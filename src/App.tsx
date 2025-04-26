@@ -1,10 +1,13 @@
-import { Button } from "@/components/ui/button"
+import { AuthProvider } from '@/context'
+import AllRoutes from '@/routes/Routes'
+import { Toaster } from 'sonner'
 
 function App() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-svh">
-      <Button variant={"secondary"}>Click</Button>
-    </div>
+    <AuthProvider>
+      <AllRoutes />
+      <Toaster richColors />
+    </AuthProvider>
   )
 }
 
