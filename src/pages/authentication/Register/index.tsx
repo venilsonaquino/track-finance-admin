@@ -1,15 +1,19 @@
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { LogIn } from "lucide-react"
+import { Eye, EyeOff, LogIn } from "lucide-react"
 
 interface RegisterProps {
     onShowLogin: () => void
 }
 
 const Register = ({ onShowLogin }: RegisterProps) => {
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
     return (
         <div className="w-full lg:w-1/2 flex flex-col p-8">
             <div className="flex justify-end space-x-4 mb-8">
@@ -38,26 +42,44 @@ const Register = ({ onShowLogin }: RegisterProps) => {
                             <div className="space-y-2">
                                 <Label htmlFor="password">Senha</Label>
                                 <div className="relative">
-                                    <Input id="password" type="password" />
+                                    <Input 
+                                        id="password" 
+                                        type={showPassword ? "text" : "password"} 
+                                    />
                                     <Button
+                                        type="button"
                                         variant="ghost"
                                         size="sm"
                                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                        onClick={() => setShowPassword(!showPassword)}
                                     >
-                                        Mostrar
+                                        {showPassword ? (
+                                            <Eye className="h-4 w-4" />
+                                        ) : (
+                                            <EyeOff className="h-4 w-4" />
+                                        )}
                                     </Button>
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="confirmPassword">Confirmar senha</Label>
                                 <div className="relative">
-                                    <Input id="confirmPassword" type="password" />
+                                    <Input 
+                                        id="confirmPassword" 
+                                        type={showConfirmPassword ? "text" : "password"} 
+                                    />
                                     <Button
+                                        type="button"
                                         variant="ghost"
                                         size="sm"
                                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                     >
-                                        Mostrar
+                                        {showConfirmPassword ? (
+                                            <Eye className="h-4 w-4" />
+                                        ) : (
+                                            <EyeOff className="h-4 w-4" />
+                                        )}
                                     </Button>
                                 </div>
                             </div>
