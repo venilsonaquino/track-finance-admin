@@ -2,7 +2,6 @@ import { lazy } from 'react'
 import { Navigate, RouteProps } from 'react-router-dom'
 
 const Login = lazy(() => import('@/pages/authentication/Login'))
-const Register = lazy(() => import('@/pages/authentication/Register'))
 const Error404 = lazy(() => import('@/pages/authentication/Error404'))
 const Error500 = lazy(() => import('@/pages/authentication/Error500'))
 const Dashboard = lazy(() => import('@/pages/dashboard'))
@@ -31,11 +30,6 @@ const authRoutes: RoutesProps[] = [
 		path: '/auth/login',
 		name: 'Login',
 		element: <Login />,
-	},
-	{
-		path: '/auth/register',
-		name: 'Register',
-		element: <Register />,
 	},
 	{
 		path: '/auth/auth-404',

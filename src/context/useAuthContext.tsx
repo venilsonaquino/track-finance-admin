@@ -1,6 +1,14 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { deleteCookie, hasCookie, setCookie } from 'cookies-next'
-import { AuthContextType, AuthUser } from '@/types'
+import { LoginResponse } from '@/api/dtos/auth/login/loginResponse'
+
+
+export type AuthContextType = {
+	authenticatedUser: LoginResponse | undefined
+	isAuthenticated: boolean
+	saveSession: (session: LoginResponse) => void
+	removeSession: () => void
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -15,7 +23,7 @@ export function useAuthContext() {
 const authSessionKey = '_TRACK_FINANCE_TOKEN_'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-	const [authenticatedUser, setAuthenticatedUser] = useState<AuthUser | undefined>(undefined)
+	const [authenticatedUser, setAuthenticatedUser] = useState<LoginResponse | undefined>(undefined)
 	const [isAuthenticated, setIsAuthenticated] = useState(false)
 
 	useEffect(() => {
@@ -26,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		checkAuth()
 	}, [])
 
-	const saveSession = (authenticatedUser: AuthUser) => {
+	const saveSession = (authenticatedUser: LoginResponse) => {
 		setCookie(authSessionKey, JSON.stringify(authenticatedUser))
 		setAuthenticatedUser(authenticatedUser)
 		setIsAuthenticated(true)
