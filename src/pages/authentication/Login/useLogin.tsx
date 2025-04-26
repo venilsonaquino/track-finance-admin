@@ -55,9 +55,8 @@ export default function useLogin() {
 				navigate(redirectUrl)
 			}
 		} catch (e: any) {
-			console.log(e)
 			if (e.response?.data?.error) {
-				toast.error(e.response?.data?.error, {
+				toast.error(e.response?.data?.message, {
 					position: 'top-right',
 					duration: 5000,
 				})
