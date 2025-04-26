@@ -50,17 +50,23 @@ export default function useLogin() {
 				})
 				toast.success('Login efetuado com sucesso, redirecionando...', {
 					position: 'top-right',
-					duration: 2000,
+					duration: 5000,
 				})
 				navigate(redirectUrl)
 			}
 		} catch (e: any) {
+			console.log(e)
 			if (e.response?.data?.error) {
 				toast.error(e.response?.data?.error, {
 					position: 'top-right',
-					duration: 2000,
+					duration: 5000,
 				})
+        return
 			}
+			toast.error('Erro ao efetuar login, por favor tente novamente mais tarde', {
+				position: 'top-right',
+				duration: 5000,
+			})
 		} finally {
 			setLoading(false)
 		}

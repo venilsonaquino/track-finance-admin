@@ -5,14 +5,19 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff } from "lucide-react"
 import Register from "../Register"
+import useLogin from "./useLogin"
+import { Navigate } from "react-router-dom"
+import { Controller } from "react-hook-form"
 
 const Login = () => {
     const [showRegister, setShowRegister] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
+    const { loading, control, login, redirectUrl, isAuthenticated } = useLogin()
 
     return (
         <div className="min-h-screen flex">
             {/* Lado esquerdo */}
+            {isAuthenticated && <Navigate to={redirectUrl} replace />}
             <div className="hidden lg:flex w-1/2 bg-primary items-center justify-center">
                 <div className="text-center text-white space-y-4">
                     <div className="w-32 h-32 bg-white rounded-full mx-auto flex items-center justify-center">
@@ -42,34 +47,66 @@ const Login = () => {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <form className="space-y-4">
+                                <form onSubmit={login} className="space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="email">Email</Label>
-                                        <Input id="email" type="email" placeholder="seu@email.com" />
+                                        <Controller
+                                            name="email"
+                                            control={control}
+                                            render={({ field, fieldState: { error } }) => (
+                                                <>
+                                                    <Input
+                                                        {...field}
+                                                        id="email"
+                                                        type="email"
+                                                        placeholder="seu@email.com"
+                                                        className={error ? "border-red-500" : ""}
+                                                    />
+                                                    {error && (
+                                                        <p className="text-sm text-red-500">{error.message}</p>
+                                                    )}
+                                                </>
+                                            )}
+                                        />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="password">Senha</Label>
-                                        <div className="relative">
-                                            <Input 
-                                                id="password" 
-                                                type={showPassword ? "text" : "password"} 
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                            >
-                                                {showPassword ? (
-                                                    <Eye className="h-4 w-4" />
-                                                ) : (
-                                                    <EyeOff className="h-4 w-4" />
-                                                )}
-                                            </Button>
-                                        </div>
+                                        <Controller
+                                            name="password"
+                                            control={control}
+                                            render={({ field, fieldState: { error } }) => (
+                                                <>
+                                                    <div className="relative">
+                                                        <Input
+                                                            {...field}
+                                                            id="password"
+                                                            type={showPassword ? "text" : "password"}
+                                                            className={error ? "border-red-500" : ""}
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                                            onClick={() => setShowPassword(!showPassword)}
+                                                        >
+                                                            {showPassword ? (
+                                                                <Eye className="h-4 w-4" />
+                                                            ) : (
+                                                                <EyeOff className="h-4 w-4" />
+                                                            )}
+                                                        </Button>
+                                                    </div>
+                                                    {error && (
+                                                        <p className="text-sm text-red-500">{error.message}</p>
+                                                    )}
+                                                </>
+                                            )}
+                                        />
                                     </div>
-                                    <Button className="w-full">Entrar</Button>
+                                    <Button type="submit" className="w-full" disabled={loading}>
+                                        {loading ? "Entrando..." : "Entrar"}
+                                    </Button>
                                     <div className="text-center">
                                         <Button variant="link" className="text-sm">
                                             Esqueceu sua senha?
