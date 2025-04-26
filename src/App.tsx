@@ -1,12 +1,12 @@
 import { AuthProvider } from '@/context'
 import AllRoutes from '@/routes/Routes'
-import { Toaster } from 'sonner'
+import { Toaster } from '@/components/ui/sonner'
 
 function App() {
   return (
     <AuthProvider>
       <AllRoutes />
-      <Toaster richColors />
+      <Toaster />
     </AuthProvider>
   )
 }
