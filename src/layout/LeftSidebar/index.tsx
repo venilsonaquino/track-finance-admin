@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { VERTICAL_MENU_ITEMS } from './menu';
+import { VERTICAL_MENU_ITEMS, MenuItemType } from './menu';
 import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -18,10 +18,11 @@ const LeftSidebar = () => {
     );
   };
 
-  const renderMenuItem = (item: any) => {
+  const renderMenuItem = (item: MenuItemType, level: number = 0) => {
     const isActive = location.pathname === item.url;
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedItems.includes(item.key);
+    const indent = level * 16; // 16px de indentação por nível
 
     return (
       <div key={item.key} className="space-y-1">
@@ -37,6 +38,7 @@ const LeftSidebar = () => {
                 'w-full justify-start',
                 isActive && 'bg-accent text-accent-foreground'
               )}
+              style={{ paddingLeft: `${indent}px` }}
               onClick={() => hasChildren && toggleItem(item.key)}
             >
               {item.icon && <span className="mr-2">{item.icon}</span>}
@@ -50,21 +52,9 @@ const LeftSidebar = () => {
                 />
               )}
             </Button>
-            {hasChildren && isExpanded && (
-              <div className="ml-4 space-y-1">
-                {item.children.map((child: any) => (
-                  <Link
-                    key={child.key}
-                    to={child.url}
-                    className={cn(
-                      'block px-4 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground',
-                      location.pathname === child.url &&
-                        'bg-accent text-accent-foreground'
-                    )}
-                  >
-                    {child.label}
-                  </Link>
-                ))}
+            {hasChildren && isExpanded && item.children && (
+              <div className="space-y-1">
+                {item.children.map((child) => renderMenuItem(child, level + 1))}
               </div>
             )}
           </div>
