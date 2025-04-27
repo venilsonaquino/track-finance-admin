@@ -1,8 +1,17 @@
-import { Bell, Search, Sun, Moon, PanelLeft } from 'lucide-react';
+import { Bell, Search, Sun, Moon, PanelLeft, User, Settings, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/context/theme-context';
 import { useSidebar } from '@/layout/LeftSidebar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const TopNavbar = () => {
     const { theme, setTheme } = useTheme();
@@ -53,10 +62,36 @@ const TopNavbar = () => {
                         <Bell className="h-4 w-4" />
                         <span className="sr-only">Notificações</span>
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                        <div className="h-6 w-6 rounded-full bg-primary/10" />
-                        <span className="sr-only">Perfil do usuário</span>
-                    </Button>
+                    
+                    {/* Dropdown do perfil do usuário */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full overflow-hidden">
+                                <Avatar>
+                                    <AvatarImage src="/avatar-placeholder.png" alt="Perfil" />
+                                    <AvatarFallback>VS</AvatarFallback>
+                                </Avatar>
+                                <span className="sr-only">Perfil do usuário</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                                <User className="mr-2 h-4 w-4" />
+                                <span>Perfil</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <Settings className="mr-2 h-4 w-4" />
+                                <span>Configurações</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive">
+                                <LogOut className="mr-2 h-4 w-4" />
+                                <span>Sair</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         </nav>
