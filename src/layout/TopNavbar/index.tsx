@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 
 const TopNavbar = () => {
     const { theme, setTheme } = useTheme();
-    const { isOpen, setIsOpen } = useSidebar();
+    const { setIsOpen } = useSidebar();
     const { removeSession, authenticatedUser } = useAuthContext();
     const navigate = useNavigate();
 
