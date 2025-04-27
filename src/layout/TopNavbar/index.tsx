@@ -12,10 +12,24 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuthContext } from '@/context/useAuthContext';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const TopNavbar = () => {
     const { theme, setTheme } = useTheme();
     const { isOpen, setIsOpen } = useSidebar();
+    const { removeSession } = useAuthContext();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        removeSession();
+        toast.success('Logout efetuado com sucesso', {
+            position: 'top-right',
+            duration: 3000,
+        });
+        navigate('/auth/login');
+    };
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -86,7 +100,7 @@ const TopNavbar = () => {
                                 <span>Configurações</span>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                                 <LogOut className="mr-2 h-4 w-4" />
                                 <span>Sair</span>
                             </DropdownMenuItem>
