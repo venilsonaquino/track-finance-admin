@@ -38,7 +38,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
               <TopNavbar />
             </Suspense>
             <div className="page-content flex-1 overflow-auto">
-              <div className="container-fluid">
+              <div className="container-fluid p-4">
                 <div className="breadcrumb-container py-2">
                   {/* Espaço reservado para breadcrumbs */}
                 </div>
