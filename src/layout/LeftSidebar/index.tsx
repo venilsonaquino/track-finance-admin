@@ -35,14 +35,14 @@ const LeftSidebar = () => {
             <Button
               variant="ghost"
               className={cn(
-                'w-full justify-start',
+                'w-full flex items-center gap-2 px-4 justify-start',
                 isActive && 'bg-accent text-accent-foreground'
               )}
-              style={{ paddingLeft: `${indent}px` }}
+              style={{ paddingLeft: `${indent + 16}px` }}
               onClick={() => hasChildren && toggleItem(item.key)}
             >
-              {item.icon && <span className="mr-2">{item.icon}</span>}
-              <span className="flex-1">{item.label}</span>
+              {item.icon}
+              <span className="flex-1 text-left">{item.label}</span>
               {item.badge && (
                 <span className={cn(item.badge.variant, 'rounded-sm')}>
                   {item.badge.text}
