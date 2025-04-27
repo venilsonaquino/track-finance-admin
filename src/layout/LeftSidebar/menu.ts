@@ -19,6 +19,7 @@ export const VERTICAL_MENU_ITEMS: MenuItemType[] = [
 		icon: '',
 		label: 'Dashboard',
 		isTitle: false,
+		url: '/dashboard',
 	},
 	{
 		key: 'work-time-expenses',
