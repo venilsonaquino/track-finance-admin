@@ -43,6 +43,11 @@ const LeftSidebar = () => {
             >
               {item.icon && <span className="mr-2">{item.icon}</span>}
               <span className="flex-1">{item.label}</span>
+              {item.badge && (
+                <span className={cn(item.badge.variant, 'rounded-sm')}>
+                  {item.badge.text}
+                </span>
+              )}
               {hasChildren && (
                 <ChevronDown
                   className={cn(
@@ -64,11 +69,11 @@ const LeftSidebar = () => {
   };
 
   return (
-    <div className="hidden md:flex flex-col w-64 h-screen border-r bg-background">
+    <div className="hidden md:flex flex-col w-64 h-screen border-r bg-background fixed">
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold">Track Finance</h2>
       </div>
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 h-[calc(100vh-65px)]">
         <div className="p-4 space-y-2">
           {VERTICAL_MENU_ITEMS.map((item) => renderMenuItem(item))}
         </div>
