@@ -69,11 +69,11 @@ const LeftSidebar = () => {
   };
 
   return (
-    <div className="hidden md:flex flex-col w-64 h-screen border-r bg-background fixed">
+    <div className="hidden md:flex flex-col w-64 h-screen border-r bg-background">
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold">Track Finance</h2>
       </div>
-      <ScrollArea className="flex-1 h-[calc(100vh-65px)]">
+      <ScrollArea className="flex-1">
         <div className="p-4 space-y-2">
           {VERTICAL_MENU_ITEMS.map((item) => renderMenuItem(item))}
         </div>
