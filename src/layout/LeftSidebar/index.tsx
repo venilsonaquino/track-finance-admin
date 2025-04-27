@@ -5,8 +5,37 @@ import { VERTICAL_MENU_ITEMS, MenuItemType } from './menu';
 import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 
-const LeftSidebar = () => {
+// Contexto para controlar o estado da Sidebar em dispositivos móveis
+import { createContext, useContext } from 'react';
+
+type SidebarContextType = {
+  isOpen: boolean;
+  setIsOpen: (value: boolean) => void;
+};
+
+const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
+
+export const SidebarProvider = ({ children }: { children: React.ReactNode }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <SidebarContext.Provider value={{ isOpen, setIsOpen }}>
+      {children}
+    </SidebarContext.Provider>
+  );
+};
+
+export const useSidebar = () => {
+  const context = useContext(SidebarContext);
+  if (context === undefined) {
+    throw new Error('useSidebar must be used within a SidebarProvider');
+  }
+  return context;
+};
+
+// Componente de menu que é compartilhado entre a versão desktop e mobile
+const SidebarMenu = () => {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const location = useLocation();
 
@@ -98,7 +127,7 @@ const LeftSidebar = () => {
   };
 
   return (
-    <div className="hidden md:flex flex-col w-64 h-screen border-r bg-background">
+    <>
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold">Track Finance</h2>
       </div>
@@ -107,7 +136,33 @@ const LeftSidebar = () => {
           {VERTICAL_MENU_ITEMS.map((item) => renderMenuItem(item))}
         </div>
       </ScrollArea>
-    </div>
+    </>
+  );
+};
+
+// Componente principal da Sidebar
+const LeftSidebar = () => {
+  const { isOpen, setIsOpen } = useSidebar();
+
+  return (
+    <>
+      {/* Versão desktop: sempre visível em telas médias e acima */}
+      <div className="hidden md:flex flex-col w-64 h-screen border-r bg-background">
+        <SidebarMenu />
+      </div>
+
+      {/* Versão mobile: drawer que abre do lado esquerdo */}
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent 
+          side="left" 
+          className="p-0 w-64" 
+          title="Menu de navegação Track Finance"
+          description="Painel lateral com links de navegação do sistema. Pressione Escape para fechar."
+        >
+          <SidebarMenu />
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
 

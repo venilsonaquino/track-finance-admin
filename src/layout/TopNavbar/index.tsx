@@ -1,15 +1,27 @@
-import { Bell, Search, Sun, Moon } from 'lucide-react';
+import { Bell, Search, Sun, Moon, PanelLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/context/theme-context';
+import { useSidebar } from '@/layout/LeftSidebar';
 
 const TopNavbar = () => {
     const { theme, setTheme } = useTheme();
+    const { isOpen, setIsOpen } = useSidebar();
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex w-full h-14 items-center px-4">
                 <div className="flex items-center">
+                    {/* Botão para abrir a sidebar em telas móveis */}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="md:hidden h-9 w-9 mr-2"
+                        onClick={() => setIsOpen(true)}
+                    >
+                        <PanelLeft className="h-4 w-4" />
+                        <span className="sr-only">Menu</span>
+                    </Button>
                     <span className="text-base sr-only">Track Finance</span>
                 </div>
 
