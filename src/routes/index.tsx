@@ -56,40 +56,40 @@ const authRoutes: RoutesProps[] = [
 
 const workTimeExpensesRoutes: RoutesProps[] = [
 	{
-		path: '/work-time-expenses',
-		name: 'Work Time Expenses',
+		path: '/horas-e-despesas',
+		name: 'Horas e Despesas',
 		element: <WorkTimeExpense />,
 	},
 ]
 
 const transactionsRoutes: RoutesProps[] = [
 	{
-		path: '/transactions',
-		name: 'Transactions',
+		path: '/transacoes',
+		name: 'Transações',
 		element: <Transaction />,
 	},
 ]
 
 const importFilesRoutes: RoutesProps[] = [
 	{
-		path: '/import-files',
-		name: 'Import Files',
+		path: '/importar-arquivos',
+		name: 'Importar Arquivos',
 		element: <ImportFile />,
 	},
 ]
 
 const walletsRoutes: RoutesProps[] = [
 	{
-		path: '/wallets',
-		name: 'Wallets',
+		path: '/carteiras',
+		name: 'Carteiras',
 		element: <Wallet />,
 	},
 ]
 
 const categoriesRoutes: RoutesProps[] = [
 	{
-		path: '/categories',
-		name: 'Categories',
+		path: '/categorias',
+		name: 'Categorias',
 		element: <Categories />,
 	},
 ]

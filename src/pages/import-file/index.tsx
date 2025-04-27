@@ -1,5 +1,7 @@
+import PageBreadcrumbNav from "@/components/BreadcrumbNav";
+
 const ImportFile = () => {
-	return <div>ImportFile</div>;
+	return <PageBreadcrumbNav title="Importar Arquivo" />;
 };
 
 export default ImportFile;
