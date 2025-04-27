@@ -1,13 +1,19 @@
 import { AuthProvider } from '@/context'
+import { ThemeProvider } from '@/context/theme-context'
+import { SidebarProvider } from '@/layout/LeftSidebar'
 import AllRoutes from '@/routes/Routes'
 import { Toaster } from '@/components/ui/sonner'
 
 function App() {
   return (
-    <AuthProvider>
-      <AllRoutes />
-      <Toaster />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <SidebarProvider>
+          <AllRoutes />
+          <Toaster />
+        </SidebarProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 

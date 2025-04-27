@@ -28,19 +28,24 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
   return (
     <Suspense fallback={FallbackLoader}>
-      <div className="flex">
-        <Suspense fallback={<div />}>
-          <LeftSideBar />
-        </Suspense>
-        <div className="page-wrapper">
+      <div className="flex h-screen flex-col">
+        <div className="flex flex-1 overflow-hidden">
           <Suspense fallback={<div />}>
-            <TopNavbar />
+            <LeftSideBar />
           </Suspense>
-          <div className="page-content">
-            <div className="container-fluid">
-              <Suspense fallback={FallbackLoader}>
-                {children}
-              </Suspense>
+          <div className="page-wrapper flex-1 flex flex-col">
+            <Suspense fallback={<div />}>
+              <TopNavbar />
+            </Suspense>
+            <div className="page-content flex-1 overflow-auto">
+              <div className="container-fluid">
+                <div className="breadcrumb-container py-2">
+                  {/* Espaço reservado para breadcrumbs */}
+                </div>
+                <Suspense fallback={FallbackLoader}>
+                  {children}
+                </Suspense>
+              </div>
             </div>
             <Suspense fallback={<div />}>
               <Footer />

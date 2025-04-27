@@ -1,8 +1,11 @@
+import { Home, Clock, Wallet, FileUp, FolderTree, CreditCard } from 'lucide-react';
+import { ReactNode } from 'react';
+
 export type MenuItemType = {
 	key: string
 	label: string
 	isTitle?: boolean
-	icon?: any
+	icon?: ReactNode
 	url?: string
 	parentKey?: string
 	target?: string
@@ -16,14 +19,14 @@ export type MenuItemType = {
 export const VERTICAL_MENU_ITEMS: MenuItemType[] = [
 	{
 		key: 'dashboard',
-		icon: '',
+		icon: <Home className="h-4 w-4" />,
 		label: 'Dashboard',
 		isTitle: false,
 		url: '/dashboard',
 	},
 	{
 		key: 'work-time-expenses',
-		icon: '',
+		icon: <Clock className="h-4 w-4" />,
 		label: 'Gastos em Tempo',
 		isTitle: false,
 		url: '/work-time-expenses',
@@ -33,28 +36,28 @@ export const VERTICAL_MENU_ITEMS: MenuItemType[] = [
 		label: 'Transações',
 		isTitle: false,
 		url: '/transactions',
-		icon: '',
+		icon: <CreditCard className="h-4 w-4" />,
 	},
 	{
 		key: 'import-files',
 		label: 'Importar Arquivos',
 		isTitle: false,
 		url: '/import-files',
-		icon: '',
+		icon: <FileUp className="h-4 w-4" />,
 	},
 	{
 		key: 'categories',
 		label: 'Categorias',
 		isTitle: false,
 		url: '/categories',
-		icon: '',
+		icon: <FolderTree className="h-4 w-4" />,
 	},
 	{
 		key: 'wallets',
 		label: 'Carteiras',
 		isTitle: false,
 		url: '/wallets',
-		icon: '',
+		icon: <Wallet className="h-4 w-4" />,
 	},
 ]
 
