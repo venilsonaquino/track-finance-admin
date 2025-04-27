@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 const TopNavbar = () => {
     const { theme, setTheme } = useTheme();
     const { isOpen, setIsOpen } = useSidebar();
-    const { removeSession } = useAuthContext();
+    const { removeSession, authenticatedUser } = useAuthContext();
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -29,6 +29,19 @@ const TopNavbar = () => {
             duration: 3000,
         });
         navigate('/auth/login');
+    };
+
+    const getUserInitials = () => {
+        const fullName = authenticatedUser?.user?.fullName || '';
+        if (!fullName) return 'U';
+        
+        const nameParts = fullName.split(' ');
+        if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+        
+        const firstName = nameParts[0];
+        const lastName = nameParts[nameParts.length - 1];
+        
+        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     };
 
     return (
@@ -83,7 +96,7 @@ const TopNavbar = () => {
                             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full overflow-hidden">
                                 <Avatar>
                                     <AvatarImage src="/avatar-placeholder.png" alt="Perfil" />
-                                    <AvatarFallback>VS</AvatarFallback>
+                                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
                                 </Avatar>
                                 <span className="sr-only">Perfil do usuário</span>
                             </Button>
