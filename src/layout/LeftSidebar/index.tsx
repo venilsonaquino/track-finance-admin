@@ -32,31 +32,60 @@ const LeftSidebar = () => {
           </div>
         ) : (
           <div>
-            <Button
-              variant="ghost"
-              className={cn(
-                'w-full flex items-center gap-2 px-4 justify-start',
-                isActive && 'bg-accent text-accent-foreground'
-              )}
-              style={{ paddingLeft: `${indent + 16}px` }}
-              onClick={() => hasChildren && toggleItem(item.key)}
-            >
-              {item.icon}
-              <span className="flex-1 text-left">{item.label}</span>
-              {item.badge && (
-                <span className={cn(item.badge.variant, 'rounded-sm')}>
-                  {item.badge.text}
-                </span>
-              )}
-              {hasChildren && (
-                <ChevronDown
+            {item.url ? (
+              <Link to={item.url} className="w-full">
+                <Button
+                  variant="ghost"
                   className={cn(
-                    'h-4 w-4 transition-transform',
-                    isExpanded && 'rotate-180'
+                    'w-full flex items-center gap-2 px-4 justify-start',
+                    isActive && 'bg-accent text-accent-foreground'
                   )}
-                />
-              )}
-            </Button>
+                  style={{ paddingLeft: `${indent + 16}px` }}
+                >
+                  {item.icon}
+                  <span className="flex-1 text-left">{item.label}</span>
+                  {item.badge && (
+                    <span className={cn(item.badge.variant, 'rounded-sm')}>
+                      {item.badge.text}
+                    </span>
+                  )}
+                  {hasChildren && (
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 transition-transform',
+                        isExpanded && 'rotate-180'
+                      )}
+                    />
+                  )}
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                variant="ghost"
+                className={cn(
+                  'w-full flex items-center gap-2 px-4 justify-start',
+                  isActive && 'bg-accent text-accent-foreground'
+                )}
+                style={{ paddingLeft: `${indent + 16}px` }}
+                onClick={() => hasChildren && toggleItem(item.key)}
+              >
+                {item.icon}
+                <span className="flex-1 text-left">{item.label}</span>
+                {item.badge && (
+                  <span className={cn(item.badge.variant, 'rounded-sm')}>
+                    {item.badge.text}
+                  </span>
+                )}
+                {hasChildren && (
+                  <ChevronDown
+                    className={cn(
+                      'h-4 w-4 transition-transform',
+                      isExpanded && 'rotate-180'
+                    )}
+                  />
+                )}
+              </Button>
+            )}
             {hasChildren && isExpanded && item.children && (
               <div className="space-y-1">
                 {item.children.map((child) => renderMenuItem(child, level + 1))}
