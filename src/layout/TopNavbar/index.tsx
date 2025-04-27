@@ -45,7 +45,7 @@ const TopNavbar = () => {
     };
 
     return (
-        <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <nav className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex w-full h-14 items-center px-4">
                 <div className="flex items-center">
                     {/* Botão para abrir a sidebar em telas móveis */}
