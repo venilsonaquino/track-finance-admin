@@ -15,12 +15,15 @@ import {
 import { useAuthContext } from '@/context/useAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-
+import { UserNameUtils } from '@/utils/user-name-utils';
 const TopNavbar = () => {
     const { theme, setTheme } = useTheme();
     const { setIsOpen } = useSidebar();
     const { removeSession, authenticatedUser } = useAuthContext();
     const navigate = useNavigate();
+    const fullName = authenticatedUser?.user?.fullName || '';
+    const initials = UserNameUtils.getUserInitials(fullName);
+    const firstAndLastName = UserNameUtils.getFirstAndLastName(fullName);
 
     const handleLogout = () => {
         removeSession();
@@ -29,19 +32,6 @@ const TopNavbar = () => {
             duration: 3000,
         });
         navigate('/auth/login');
-    };
-
-    const getUserInitials = () => {
-        const fullName = authenticatedUser?.user?.fullName || '';
-        if (!fullName) return 'U';
-        
-        const nameParts = fullName.split(' ');
-        if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
-        
-        const firstName = nameParts[0];
-        const lastName = nameParts[nameParts.length - 1];
-        
-        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     };
 
     return (
@@ -93,12 +83,20 @@ const TopNavbar = () => {
                     {/* Dropdown do perfil do usuário */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full overflow-hidden cursor-pointer">
-                                <Avatar>
-                                    <AvatarImage src="/avatar-placeholder.png" alt="Perfil" />
-                                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                                </Avatar>
+                            <Button variant="ghost" className="flex items-center gap-2 h-9 pl-2 pr-3 rounded-full cursor-pointer">
+                                <div className="hidden md:flex flex-col items-start">
+                                    <span className="text-sm font-medium leading-none truncate">
+                                        {firstAndLastName}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        {authenticatedUser?.user?.plan || 'Plano Gratuito'}
+                                    </span>
+                                </div>
                                 <span className="sr-only">Perfil do usuário</span>
+                                <Avatar className="h-10 w-10">
+                                    <AvatarImage src="/avatar-placeholder.png" alt="Perfil" />
+                                    <AvatarFallback>{initials}</AvatarFallback>
+                                </Avatar>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
