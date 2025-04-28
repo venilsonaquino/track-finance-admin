@@ -31,7 +31,10 @@ const TopNavbar = () => {
             position: 'top-right',
             duration: 3000,
         });
-        navigate('/auth/login');
+        // setTimeout para garantir que o logout seja efetuado antes de redirecionar para a página de login
+        setTimeout(() => {
+            navigate('/auth/login');
+        }, 100);
     };
 
     return (
