@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
-import { deleteCookie, hasCookie, setCookie } from 'cookies-next'
+import { deleteCookie, hasCookie, setCookie, getCookie } from 'cookies-next'
 import { LoginResponse } from '@/api/dtos/auth/login/loginResponse'
+import { AuthService } from '@/api/services/authService'
 
 
 export type AuthContextType = {
@@ -8,6 +9,7 @@ export type AuthContextType = {
 	isAuthenticated: boolean
 	saveSession: (session: LoginResponse) => void
 	removeSession: () => void
+	updateToken: (token: string) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -26,12 +28,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const [authenticatedUser, setAuthenticatedUser] = useState<LoginResponse | undefined>(undefined)
 	const [isAuthenticated, setIsAuthenticated] = useState(false)
 
+	// Carregar dados do usuário do cookie ao iniciar
 	useEffect(() => {
-		const checkAuth = async () => {
-			const hasAuth = await hasCookie(authSessionKey)
-			setIsAuthenticated(hasAuth)
+		const loadUserData = async () => {
+			const hasAuth = hasCookie(authSessionKey)
+			if (hasAuth) {
+				try {
+					const authData = JSON.parse(String(getCookie(authSessionKey)))
+					setAuthenticatedUser(authData)
+					setIsAuthenticated(true)
+					
+					// Opcional: validar o perfil do usuário com o backend
+					try {
+						await AuthService.profile()
+					} catch (error) {
+						// Se o perfil falhar e não for possível fazer refresh, 
+						// limpar a sessão para forçar novo login
+						console.error('Falha ao validar perfil do usuário', error)
+					}
+				} catch (error) {
+					console.error('Erro ao carregar dados do usuário', error)
+					removeSession()
+				}
+			} else {
+				setIsAuthenticated(false)
+				setAuthenticatedUser(undefined)
+			}
 		}
-		checkAuth()
+		
+		loadUserData()
 	}, [])
 
 	const saveSession = (authenticatedUser: LoginResponse) => {
@@ -45,6 +70,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		setAuthenticatedUser(undefined)
 		setIsAuthenticated(false)
 	}
+	
+	// Função para atualizar apenas o token, mantendo os dados do usuário
+	const updateToken = (token: string) => {
+		if (authenticatedUser) {
+			const updatedUser = {
+				...authenticatedUser,
+				token
+			}
+			setCookie(authSessionKey, JSON.stringify(updatedUser))
+			setAuthenticatedUser(updatedUser)
+		}
+	}
 
 	return (
 		<AuthContext.Provider
@@ -53,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 				isAuthenticated,
 				saveSession,
 				removeSession,
+				updateToken
 			}}
 		>
 			{children}
