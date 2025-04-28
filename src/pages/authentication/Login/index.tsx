@@ -15,13 +15,13 @@ const Login = () => {
     const { loading, control, login, redirectUrl, isAuthenticated } = useLogin()
 
     return (
-        <div className="min-h-screen flex">
+        <div className="min-h-screen flex bg-background text-foreground">
             {/* Lado esquerdo */}
             {isAuthenticated && <Navigate to={redirectUrl} replace />}
-            <div className="hidden lg:flex w-1/2 bg-primary items-center justify-center">
-                <div className="text-center text-white space-y-4">
-                    <div className="w-32 h-32 bg-white rounded-full mx-auto flex items-center justify-center">
-                        <span className="text-primary text-4xl font-bold">TF</span>
+            <div className="hidden lg:flex w-1/2 bg-primary dark:bg-sidebar items-center justify-center">
+                <div className="text-center text-primary-foreground dark:text-sidebar-foreground space-y-4">
+                    <div className="w-32 h-32 bg-background dark:bg-sidebar-accent rounded-full mx-auto flex items-center justify-center">
+                        <span className="text-primary dark:text-sidebar-primary text-4xl font-bold">TF</span>
                     </div>
                     <h1 className="text-4xl font-bold">Track Finance</h1>
                     <p className="text-lg">Gerencie suas finanças de forma simples e eficiente</p>
@@ -32,14 +32,14 @@ const Login = () => {
             {showRegister ? (
                 <Register onShowLogin={() => setShowRegister(false)} />
             ) : (
-                <div className="w-full lg:w-1/2 flex flex-col p-8">
+                <div className="w-full lg:w-1/2 flex flex-col p-8 bg-background text-foreground">
                     <div className="flex justify-end space-x-4 mb-8">
-                        <Button variant="outline" className="bg-white">Entrar</Button>
+                        <Button variant="outline" className="dark:bg-secondary bg-white">Entrar</Button>
                         <Button variant="outline" onClick={() => setShowRegister(true)}>Cadastrar</Button>
                     </div>
 
                     <div className="flex-1 flex items-center justify-center">
-                        <Card className="w-full max-w-md">
+                        <Card className="w-full max-w-md border-border bg-card text-card-foreground">
                             <CardHeader>
                                 <CardTitle className="text-2xl">Bem-vindo de volta</CardTitle>
                                 <CardDescription>

@@ -1,5 +1,7 @@
+import PageBreadcrumbNav from "@/components/BreadcrumbNav";
+
 const Category = () => {
-	return <div>Categories</div>;
+	return <PageBreadcrumbNav title="Categorias" />;
 };
 
 export default Category;

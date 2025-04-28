@@ -1,5 +1,7 @@
+import PageBreadcrumbNav from "@/components/BreadcrumbNav";
+
 const Transaction = () => {
-	return <div>Transactions</div>;
+	return <PageBreadcrumbNav title="Transações" />;
 };
 
 export default Transaction;

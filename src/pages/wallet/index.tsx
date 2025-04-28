@@ -1,5 +1,7 @@
+import PageBreadcrumbNav from "@/components/BreadcrumbNav";
+
 const Wallet = () => {
-	return <div>Wallet</div>;
+	return <PageBreadcrumbNav title="Carteiras" />;
 };
 
 export default Wallet;

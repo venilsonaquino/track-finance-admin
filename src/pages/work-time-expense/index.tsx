@@ -1,6 +1,7 @@
+import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 
 const WorkTimeExpense = () => {
-	return <div>WorkTimeExpenses</div>;
+	return <PageBreadcrumbNav title="Horas e Despesas" />;
 };
 
 export default WorkTimeExpense;

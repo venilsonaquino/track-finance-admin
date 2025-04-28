@@ -62,11 +62,11 @@ const SidebarMenu = () => {
         ) : (
           <div>
             {item.url ? (
-              <Link to={item.url} className="w-full">
+              <Link to={item.url} className="w-full cursor-pointer">
                 <Button
                   variant="ghost"
                   className={cn(
-                    'w-full flex items-center gap-2 px-4 justify-start',
+                    'w-full flex items-center gap-2 px-4 justify-start cursor-pointer',
                     isActive && 'bg-accent text-accent-foreground'
                   )}
                   style={{ paddingLeft: `${indent + 16}px` }}
@@ -92,7 +92,7 @@ const SidebarMenu = () => {
               <Button
                 variant="ghost"
                 className={cn(
-                  'w-full flex items-center gap-2 px-4 justify-start',
+                  'w-full flex items-center gap-2 px-4 justify-start cursor-pointer',
                   isActive && 'bg-accent text-accent-foreground'
                 )}
                 style={{ paddingLeft: `${indent + 16}px` }}

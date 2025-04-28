@@ -18,8 +18,8 @@ import { toast } from 'sonner';
 
 const TopNavbar = () => {
     const { theme, setTheme } = useTheme();
-    const { isOpen, setIsOpen } = useSidebar();
-    const { removeSession } = useAuthContext();
+    const { setIsOpen } = useSidebar();
+    const { removeSession, authenticatedUser } = useAuthContext();
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -31,15 +31,28 @@ const TopNavbar = () => {
         navigate('/auth/login');
     };
 
+    const getUserInitials = () => {
+        const fullName = authenticatedUser?.user?.fullName || '';
+        if (!fullName) return 'U';
+        
+        const nameParts = fullName.split(' ');
+        if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+        
+        const firstName = nameParts[0];
+        const lastName = nameParts[nameParts.length - 1];
+        
+        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    };
+
     return (
-        <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <nav className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex w-full h-14 items-center px-4">
                 <div className="flex items-center">
                     {/* Botão para abrir a sidebar em telas móveis */}
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="md:hidden h-9 w-9 mr-2"
+                        className="md:hidden h-9 w-9 mr-2 cursor-pointer"
                         onClick={() => setIsOpen(true)}
                     >
                         <PanelLeft className="h-4 w-4" />
@@ -65,14 +78,14 @@ const TopNavbar = () => {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 rounded-full"
+                        className="h-9 w-9 rounded-full cursor-pointer"
                         onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                     >
                         <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                         <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                         <span className="sr-only">Alternar tema</span>
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full cursor-pointer">
                         <Bell className="h-4 w-4" />
                         <span className="sr-only">Notificações</span>
                     </Button>
@@ -80,10 +93,10 @@ const TopNavbar = () => {
                     {/* Dropdown do perfil do usuário */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full overflow-hidden">
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full overflow-hidden cursor-pointer">
                                 <Avatar>
                                     <AvatarImage src="/avatar-placeholder.png" alt="Perfil" />
-                                    <AvatarFallback>VS</AvatarFallback>
+                                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
                                 </Avatar>
                                 <span className="sr-only">Perfil do usuário</span>
                             </Button>
@@ -91,16 +104,16 @@ const TopNavbar = () => {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer">
                                 <User className="mr-2 h-4 w-4" />
                                 <span>Perfil</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer">
                                 <Settings className="mr-2 h-4 w-4" />
                                 <span>Configurações</span>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                            <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
                                 <LogOut className="mr-2 h-4 w-4" />
                                 <span>Sair</span>
                             </DropdownMenuItem>

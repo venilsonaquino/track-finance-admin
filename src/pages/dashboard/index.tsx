@@ -1,8 +1,8 @@
+import PageBreadcrumbNav from "@/components/BreadcrumbNav"
+
 const Dashboard = () => {
     return (
-        <div>
-            <h1>Dashboard</h1>
-        </div>
+        <PageBreadcrumbNav title="Dashboard" />
     )
 }
 
