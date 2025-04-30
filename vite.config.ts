@@ -9,5 +9,13 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src')
     }
+  },
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true, // Garante que não troque a porta automaticamente
+    watch: {
+      usePolling: true // Necessário em alguns ambientes Docker
+    }
   }
 })
