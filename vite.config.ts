@@ -9,5 +9,8 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src')
     }
+  },
+  server: {
+    host: true // permite acesso externo (ex: pelo celular na mesma rede)
   }
 })
