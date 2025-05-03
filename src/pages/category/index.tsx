@@ -9,7 +9,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, MoreVertical } from "lucide-react";
 import {
 	useReactTable,
 	getCoreRowModel,
@@ -33,18 +33,45 @@ import {
 } from "@/components/ui/dialog";
 import { CategoryResponse } from "@/api/dtos/category/category-response";
 import { CategoryRequest } from "@/api/dtos/category/category-request";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { DynamicIcon } from "lucide-react/dynamic";
+import { ConfirmDelete } from "@/components/confirm-delete";
+import { toast } from "sonner";
 
 const Category = () => {
 	const { categories, loading, error, deleteCategory, createCategory, updateCategory } = useCategories();
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
 	const [selectedCategory, setSelectedCategory] = useState<CategoryResponse | null>(null);
 
 	const columns: ColumnDef<CategoryResponse>[] = [
 		{
 			accessorKey: "name",
 			header: "Nome",
+		},
+		{
+			accessorKey: "icon",
+			header: "Ícone",
+			cell: ({ row }) => {
+				const category = row.original;
+				return <DynamicIcon name={category.icon as any} size={24} />;
+			},
+		},
+		{
+			accessorKey: "color",
+			header: "Cor",
+			cell: ({ row }) => {
+				const category = row.original;
+				return <div className="w-4 h-4 rounded-full" style={{ backgroundColor: category.color }} />;
+			},
 		},
 		{
 			accessorKey: "description",
@@ -55,25 +82,30 @@ const Category = () => {
 			cell: ({ row }) => {
 				const category = row.original;
 				return (
-					<div className="flex gap-2">
-						<Button
-							variant="outline"
-							size="icon"
-							onClick={() => {
-								setSelectedCategory(category);
-								setIsDialogOpen(true);
-							}}
-						>
-							<Pencil className="h-4 w-4" />
-						</Button>
-						<Button
-							variant="outline"
-							size="icon"
-							onClick={() => deleteCategory(category.id)}
-						>
-							<Trash2 className="h-4 w-4" />
-						</Button>
-					</div>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant="ghost" size="icon">
+								<MoreVertical className="h-4 w-4" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem
+								onClick={() => {
+									setSelectedCategory(category);
+									setIsDialogOpen(true);
+								}}
+							>
+								<Pencil className="h-4 w-4 mr-2" />
+								Editar
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => handleDelete(category.id)}
+							>
+								<Trash2 className="h-4 w-4 mr-2" />
+								Excluir
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				);
 			},
 		},
@@ -102,6 +134,25 @@ const Category = () => {
 		}
 		setIsDialogOpen(false);
 		setSelectedCategory(null);
+	};
+
+	const handleDelete = async (id: string) => {
+		setCategoryToDelete(id);
+		setIsDeleteDialogOpen(true);
+	};
+
+	const confirmDelete = async () => {
+		if (!categoryToDelete) return;
+		
+		try {
+			await deleteCategory(categoryToDelete);
+			toast.success("Categoria excluída com sucesso!");
+		} catch (error) {
+			toast.error("Erro ao excluir categoria");
+		} finally {
+			setIsDeleteDialogOpen(false);
+			setCategoryToDelete(null);
+		}
 	};
 
 	if (loading) return <div>Carregando...</div>;
@@ -216,6 +267,12 @@ const Category = () => {
 					Próxima
 				</Button>
 			</div>
+
+			<ConfirmDelete
+				isDeleteDialogOpen={isDeleteDialogOpen}
+				setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+				confirmDelete={confirmDelete}
+			/>
 		</div>
 	);
 };

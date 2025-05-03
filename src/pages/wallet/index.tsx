@@ -6,8 +6,7 @@ import { useWallets } from "./hooks/use-wallets";
 import { WalletRequest } from "@/api/dtos/wallet/wallet-request";
 import { toast } from "sonner";
 import { WalletResponse } from "@/api/dtos/wallet/wallet-response";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { ConfirmDelete } from "@/components/confirm-delete";
 
 const Wallet = () => {
 	const { wallets, loading, error, createWallet, updateWallet, deleteWallet } = useWallets();
@@ -115,22 +114,12 @@ const Wallet = () => {
 				))}
 			</div>
 
-			<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Confirmar Exclusão</DialogTitle>
-					</DialogHeader>
-					<p>Tem certeza que deseja excluir esta carteira? Esta ação não pode ser desfeita.</p>
-					<DialogFooter>
-						<Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-							Cancelar
-						</Button>
-						<Button variant="destructive" onClick={confirmDelete}>
-							Excluir
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+			<ConfirmDelete
+				isDeleteDialogOpen={isDeleteDialogOpen}
+				setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+				confirmDelete={confirmDelete}
+			/>
+
 		</div>
 	);
 };

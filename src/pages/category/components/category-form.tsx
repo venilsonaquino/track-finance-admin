@@ -26,13 +26,13 @@ interface CategoryFormProps {
 }
 
 const colors = [
-  { value: "red", label: "Vermelho" },
-  { value: "blue", label: "Azul" },
-  { value: "green", label: "Verde" },
-  { value: "yellow", label: "Amarelo" },
-  { value: "purple", label: "Roxo" },
-  { value: "pink", label: "Rosa" },
-  { value: "orange", label: "Laranja" },
+  { value: "#FF0000", label: "Vermelho" },
+  { value: "#0000FF", label: "Azul" },
+  { value: "#008000", label: "Verde" },
+  { value: "#FFFF00", label: "Amarelo" },
+  { value: "#800080", label: "Roxo" },
+  { value: "#FFC0CB", label: "Rosa" },
+  { value: "#FFA500", label: "Laranja" },
 ];
 
 const icons = [
