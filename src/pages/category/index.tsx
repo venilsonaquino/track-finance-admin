@@ -62,15 +62,23 @@ const Category = () => {
 			header: "Ícone",
 			cell: ({ row }) => {
 				const category = row.original;
-				return <DynamicIcon name={category.icon as any} size={24} />;
+				return (
+					<div className=" w-full h-full min-h-[48px]">
+						<div 
+							className="w-8 h-8 rounded-full flex items-center justify-center"
+							style={{ backgroundColor: category.color }}
+						>
+							<DynamicIcon 
+								name={category.icon as any} 
+								size={16} 
+								className="text-white"
+							/>
+						</div>
+					</div>
+				);
 			},
-		},
-		{
-			accessorKey: "color",
-			header: "Cor",
-			cell: ({ row }) => {
-				const category = row.original;
-				return <div className="w-4 h-4 rounded-full" style={{ backgroundColor: category.color }} />;
+			meta: {
+				cellClassName: "!p-0 align-middle"
 			},
 		},
 		{
