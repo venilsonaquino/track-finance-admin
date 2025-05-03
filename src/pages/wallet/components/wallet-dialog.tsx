@@ -7,14 +7,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { WalletForm } from "./wallet-form";
-import { Wallet } from "@/types/wallet";
-
+import { WalletResponse } from "@/api/dtos/wallet/wallet-response";
 interface WalletDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  formData: Partial<Wallet>;
+  formData: Partial<WalletResponse>;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  onInputChange: (field: keyof Wallet, value: string | number) => void;
+  onInputChange: (field: keyof WalletResponse, value: string | number) => void;
   isEditing: boolean;
 }
 

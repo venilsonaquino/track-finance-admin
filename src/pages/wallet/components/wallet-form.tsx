@@ -8,12 +8,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Wallet } from "@/types/wallet";
+import { WalletResponse } from "@/api/dtos/wallet/wallet-response";
 
 interface WalletFormProps {
-  formData: Partial<Wallet>;
+  formData: Partial<WalletResponse>;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  onInputChange: (field: keyof Wallet, value: string | number) => void;
+  onInputChange: (field: keyof WalletResponse, value: string | number) => void;
   isEditing: boolean;
 }
 
@@ -57,8 +57,8 @@ export const WalletForm = ({
       <div className="space-y-2">
         <label htmlFor="type">Tipo</label>
         <Select
-          value={formData.type}
-          onValueChange={(value: string) => onInputChange("type", value)}
+          value={formData.walletType}
+          onValueChange={(value: string) => onInputChange("walletType", value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione o tipo" />
@@ -76,8 +76,8 @@ export const WalletForm = ({
         <Input
           type="number"
           id="initialBalance"
-          value={formData.initialBalance}
-          onChange={(e) => onInputChange("initialBalance", Number(e.target.value))}
+          value={formData.balance}
+          onChange={(e) => onInputChange("balance", Number(e.target.value))}
           required
         />
       </div>
