@@ -6,10 +6,14 @@ import { useWallets } from "./hooks/use-wallets";
 import { WalletRequest } from "@/api/dtos/wallet/wallet-request";
 import { toast } from "sonner";
 import { WalletResponse } from "@/api/dtos/wallet/wallet-response";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const Wallet = () => {
 	const { wallets, loading, error, createWallet, updateWallet, deleteWallet } = useWallets();
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [walletToDelete, setWalletToDelete] = useState<string | null>(null);
 	const [editingWallet, setEditingWallet] = useState<string | null>(null);
 	const [formData, setFormData] = useState<Partial<WalletResponse>>({
 		name: "",
@@ -59,11 +63,21 @@ const Wallet = () => {
 	};
 
 	const handleDelete = async (id: string) => {
+		setWalletToDelete(id);
+		setIsDeleteDialogOpen(true);
+	};
+
+	const confirmDelete = async () => {
+		if (!walletToDelete) return;
+		
 		try {
-			await deleteWallet(id);
+			await deleteWallet(walletToDelete);
 			toast.success("Carteira excluída com sucesso!");
 		} catch (error) {
 			toast.error("Erro ao excluir carteira");
+		} finally {
+			setIsDeleteDialogOpen(false);
+			setWalletToDelete(null);
 		}
 	};
 
@@ -100,6 +114,23 @@ const Wallet = () => {
 					/>
 				))}
 			</div>
+
+			<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Confirmar Exclusão</DialogTitle>
+					</DialogHeader>
+					<p>Tem certeza que deseja excluir esta carteira? Esta ação não pode ser desfeita.</p>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+							Cancelar
+						</Button>
+						<Button variant="destructive" onClick={confirmDelete}>
+							Excluir
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 };
