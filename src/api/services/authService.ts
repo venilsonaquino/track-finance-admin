@@ -1,5 +1,6 @@
 import HttpClient from '@/api/httpClient';
-import { LoginRequest, RegisterRequest } from '@/api/dtos/auth/register/registerRequest';
+import { RegisterRequest } from '@/api/dtos/auth/register/registerRequest';
+import { LoginRequest } from '@/api/dtos/auth/login/loginRequest';
 
 export const AuthService = {
   register: (data: RegisterRequest) => HttpClient.post('/auth/register', data),
