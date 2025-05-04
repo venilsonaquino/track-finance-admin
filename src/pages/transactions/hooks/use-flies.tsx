@@ -3,7 +3,7 @@ import { FileService } from "@/api/services/fileService";
 import { useState } from "react";
 
 export const useFiles = () => {
-  const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
+  const [importedTransactions, setImportedTransactions] = useState<TransactionResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -11,12 +11,16 @@ export const useFiles = () => {
     try {
       setLoading(true);
       const response = await FileService.uploadFile(file);
-      setTransactions(prev => [...prev, response.data]);
+      const newTransactions = [...importedTransactions, response.data];
+      setImportedTransactions(newTransactions);
+      return response;
     } catch (error) {
       setError(error as string);
+      throw error;
     } finally {
       setLoading(false);
     }
   }
-  return { transactions, loading, error, uploadFile };
+
+  return { importedTransactions, loading, error, uploadFile };
 }
