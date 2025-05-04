@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +9,8 @@ import { Upload, CheckCircle2 } from "lucide-react";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import { toast } from "sonner";
 
-const ImportFile = () => {
+const ImportTransactionPage = () => {
+	const navigate = useNavigate();
 	const [file, setFile] = useState<File | null>(null);
 	const [isValid, setIsValid] = useState(false);
 	const [isUploading, setIsUploading] = useState(false);
@@ -55,6 +57,7 @@ const ImportFile = () => {
 					toast.success("Arquivo importado com sucesso!", {
 						icon: <CheckCircle2 className="text-green-500" />,
 					});
+					navigate("/transacoes/importar/review");
 					return 100;
 				}
 				return prev + 10;
@@ -118,4 +121,4 @@ const ImportFile = () => {
 	);
 };
 
-export default ImportFile;
+export default ImportTransactionPage; 

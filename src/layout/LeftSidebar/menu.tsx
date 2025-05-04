@@ -35,8 +35,19 @@ export const VERTICAL_MENU_ITEMS: MenuItemType[] = [
 		key: 'transactions',
 		label: 'Transações',
 		isTitle: false,
-		url: '/transacoes',
 		icon: <DynamicIcon name="credit-card" className="h-4 w-4" />,
+		children: [
+			{
+				key: 'transactions-list',
+				label: 'Lançamentos',
+				url: '/transacoes/lancamentos',
+			},
+			{
+				key: 'transactions-import',
+				label: 'Importar',
+				url: '/transacoes/importar',
+			},
+		],
 	},
 	{
 		key: 'import-files',
