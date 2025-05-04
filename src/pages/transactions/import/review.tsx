@@ -17,43 +17,21 @@ import {
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
-import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "@/utils/currency-utils";
 import * as yup from "yup";
+import { TransactionResponse } from "@/api/dtos/transaction/transactionResponse";
+import { useWallets } from "@/pages/transactions/hooks/use-wallets";
+import { useCategories } from "@/pages/transactions/hooks/use-categories";
 
-type Transaction = {
-	transferType: string;
-	depositedDate: string;
-	description: string;
-	amount: string;
-	fitId: string;
-	category: string | null;
-	
-	// Recorrência
-	isRecurring: boolean | null;
-	recurrenceType: "INDEFINITE" | "FIXED" | null;
-	recurringInterval: "DAILY" | "MONTHLY" | "WEEKLY" | "YEARLY" | null;
-	recurringEndDate: string | null;
-
-	// Parcelamento
-	isInstallment: boolean | null;
-	installmentTotal: number | null;
-	installmentNumber: number | null;
-	installmentEndDate: string | null;
-
-	// Outros campos
-	wallet: string | null;
-	isFitIdAlreadyExists: boolean;
-	bankName: string;
-	bankId: string;
-	accountId: string;
-	accountType: string;
-	currency: string;
-	transactionDate: string;
-	transactionSource: string;
-	balance: string;
-	balanceDate: string;
+type ValidationErrors = {
+	[key: string]: { [key: string]: string };
 };
+
+interface ReviewTransactionsProps {
+	transactions: TransactionResponse[];
+	onCancel: () => void;
+	onSave: (transactions: TransactionResponse[]) => void;
+}
 
 const transactionSchema = yup.object().shape({
 	installmentTotal: yup.number()
@@ -75,233 +53,114 @@ const transactionSchema = yup.object().shape({
 		}),
 });
 
-const ReviewTransactionsPage = () => {
-	const navigate = useNavigate();
-	const [transactions, setTransactions] = useState<Transaction[]>([
-		{
-			transferType: "DEBIT",
-			depositedDate: "2025-01-09",
-			description: "Sesc Consolacao",
-			amount: "-5.00",
-			fitId: "677ea047-fd31-4178-9bbe-a29dabab0638",
-			category: null,
-			isRecurring: null,
-			recurrenceType: null,
-			recurringInterval: null,
-			recurringEndDate: null,
-			isInstallment: null,
-			installmentTotal: null,
-			installmentNumber: null,
-			installmentEndDate: null,
-			wallet: null,
-			isFitIdAlreadyExists: true,
-			bankName: "NU PAGAMENTOS S.A.",
-			bankId: "260",
-			accountId: "5fd5616c-9400-4669-ab6c-a257f0020592",
-			accountType: "CREDIT_CARD",
-			currency: "BRL",
-			transactionDate: "2025-01-09",
-			transactionSource: "CREDIT_CARD",
-			balance: "-2193.33",
-			balanceDate: "2025-01-11"
-		},
-		{
-			transferType: "CREDIT",
-			depositedDate: "2025-01-10",
-			description: "Transferência Recebida",
-			amount: "1500.00",
-			fitId: "a12bcdef-1234-5678-abcd-1234567890ab",
-			category: null,
-			isRecurring: null,
-			recurrenceType: null,
-			recurringInterval: null,
-			recurringEndDate: null,
-			isInstallment: null,
-			installmentTotal: null,
-			installmentNumber: null,
-			installmentEndDate: null,
-			wallet: null,
-			isFitIdAlreadyExists: false,
-			bankName: "ITAÚ UNIBANCO S.A.",
-			bankId: "341",
-			accountId: "abcd1234-5678-9101-1121-a1b2c3d4e5f6",
-			accountType: "CHECKING",
-			currency: "BRL",
-			transactionDate: "2025-01-10",
-			transactionSource: "BANK_TRANSFER",
-			balance: "306.67",
-			balanceDate: "2025-01-11"
-		},
-		{
-			transferType: "DEBIT",
-			depositedDate: "2025-01-08",
-			description: "IFood",
-			amount: "-42.50",
-			fitId: "f334c555-f98a-4c7e-8111-ae05cf00d111",
-			category: null,
-			isRecurring: null,
-			recurrenceType: null,
-			recurringInterval: null,
-			recurringEndDate: null,
-			isInstallment: null,
-			installmentTotal: null,
-			installmentNumber: null,
-			installmentEndDate: null,
-			wallet: null,
-			isFitIdAlreadyExists: false,
-			bankName: "BANCO INTER",
-			bankId: "077",
-			accountId: "98ab7654-3210-4321-bbbb-9876a1b2c3d4",
-			accountType: "CREDIT_CARD",
-			currency: "BRL",
-			transactionDate: "2025-01-08",
-			transactionSource: "CREDIT_CARD",
-			balance: "-2235.83",
-			balanceDate: "2025-01-09"
-		},
-		{
-			transferType: "DEBIT",
-			depositedDate: "2025-01-07",
-			description: "Assinatura Spotify",
-			amount: "-19.90",
-			fitId: "8ee1f222-93de-4ef7-9ad5-22a123456789",
-			category: null,
-			isRecurring: null,
-			recurrenceType: null,
-			recurringInterval: null,
-			recurringEndDate: null,
-			isInstallment: null,
-			installmentTotal: null,
-			installmentNumber: null,
-			installmentEndDate: null,
-			wallet: null,
-			isFitIdAlreadyExists: false,
-			bankName: "CAIXA ECONÔMICA FEDERAL",
-			bankId: "104",
-			accountId: "caixa1234-4321-5678-9999-abcdefabcdef",
-			accountType: "CHECKING",
-			currency: "BRL",
-			transactionDate: "2025-01-07",
-			transactionSource: "DEBIT_CARD",
-			balance: "-2255.73",
-			balanceDate: "2025-01-08"
-		}
-	]);
-
-	const wallets = [
-		{ id: "1", name: "Nubank" },
-		{ id: "2", name: "Inter" },
-		{ id: "3", name: "Carteira" },
-	];
-
-	const categories = [
-		{ id: "1", name: "Alimentação" },
-		{ id: "2", name: "Entretenimento" },
-		{ id: "3", name: "Transporte" },
-		{ id: "4", name: "Saúde" },
-	];
-
-	const [errors, setErrors] = useState<{ [key: string]: { [key: string]: string } }>({});
+const ReviewTransactionsPage = ({ transactions: importedTransactions, onCancel, onSave }: ReviewTransactionsProps) => {
+	const { wallets } = useWallets();
+	const { categories } = useCategories();
+	const [transactions, setTransactions] = useState<TransactionResponse[]>(() => {
+		// Inicializa as transações com a primeira carteira e categoria por padrão
+		return importedTransactions.map(transaction => ({
+			...transaction,
+			wallet: transaction.wallet || wallets[0] || null,
+			category: transaction.category || categories[0] || null
+		}));
+	});
+	const [errors, setErrors] = useState<ValidationErrors>({});
 
 	const handleWalletChange = (fitId: string, walletId: string) => {
-		setTransactions(transactions.map(transaction => 
-			transaction.fitId === fitId 
-				? { ...transaction, wallet: walletId }
-				: transaction
-		));
+		const selectedWallet = wallets.find(w => w.id === walletId);
+		if (!selectedWallet) return;
+
+		setTransactions(prev =>
+			prev.map(transaction =>
+				transaction.fitId === fitId
+					? { ...transaction, wallet: selectedWallet }
+					: transaction
+			)
+		);
 	};
 
 	const handleCategoryChange = (fitId: string, categoryId: string) => {
-		setTransactions(transactions.map(transaction => 
-			transaction.fitId === fitId 
-				? { ...transaction, category: categoryId }
-				: transaction
-		));
+		const selectedCategory = categories.find(c => c.id === categoryId);
+		if (!selectedCategory) return;
+
+		setTransactions(prev =>
+			prev.map(transaction =>
+				transaction.fitId === fitId
+					? { ...transaction, category: selectedCategory }
+					: transaction
+			)
+		);
 	};
 
 	const handleRecurringChange = (fitId: string, isRecurring: boolean) => {
-		setTransactions(transactions.map(transaction => 
-			transaction.fitId === fitId 
-				? { 
-					...transaction, 
-					isRecurring,
-					isInstallment: isRecurring ? false : transaction.isInstallment,
-					installmentTotal: isRecurring ? null : transaction.installmentTotal,
-					installmentNumber: isRecurring ? null : transaction.installmentNumber,
-					installmentEndDate: isRecurring ? null : transaction.installmentEndDate
-				}
-				: transaction
-		));
+		setTransactions(prev =>
+			prev.map(transaction =>
+				transaction.fitId === fitId
+					? {
+							...transaction,
+							isRecurring,
+							recurrenceType: isRecurring ? "INDEFINITE" : null,
+							recurringInterval: isRecurring ? "MONTHLY" : null,
+							recurringEndDate: null,
+					  }
+					: transaction
+			)
+		);
 	};
 
 	const handleInstallmentChange = async (fitId: string, isInstallment: boolean) => {
-		const updatedTransactions = transactions.map(transaction => 
-			transaction.fitId === fitId 
-				? { 
-					...transaction, 
-					isInstallment,
-					isRecurring: isInstallment ? false : transaction.isRecurring,
-					recurringEndDate: isInstallment ? null : transaction.recurringEndDate,
-					// Limpar campos de parcelamento se desativar
-					installmentTotal: isInstallment ? transaction.installmentTotal : null,
-					recurringInterval: isInstallment ? transaction.recurringInterval : null,
-				}
-				: transaction
+		setTransactions(prev =>
+			prev.map(transaction =>
+				transaction.fitId === fitId
+					? {
+							...transaction,
+							isInstallment,
+							installmentTotal: isInstallment ? 2 : null,
+							installmentNumber: isInstallment ? 1 : null,
+							installmentEndDate: null,
+					  }
+					: transaction
+			)
 		);
-
-		setTransactions(updatedTransactions);
-		
-		// Validar após atualizar
-		const transaction = updatedTransactions.find(t => t.fitId === fitId);
-		if (transaction) {
-			await validateTransaction(transaction);
-		}
 	};
 
 	const handleInstallmentTotalChange = async (fitId: string, total: string) => {
 		const totalNumber = parseInt(total);
 		if (isNaN(totalNumber)) return;
 
-		const updatedTransactions = transactions.map(transaction => 
-			transaction.fitId === fitId 
-				? { ...transaction, installmentTotal: totalNumber }
-				: transaction
+		setTransactions(prev =>
+			prev.map(transaction =>
+				transaction.fitId === fitId
+					? { ...transaction, installmentTotal: totalNumber }
+					: transaction
+			)
 		);
-
-		setTransactions(updatedTransactions);
-		
-		// Validar após atualizar
-		const transaction = updatedTransactions.find(t => t.fitId === fitId);
-		if (transaction) {
-			await validateTransaction(transaction);
-		}
 	};
 
-	const handleRecurringIntervalChange = async (fitId: string, interval: "DAILY" | "MONTHLY" | "WEEKLY" | "YEARLY" | null) => {
-		const updatedTransactions = transactions.map(transaction => 
-			transaction.fitId === fitId 
-				? { ...transaction, recurringInterval: interval }
-				: transaction
+	const handleRecurringIntervalChange = async (
+		fitId: string,
+		interval: "DAILY" | "MONTHLY" | "WEEKLY" | "YEARLY" | null
+	) => {
+		setTransactions(prev =>
+			prev.map(transaction =>
+				transaction.fitId === fitId
+					? { ...transaction, recurringInterval: interval }
+					: transaction
+			)
 		);
-
-		setTransactions(updatedTransactions);
-		
-		// Validar após atualizar
-		const transaction = updatedTransactions.find(t => t.fitId === fitId);
-		if (transaction) {
-			await validateTransaction(transaction);
-		}
 	};
 
 	const handleDescriptionChange = (fitId: string, description: string) => {
-		setTransactions(transactions.map(transaction => 
-			transaction.fitId === fitId 
-				? { ...transaction, description }
-				: transaction
-		));
+		setTransactions(prev =>
+			prev.map(transaction =>
+				transaction.fitId === fitId
+					? { ...transaction, description }
+					: transaction
+			)
+		);
 	};
 
-	const validateTransaction = async (transaction: Transaction) => {
+	const validateTransaction = async (transaction: TransactionResponse) => {
 		try {
 			await transactionSchema.validate(transaction, { abortEarly: false });
 			setErrors(prev => ({ ...prev, [transaction.fitId]: {} }));
@@ -329,10 +188,7 @@ const ReviewTransactionsPage = () => {
 		);
 
 		if (validations.every(isValid => isValid)) {
-			// Implementar a lógica para salvar todas as transações
-			console.log("Transações a serem salvas:", transactions);
-			// Após salvar, redirecionar para a listagem de transações
-			navigate("/transacoes/lancamentos");
+			onSave(transactions);
 		}
 	};
 
@@ -349,7 +205,7 @@ const ReviewTransactionsPage = () => {
 						</p>
 					</div>
 					<div className="space-x-3">
-						<Button variant="outline" onClick={() => navigate("/transacoes/lancamentos")}>
+						<Button variant="outline" onClick={onCancel}>
 							Cancelar
 						</Button>
 						<Button onClick={handleSaveAll}>
@@ -417,40 +273,44 @@ const ReviewTransactionsPage = () => {
 							</div>
 
 							<div className="mt-4 space-y-4">
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-									<Select
-										value={transaction.wallet || undefined}
-										onValueChange={(value) => handleWalletChange(transaction.fitId, value)}
-										disabled={transaction.isFitIdAlreadyExists}
-									>
-										<SelectTrigger className={transaction.isFitIdAlreadyExists ? 'opacity-50' : ''}>
-											<SelectValue placeholder="Selecionar carteira" />
-										</SelectTrigger>
-										<SelectContent>
-											{wallets.map((wallet) => (
-												<SelectItem key={wallet.id} value={wallet.id}>
-													{wallet.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<label className="text-sm font-medium">Carteira</label>
+										<Select
+											value={typeof transaction.wallet === 'object' && transaction.wallet ? transaction.wallet.id : wallets[0]?.id || ''}
+											onValueChange={(value) => handleWalletChange(transaction.fitId, value)}
+										>
+											<SelectTrigger>
+												<SelectValue placeholder="Selecione uma carteira" />
+											</SelectTrigger>
+											<SelectContent>
+												{wallets.map((wallet) => (
+													<SelectItem key={wallet.id} value={wallet.id}>
+														{wallet.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
 
-									<Select
-										value={transaction.category || undefined}
-										onValueChange={(value) => handleCategoryChange(transaction.fitId, value)}
-										disabled={transaction.isFitIdAlreadyExists}
-									>
-										<SelectTrigger className={transaction.isFitIdAlreadyExists ? 'opacity-50' : ''}>
-											<SelectValue placeholder="Selecionar categoria" />
-										</SelectTrigger>
-										<SelectContent>
-											{categories.map((category) => (
-												<SelectItem key={category.id} value={category.id}>
-													{category.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
+									<div>
+										<label className="text-sm font-medium">Categoria</label>
+										<Select
+											value={typeof transaction.category === 'object' && transaction.category ? transaction.category.id : categories[0]?.id || ''}
+											onValueChange={(value) => handleCategoryChange(transaction.fitId, value)}
+										>
+											<SelectTrigger>
+												<SelectValue placeholder="Selecione uma categoria" />
+											</SelectTrigger>
+											<SelectContent>
+												{categories.map((category) => (
+													<SelectItem key={category.id} value={category.id}>
+														{category.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
 								</div>
 
 								{!transaction.isFitIdAlreadyExists && (
