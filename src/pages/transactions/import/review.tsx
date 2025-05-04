@@ -10,7 +10,12 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { CheckCircle2, Calendar, Repeat, CreditCard } from "lucide-react";
+import { CheckCircle2, Calendar, Repeat, CreditCard, ChevronDown } from "lucide-react";
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "@/utils/currency-utils";
@@ -198,9 +203,10 @@ const ReviewTransactionsPage = () => {
 				? { 
 					...transaction, 
 					isRecurring,
-					recurrenceType: null,
-					recurringInterval: null,
-					recurringEndDate: null
+					isInstallment: isRecurring ? false : transaction.isInstallment,
+					installmentTotal: isRecurring ? null : transaction.installmentTotal,
+					installmentNumber: isRecurring ? null : transaction.installmentNumber,
+					installmentEndDate: isRecurring ? null : transaction.installmentEndDate
 				}
 				: transaction
 		));
@@ -240,9 +246,8 @@ const ReviewTransactionsPage = () => {
 				? { 
 					...transaction, 
 					isInstallment,
-					installmentTotal: null,
-					installmentNumber: null,
-					installmentEndDate: null
+					isRecurring: isInstallment ? false : transaction.isRecurring,
+					recurringEndDate: isInstallment ? null : transaction.recurringEndDate
 				}
 				: transaction
 		));
@@ -330,8 +335,8 @@ const ReviewTransactionsPage = () => {
 									: 'hover:shadow-md'
 							}`}
 						>
-							<div className="flex items-start justify-between">
-								<div className="space-y-2 flex-1 mr-4">
+							<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+								<div className="space-y-2 flex-1">
 									<div className="flex items-center gap-2">
 										{transaction.isFitIdAlreadyExists && (
 											<div className="flex items-center gap-2 text-blue-600 bg-blue-50 px-3 py-1.5 rounded-md text-sm font-medium">
@@ -339,7 +344,7 @@ const ReviewTransactionsPage = () => {
 												Transação já processada
 											</div>
 										)}
-										<div className="flex items-center gap-2 group">
+										<div className="flex items-center gap-2 group w-full">
 											<Input
 												type="text"
 												value={transaction.description}
@@ -349,7 +354,7 @@ const ReviewTransactionsPage = () => {
 											/>
 										</div>
 									</div>
-									<div className="flex items-center gap-2 text-sm text-gray-500">
+									<div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
 										<span>{new Date(transaction.depositedDate).toLocaleDateString("pt-BR")}</span>
 										<span>•</span>
 										<span>{transaction.bankName}</span>
@@ -373,7 +378,7 @@ const ReviewTransactionsPage = () => {
 							</div>
 
 							<div className="mt-4 space-y-4">
-								<div className="grid grid-cols-2 gap-3">
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 									<Select
 										value={transaction.wallet || undefined}
 										onValueChange={(value) => handleWalletChange(transaction.fitId, value)}
@@ -410,107 +415,78 @@ const ReviewTransactionsPage = () => {
 								</div>
 
 								{!transaction.isFitIdAlreadyExists && (
-									<div className="border-t pt-3 space-y-4">
-										{/* Controles de Recorrência */}
-										<div className="space-y-2">
-											<div className="flex items-center justify-between">
-												<div className="flex items-center gap-2">
-													<Repeat className="h-4 w-4 text-gray-500" />
-													<span className="text-sm font-medium">Transação Recorrente</span>
-												</div>
-												<Switch
-													checked={transaction.isRecurring || false}
-													onCheckedChange={(checked) => handleRecurringChange(transaction.fitId, checked)}
-												/>
+									<div className="border-t pt-3">
+										<Collapsible>
+											<div className="flex justify-end items-center gap-2">
+												<span className="text-sm font-medium text-gray-600">Configurações Avançadas</span>
+												<CollapsibleTrigger asChild>
+													<Button variant="ghost" size="sm" className="p-0 h-6 w-6">
+														<ChevronDown className="h-4 w-4" />
+													</Button>
+												</CollapsibleTrigger>
 											</div>
 
-											{transaction.isRecurring && (
-												<div className="space-y-2 pl-6">
-													<Select
-														value={transaction.recurrenceType || ""}
-														onValueChange={(value: "INDEFINITE" | "FIXED") => 
-															handleRecurrenceTypeChange(transaction.fitId, value)
-														}
-													>
-														<SelectTrigger>
-															<SelectValue placeholder="Tipo de recorrência" />
-														</SelectTrigger>
-														<SelectContent>
-															<SelectItem value="INDEFINITE">Sem data final</SelectItem>
-															<SelectItem value="FIXED">Com data final</SelectItem>
-														</SelectContent>
-													</Select>
-
-													<Select
-														value={transaction.recurringInterval || ""}
-														onValueChange={(value: "MONTHLY" | "WEEKLY" | "YEARLY") => 
-															handleRecurringIntervalChange(transaction.fitId, value)
-														}
-													>
-														<SelectTrigger>
-															<SelectValue placeholder="Frequência" />
-														</SelectTrigger>
-														<SelectContent>
-															<SelectItem value="WEEKLY">Semanal</SelectItem>
-															<SelectItem value="MONTHLY">Mensal</SelectItem>
-															<SelectItem value="YEARLY">Anual</SelectItem>
-														</SelectContent>
-													</Select>
-
-													{transaction.recurrenceType === "FIXED" && (
-														<Input
-															type="date"
-															value={transaction.recurringEndDate || ""}
-															onChange={(e) => handleRecurringEndDateChange(transaction.fitId, e.target.value)}
-															className="w-full"
+											<CollapsibleContent className="space-y-4 mt-4">
+												{/* Controles de Transação Fixa */}
+												<div className="space-y-2">
+													<div className="flex items-center justify-between">
+														<div className="flex items-center gap-2">
+															<Repeat className="h-4 w-4 text-gray-500" />
+															<span className="text-sm font-medium">Transação Fixa</span>
+														</div>
+														<Switch
+															checked={!!transaction.isRecurring}
+															onCheckedChange={(checked) => handleRecurringChange(transaction.fitId, checked)}
+															disabled={!!transaction.isInstallment}
 														/>
-													)}
-												</div>
-											)}
-										</div>
-
-										{/* Controles de Parcelamento */}
-										<div className="space-y-2">
-											<div className="flex items-center justify-between">
-												<div className="flex items-center gap-2">
-													<CreditCard className="h-4 w-4 text-gray-500" />
-													<span className="text-sm font-medium">Transação Parcelada</span>
-												</div>
-												<Switch
-													checked={transaction.isInstallment || false}
-													onCheckedChange={(checked) => handleInstallmentChange(transaction.fitId, checked)}
-												/>
-											</div>
-
-											{transaction.isInstallment && (
-												<div className="space-y-2 pl-6">
-													<div className="grid grid-cols-2 gap-2">
-														<div>
-															<label className="text-sm text-gray-600 mb-1 block">Total de Parcelas</label>
-															<Input
-																type="number"
-																min="2"
-																max="48"
-																placeholder="Ex: 12"
-																value={transaction.installmentTotal || ""}
-																onChange={(e) => handleInstallmentTotalChange(transaction.fitId, e.target.value)}
-															/>
-														</div>
-														<div>
-															<label className="text-sm text-gray-600 mb-1 block">Parcela Atual</label>
-															<Input
-																type="number"
-																min="1"
-																max={transaction.installmentTotal || 48}
-																placeholder="Ex: 1"
-																value={transaction.installmentNumber || ""}
-																onChange={(e) => handleInstallmentNumberChange(transaction.fitId, e.target.value)}
-															/>
-														</div>
 													</div>
 												</div>
-											)}
-										</div>
+
+												{/* Controles de Parcelamento */}
+												<div className="space-y-2">
+													<div className="flex items-center justify-between">
+														<div className="flex items-center gap-2">
+															<CreditCard className="h-4 w-4 text-gray-500" />
+															<span className="text-sm font-medium">Transação Parcelada</span>
+														</div>
+														<Switch
+															checked={!!transaction.isInstallment}
+															onCheckedChange={(checked) => handleInstallmentChange(transaction.fitId, checked)}
+															disabled={!!transaction.isRecurring}
+														/>
+													</div>
+
+													{transaction.isInstallment && (
+														<div className="space-y-2 pl-6">
+															<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+																<div>
+																	<label className="text-sm text-gray-600 mb-1 block">Total de Parcelas</label>
+																	<Input
+																		type="number"
+																		min="2"
+																		max="48"
+																		placeholder="Ex: 12"
+																		value={transaction.installmentTotal || ""}
+																		onChange={(e) => handleInstallmentTotalChange(transaction.fitId, e.target.value)}
+																	/>
+																</div>
+																<div>
+																	<label className="text-sm text-gray-600 mb-1 block">Parcela Atual</label>
+																	<Input
+																		type="number"
+																		min="1"
+																		max={transaction.installmentTotal || 48}
+																		placeholder="Ex: 1"
+																		value={transaction.installmentNumber || ""}
+																		onChange={(e) => handleInstallmentNumberChange(transaction.fitId, e.target.value)}
+																	/>
+																</div>
+															</div>
+														</div>
+													)}
+												</div>
+											</CollapsibleContent>
+										</Collapsible>
 									</div>
 								)}
 							</div>
