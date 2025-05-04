@@ -11,7 +11,7 @@ export const useCategories = () => {
     try {
       setLoading(true);
       const response = await CategoryService.getCategories();
-      const { data } = response;
+      const { data }: { data: CategoryResponse[] } = response;
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
       setError(error as string);
