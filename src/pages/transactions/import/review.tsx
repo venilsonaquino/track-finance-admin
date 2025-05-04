@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { CheckCircle2, Calendar, Repeat, CreditCard, ChevronDown } from "lucide-react";
+import { CheckCircle2, Repeat, CreditCard, ChevronDown } from "lucide-react";
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -74,7 +74,7 @@ const ReviewTransactionsPage = () => {
 			installmentNumber: null,
 			installmentEndDate: null,
 			wallet: null,
-			isFitIdAlreadyExists: false,
+			isFitIdAlreadyExists: true,
 			bankName: "NU PAGAMENTOS S.A.",
 			bankId: "260",
 			accountId: "5fd5616c-9400-4669-ab6c-a257f0020592",
@@ -212,34 +212,6 @@ const ReviewTransactionsPage = () => {
 		));
 	};
 
-	const handleRecurrenceTypeChange = (fitId: string, type: "INDEFINITE" | "FIXED" | null) => {
-		setTransactions(transactions.map(transaction => 
-			transaction.fitId === fitId 
-				? { 
-					...transaction, 
-					recurrenceType: type,
-					recurringEndDate: type === "INDEFINITE" ? null : transaction.recurringEndDate
-				}
-				: transaction
-		));
-	};
-
-	const handleRecurringIntervalChange = (fitId: string, interval: "MONTHLY" | "WEEKLY" | "YEARLY" | null) => {
-		setTransactions(transactions.map(transaction => 
-			transaction.fitId === fitId 
-				? { ...transaction, recurringInterval: interval }
-				: transaction
-		));
-	};
-
-	const handleRecurringEndDateChange = (fitId: string, date: string) => {
-		setTransactions(transactions.map(transaction => 
-			transaction.fitId === fitId 
-				? { ...transaction, recurringEndDate: date }
-				: transaction
-		));
-	};
-
 	const handleInstallmentChange = (fitId: string, isInstallment: boolean) => {
 		setTransactions(transactions.map(transaction => 
 			transaction.fitId === fitId 
@@ -290,11 +262,6 @@ const ReviewTransactionsPage = () => {
 		navigate("/transacoes/lancamentos");
 	};
 
-	// Conta quantas transações já existem
-	const existingTransactionsCount = useMemo(() => {
-		return transactions.filter(t => t.isFitIdAlreadyExists).length;
-	}, [transactions]);
-
 	return (
 		<>
 			<PageBreadcrumbNav title="Revisar Transações" />
@@ -306,14 +273,6 @@ const ReviewTransactionsPage = () => {
 						<p className="text-sm text-gray-500 mt-1">
 							Revise e categorize suas transações antes de salvar
 						</p>
-						{existingTransactionsCount > 0 && (
-							<div className="mt-2 p-3 bg-blue-50 text-blue-700 rounded-md flex items-center gap-2">
-								<CheckCircle2 className="h-5 w-5 flex-shrink-0" />
-								<p className="text-sm">
-									{existingTransactionsCount} {existingTransactionsCount === 1 ? 'transação já foi processada' : 'transações já foram processadas'} e {existingTransactionsCount === 1 ? 'está' : 'estão'} registrada{existingTransactionsCount === 1 ? '' : 's'} no sistema.
-								</p>
-							</div>
-						)}
 					</div>
 					<div className="space-x-3">
 						<Button variant="outline" onClick={() => navigate("/transacoes/lancamentos")}>
@@ -331,38 +290,36 @@ const ReviewTransactionsPage = () => {
 							key={transaction.fitId} 
 							className={`p-4 transition-all ${
 								transaction.isFitIdAlreadyExists 
-									? 'bg-gray-50 border-blue-100' 
+									? 'bg-muted border-muted-foreground/20' 
 									: 'hover:shadow-md'
 							}`}
 						>
 							<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
 								<div className="space-y-2 flex-1">
 									<div className="flex items-center gap-2">
-										{transaction.isFitIdAlreadyExists && (
-											<div className="flex items-center gap-2 text-blue-600 bg-blue-50 px-3 py-1.5 rounded-md text-sm font-medium">
-												<CheckCircle2 className="h-4 w-4" />
-												Transação já processada
-											</div>
-										)}
 										<div className="flex items-center gap-2 group w-full">
 											<Input
 												type="text"
 												value={transaction.description}
 												onChange={(e) => handleDescriptionChange(transaction.fitId, e.target.value)}
 												disabled={transaction.isFitIdAlreadyExists}
-												className={`font-medium ${transaction.isFitIdAlreadyExists ? 'text-gray-500 bg-transparent border-none p-0' : ''}`}
+												className={`font-medium ${
+													transaction.isFitIdAlreadyExists 
+														? 'bg-transparent border-none p-0 text-muted-foreground' 
+														: ''
+												}`}
 											/>
 										</div>
 									</div>
-									<div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+									<div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
 										<span>{new Date(transaction.depositedDate).toLocaleDateString("pt-BR")}</span>
 										<span>•</span>
 										<span>{transaction.bankName}</span>
 										{transaction.isRecurring && (
 											<>
 												<span>•</span>
-												<span className="text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full text-xs">
-													Recorrente
+												<span className="text-primary bg-primary/10 px-2 py-0.5 rounded-full text-xs">
+													Fixo
 												</span>
 											</>
 										)}
@@ -370,8 +327,8 @@ const ReviewTransactionsPage = () => {
 								</div>
 								<p className={`text-lg font-semibold whitespace-nowrap ${
 									Number(transaction.amount) < 0 
-										? transaction.isFitIdAlreadyExists ? 'text-red-400' : 'text-red-600'
-										: transaction.isFitIdAlreadyExists ? 'text-green-400' : 'text-green-600'
+										? transaction.isFitIdAlreadyExists ? 'text-destructive/70' : 'text-destructive'
+										: transaction.isFitIdAlreadyExists ? 'text-emerald-500/70' : 'text-emerald-500'
 								}`}>
 									{formatCurrency(Number(transaction.amount))}
 								</p>
@@ -490,6 +447,12 @@ const ReviewTransactionsPage = () => {
 									</div>
 								)}
 							</div>
+							{transaction.isFitIdAlreadyExists && (
+								<div className="flex items-center gap-2 text-primary bg-primary/10 px-3 py-1.5 rounded-md text-sm font-medium w-full">
+									<CheckCircle2 className="h-4 w-4" />
+									Transação já processada
+								</div>
+							)}
 						</Card>
 					))}
 				</div>
