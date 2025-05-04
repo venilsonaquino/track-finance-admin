@@ -8,12 +8,13 @@ import { Progress } from "@/components/ui/progress";
 import { Upload, CheckCircle2 } from "lucide-react";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import { toast } from "sonner";
+import { useFiles } from "../hooks/use-flies";
 
 const ImportTransactionPage = () => {
 	const navigate = useNavigate();
+	const { uploadFile, loading: isUploading } = useFiles();
 	const [file, setFile] = useState<File | null>(null);
 	const [isValid, setIsValid] = useState(false);
-	const [isUploading, setIsUploading] = useState(false);
 	const [progress, setProgress] = useState(0);
 
 	const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -45,24 +46,17 @@ const ImportTransactionPage = () => {
 	const handleUpload = async () => {
 		if (!file) return;
 
-		setIsUploading(true);
 		setProgress(0);
-
-		// Simulando o upload do arquivo
-		const interval = setInterval(() => {
-			setProgress((prev) => {
-				if (prev >= 100) {
-					clearInterval(interval);
-					setIsUploading(false);
-					toast.success("Arquivo importado com sucesso!", {
-						icon: <CheckCircle2 className="text-green-500" />,
-					});
-					navigate("/transacoes/importar/review");
-					return 100;
-				}
-				return prev + 10;
+		try {
+			await uploadFile(file);
+			setProgress(100);
+			toast.success("Arquivo importado com sucesso!", {
+				icon: <CheckCircle2 className="text-green-500" />,
 			});
-		}, 300);
+			navigate("/transacoes/importar/review");
+		} catch (error) {
+			toast.error("Erro ao importar arquivo. Tente novamente.");
+		}
 	};
 
 	return (
