@@ -3,46 +3,40 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { WalletRequest } from "@/api/dtos/wallet/wallet-request";
 import { WalletForm } from "./wallet-form";
 import { WalletResponse } from "@/api/dtos/wallet/wallet-response";
+
 interface WalletDialogProps {
-  isOpen: boolean;
+  open: boolean;
   onOpenChange: (open: boolean) => void;
   formData: Partial<WalletResponse>;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  onInputChange: (field: keyof WalletResponse, value: string | number) => void;
+  onSubmit: (data: WalletRequest) => void;
+  onInputChange: (field: string | number | symbol, value: string | number) => void;
   isEditing: boolean;
 }
 
-export const WalletDialog = ({
-  isOpen,
+export function WalletDialog({
+  open,
   onOpenChange,
   formData,
   onSubmit,
   onInputChange,
   isEditing,
-}: WalletDialogProps) => {
+}: WalletDialogProps) {
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button>Nova Carteira</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Editar Carteira" : "Nova Carteira"}
-          </DialogTitle>
+          <DialogTitle>{isEditing ? "Editar Carteira" : "Nova Carteira"}</DialogTitle>
         </DialogHeader>
         <WalletForm
-          formData={formData}
+          initialData={formData as WalletRequest}
           onSubmit={onSubmit}
           onInputChange={onInputChange}
-          isEditing={isEditing}
         />
       </DialogContent>
     </Dialog>
   );
-}; 
+} 

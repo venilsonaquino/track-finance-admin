@@ -7,6 +7,7 @@ import { WalletRequest } from "@/api/dtos/wallet/wallet-request";
 import { toast } from "sonner";
 import { WalletResponse } from "@/api/dtos/wallet/wallet-response";
 import { ConfirmDelete } from "@/components/confirm-delete";
+import { Button } from "@/components/ui/button";
 
 const Wallet = () => {
 	const { wallets, loading, error, createWallet, updateWallet, deleteWallet } = useWallets();
@@ -23,14 +24,13 @@ const Wallet = () => {
 		walletType: "personal",
 	});
 
-	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-		e.preventDefault();
+	const handleSubmit = async (data: WalletRequest) => {
 		try {
 			if (editingWallet) {
-				await updateWallet(editingWallet, formData as WalletRequest);
+				await updateWallet(editingWallet, data);
 				toast.success("Carteira atualizada com sucesso!");
 			} else {
-				await createWallet(formData as WalletRequest);
+				await createWallet(data);
 				toast.success("Carteira criada com sucesso!");
 			}
 			setIsDialogOpen(false);
@@ -90,11 +90,16 @@ const Wallet = () => {
 
 	return (
 		<div className="container mx-auto p-4">
-			<PageBreadcrumbNav title="Carteiras" />
+			<div className="flex justify-between items-center">
+				<PageBreadcrumbNav title="Carteiras" />
+        <Button onClick={() => {
+					setIsDialogOpen(true);
+				}}>Nova Carteira</Button>
+			</div>
 			
 			<div className="flex justify-end mb-4">
 				<WalletDialog
-					isOpen={isDialogOpen}
+					open={isDialogOpen}
 					onOpenChange={setIsDialogOpen}
 					formData={formData}
 					onSubmit={handleSubmit}
@@ -114,6 +119,15 @@ const Wallet = () => {
 				))}
 			</div>
 
+			<WalletDialog 
+				open={isDialogOpen}
+				onOpenChange={setIsDialogOpen}
+				formData={formData}
+				onSubmit={handleSubmit}
+				onInputChange={handleInputChange}
+				isEditing={!!editingWallet}
+			/>
+			
 			<ConfirmDelete
 				isDeleteDialogOpen={isDeleteDialogOpen}
 				setIsDeleteDialogOpen={setIsDeleteDialogOpen}

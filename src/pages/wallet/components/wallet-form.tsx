@@ -9,39 +9,58 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { WalletResponse } from "@/api/dtos/wallet/wallet-response";
+import * as yup from "yup";
+import { WalletRequest } from "@/api/dtos/wallet/wallet-request";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+
+const schema = yup.object().shape({
+  name: yup.string().required("Nome é obrigatório"),
+  description: yup.string().required("Descrição é obrigatória"),
+  color: yup.string().required("Cor é obrigatória"),
+  walletType: yup.string().required("Tipo é obrigatório"),
+  balance: yup.number().required("Saldo inicial é obrigatório"),
+  icon: yup.string().default("wallet"),
+});
 
 interface WalletFormProps {
-  formData: Partial<WalletResponse>;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  onInputChange: (field: keyof WalletResponse, value: string | number) => void;
-  isEditing: boolean;
+  initialData?: Partial<WalletResponse>;
+  onSubmit: (data: WalletRequest) => void;
+  onInputChange: (field: string | number | symbol, value: string | number) => void;
+  onCancel?: () => void;
 }
 
 export const WalletForm = ({
-  formData,
+  initialData,
   onSubmit,
-  onInputChange,
-  isEditing,
 }: WalletFormProps) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<WalletRequest>({
+    resolver: yupResolver(schema),
+    defaultValues: initialData,
+  });
+
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <label htmlFor="name">Nome</label>
         <Input
           id="name"
-          value={formData.name}
-          onChange={(e) => onInputChange("name", e.target.value)}
-          required
+          {...register("name")}
         />
+        {errors.name && <p className="text-red-500">{errors.name.message}</p>}
       </div>
 
       <div className="space-y-2">
         <label htmlFor="description">Descrição</label>
         <Textarea
           id="description"
-          value={formData.description}
-          onChange={(e) => onInputChange("description", e.target.value)}
+          {...register("description")}
         />
+        {errors.description && <p className="text-red-500">{errors.description.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -49,16 +68,15 @@ export const WalletForm = ({
         <Input
           type="color"
           id="color"
-          value={formData.color}
-          onChange={(e) => onInputChange("color", e.target.value)}
+          {...register("color")}
         />
+        {errors.color && <p className="text-red-500">{errors.color.message}</p>}
       </div>
 
       <div className="space-y-2">
         <label htmlFor="type">Tipo</label>
         <Select
-          value={formData.walletType}
-          onValueChange={(value: string) => onInputChange("walletType", value)}
+          {...register("walletType")}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione o tipo" />
@@ -76,14 +94,13 @@ export const WalletForm = ({
         <Input
           type="number"
           id="initialBalance"
-          value={formData.balance}
-          onChange={(e) => onInputChange("balance", Number(e.target.value))}
-          required
+          {...register("balance")}
         />
+        {errors.balance && <p className="text-red-500">{errors.balance.message}</p>}
       </div>
 
       <Button type="submit" className="w-full">
-        {isEditing ? "Salvar Alterações" : "Criar Carteira"}
+        {initialData ? "Salvar Alterações" : "Criar Carteira"}
       </Button>
     </form>
   );
