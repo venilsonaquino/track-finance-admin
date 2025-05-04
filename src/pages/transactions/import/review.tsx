@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,7 @@ import {
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "@/utils/currency-utils";
+import * as yup from "yup";
 
 type Transaction = {
 	transferType: string;
@@ -54,6 +55,25 @@ type Transaction = {
 	balanceDate: string;
 };
 
+const transactionSchema = yup.object().shape({
+	installmentTotal: yup.number()
+		.nullable()
+		.when('isInstallment', {
+			is: true,
+			then: (schema) => schema
+				.required('Total de parcelas é obrigatório')
+				.min(2, 'Mínimo de 2 parcelas')
+				.max(48, 'Máximo de 48 parcelas'),
+		}),
+	recurringInterval: yup.string()
+		.nullable()
+		.when('isInstallment', {
+			is: true,
+			then: (schema) => schema
+				.required('Intervalo é obrigatório')
+				.oneOf(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'], 'Intervalo inválido'),
+		}),
+});
 
 const ReviewTransactionsPage = () => {
 	const navigate = useNavigate();
@@ -181,6 +201,8 @@ const ReviewTransactionsPage = () => {
 		{ id: "4", name: "Saúde" },
 	];
 
+	const [errors, setErrors] = useState<{ [key: string]: { [key: string]: string } }>({});
+
 	const handleWalletChange = (fitId: string, walletId: string) => {
 		setTransactions(transactions.map(transaction => 
 			transaction.fitId === fitId 
@@ -212,36 +234,63 @@ const ReviewTransactionsPage = () => {
 		));
 	};
 
-	const handleInstallmentChange = (fitId: string, isInstallment: boolean) => {
-		setTransactions(transactions.map(transaction => 
+	const handleInstallmentChange = async (fitId: string, isInstallment: boolean) => {
+		const updatedTransactions = transactions.map(transaction => 
 			transaction.fitId === fitId 
 				? { 
 					...transaction, 
 					isInstallment,
 					isRecurring: isInstallment ? false : transaction.isRecurring,
-					recurringEndDate: isInstallment ? null : transaction.recurringEndDate
+					recurringEndDate: isInstallment ? null : transaction.recurringEndDate,
+					// Limpar campos de parcelamento se desativar
+					installmentTotal: isInstallment ? transaction.installmentTotal : null,
+					recurringInterval: isInstallment ? transaction.recurringInterval : null,
 				}
 				: transaction
-		));
+		);
+
+		setTransactions(updatedTransactions);
+		
+		// Validar após atualizar
+		const transaction = updatedTransactions.find(t => t.fitId === fitId);
+		if (transaction) {
+			await validateTransaction(transaction);
+		}
 	};
 
-	const handleInstallmentTotalChange = (fitId: string, total: string) => {
+	const handleInstallmentTotalChange = async (fitId: string, total: string) => {
 		const totalNumber = parseInt(total);
-		if (isNaN(totalNumber) || totalNumber < 2) return;
+		if (isNaN(totalNumber)) return;
 
-		setTransactions(transactions.map(transaction => 
+		const updatedTransactions = transactions.map(transaction => 
 			transaction.fitId === fitId 
 				? { ...transaction, installmentTotal: totalNumber }
 				: transaction
-		));
+		);
+
+		setTransactions(updatedTransactions);
+		
+		// Validar após atualizar
+		const transaction = updatedTransactions.find(t => t.fitId === fitId);
+		if (transaction) {
+			await validateTransaction(transaction);
+		}
 	};
 
-	const handleRecurringIntervalChange = (fitId: string, interval: "DAILY" | "MONTHLY" | "WEEKLY" | "YEARLY" | null) => {
-		setTransactions(transactions.map(transaction => 
+	const handleRecurringIntervalChange = async (fitId: string, interval: "DAILY" | "MONTHLY" | "WEEKLY" | "YEARLY" | null) => {
+		const updatedTransactions = transactions.map(transaction => 
 			transaction.fitId === fitId 
 				? { ...transaction, recurringInterval: interval }
 				: transaction
-		));
+		);
+
+		setTransactions(updatedTransactions);
+		
+		// Validar após atualizar
+		const transaction = updatedTransactions.find(t => t.fitId === fitId);
+		if (transaction) {
+			await validateTransaction(transaction);
+		}
 	};
 
 	const handleDescriptionChange = (fitId: string, description: string) => {
@@ -252,11 +301,39 @@ const ReviewTransactionsPage = () => {
 		));
 	};
 
-	const handleSaveAll = () => {
-		// Implementar a lógica para salvar todas as transações
-		console.log("Transações a serem salvas:", transactions);
-		// Após salvar, redirecionar para a listagem de transações
-		navigate("/transacoes/lancamentos");
+	const validateTransaction = async (transaction: Transaction) => {
+		try {
+			await transactionSchema.validate(transaction, { abortEarly: false });
+			setErrors(prev => ({ ...prev, [transaction.fitId]: {} }));
+			return true;
+		} catch (err) {
+			if (err instanceof yup.ValidationError) {
+				const fieldErrors: { [key: string]: string } = {};
+				err.inner.forEach((error) => {
+					if (error.path) {
+						fieldErrors[error.path] = error.message;
+					}
+				});
+				setErrors(prev => ({ ...prev, [transaction.fitId]: fieldErrors }));
+			}
+			return false;
+		}
+	};
+
+	const handleSaveAll = async () => {
+		// Validar todas as transações antes de salvar
+		const validations = await Promise.all(
+			transactions
+				.filter(t => !t.isFitIdAlreadyExists)
+				.map(validateTransaction)
+		);
+
+		if (validations.every(isValid => isValid)) {
+			// Implementar a lógica para salvar todas as transações
+			console.log("Transações a serem salvas:", transactions);
+			// Após salvar, redirecionar para a listagem de transações
+			navigate("/transacoes/lancamentos");
+		}
 	};
 
 	return (
@@ -317,6 +394,14 @@ const ReviewTransactionsPage = () => {
 												<span>•</span>
 												<span className="text-primary bg-primary/10 px-2 py-0.5 rounded-full text-xs">
 													Fixo
+												</span>
+											</>
+										)}
+										{transaction.isInstallment && (
+											<>
+												<span>•</span>
+												<span className="text-primary bg-primary/10 px-2 py-0.5 rounded-full text-xs">
+													Parcelado
 												</span>
 											</>
 										)}
@@ -422,7 +507,13 @@ const ReviewTransactionsPage = () => {
 																		placeholder="Ex: 12"
 																		value={transaction.installmentTotal || ""}
 																		onChange={(e) => handleInstallmentTotalChange(transaction.fitId, e.target.value)}
+																		className={errors[transaction.fitId]?.installmentTotal ? 'border-destructive' : ''}
 																	/>
+																	{errors[transaction.fitId]?.installmentTotal && (
+																		<span className="text-xs text-destructive mt-1">
+																			{errors[transaction.fitId].installmentTotal}
+																		</span>
+																	)}
 																</div>
 																<div>
 																	<label className="text-sm text-gray-600 mb-1 block">Intervalo</label>
@@ -432,7 +523,7 @@ const ReviewTransactionsPage = () => {
 																			handleRecurringIntervalChange(transaction.fitId, value)
 																		}
 																	>
-																		<SelectTrigger>
+																		<SelectTrigger className={errors[transaction.fitId]?.recurringInterval ? 'border-destructive' : ''}>
 																			<SelectValue placeholder="Selecione o intervalo" />
 																		</SelectTrigger>
 																		<SelectContent>
@@ -442,6 +533,11 @@ const ReviewTransactionsPage = () => {
 																			<SelectItem value="YEARLY">Anual</SelectItem>
 																		</SelectContent>
 																	</Select>
+																	{errors[transaction.fitId]?.recurringInterval && (
+																		<span className="text-xs text-destructive mt-1">
+																			{errors[transaction.fitId].recurringInterval}
+																		</span>
+																	)}
 																</div>
 															</div>
 														</div>
