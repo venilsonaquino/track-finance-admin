@@ -11,7 +11,6 @@ const Wallet = lazy(() => import('@/pages/wallet'))
 const Transaction = lazy(() => import('@/pages/transaction'))
 const Categories = lazy(() => import('@/pages/category'))
 const ImportTransactionPage = lazy(() => import('@/pages/transactions/import'))
-const ReviewTransactionsPage = lazy(() => import('@/pages/transactions/import/review'))
 
 type RoutesProps = {
     path: RouteProps['path']
@@ -73,12 +72,7 @@ const transactionsRoutes: RoutesProps[] = [
 		path: '/transacoes/importar',
 		name: 'Importar Transações',
 		element: <ImportTransactionPage />,
-	},
-	{
-		path: '/transacoes/importar/review',
-		name: 'Revisar Transações',
-		element: <ReviewTransactionsPage />,
-	},
+	}
 ]
 
 const walletsRoutes: RoutesProps[] = [

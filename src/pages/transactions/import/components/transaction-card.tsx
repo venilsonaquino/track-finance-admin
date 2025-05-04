@@ -1,3 +1,4 @@
+import React, { useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,25 +19,29 @@ interface TransactionCardProps {
   transaction: TransactionResponse;
   wallets: WalletResponse[];
   categories: CategoryResponse[];
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, index: number) => void;
+  index: number;
 }
 
-export const TransactionCard = ({
-  transaction,
-  wallets,
-  categories,
-}: TransactionCardProps) => {
+const TransactionCard = React.memo(({ transaction, handleInputChange, index, wallets, categories }: TransactionCardProps) => {
+  const [description, setDescription] = useState(transaction.description);
+
+  const onChangeHandler = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setDescription(newValue);
+    handleInputChange(e, index);
+  }, [handleInputChange, index]);
 
   const isNegative = Number(transaction.amount) < 0;
   const isDuplicate = transaction.isFitIdAlreadyExists;
 
   const amountTextColor = isNegative
-  ? isDuplicate
-    ? "text-destructive/70"
-    : "text-destructive"
-  : isDuplicate
-  ? "text-emerald-500/70"
-  : "text-emerald-500";
-
+    ? isDuplicate
+      ? "text-destructive/70"
+      : "text-destructive"
+    : isDuplicate
+      ? "text-emerald-500/70"
+      : "text-emerald-500";
 
   return (
     <Card
@@ -52,8 +57,9 @@ export const TransactionCard = ({
             <div className="flex items-center gap-2 group w-full">
               <Input
                 type="text"
-                value={transaction.description}
-                disabled={transaction.isFitIdAlreadyExists}
+                name="description"
+                value={description}
+                onChange={onChangeHandler}
                 className={`font-medium ${
                   transaction.isFitIdAlreadyExists ? "bg-transparent border-none p-0 text-muted-foreground" : ""
                 }`}
@@ -144,4 +150,6 @@ export const TransactionCard = ({
       )}
     </Card>
   );
-}; 
+});
+
+export default TransactionCard;
