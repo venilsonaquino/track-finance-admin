@@ -31,7 +31,7 @@ type Transaction = {
 	// Recorrência
 	isRecurring: boolean | null;
 	recurrenceType: "INDEFINITE" | "FIXED" | null;
-	recurringInterval: "MONTHLY" | "WEEKLY" | "YEARLY" | null;
+	recurringInterval: "DAILY" | "MONTHLY" | "WEEKLY" | "YEARLY" | null;
 	recurringEndDate: string | null;
 
 	// Parcelamento
@@ -236,13 +236,10 @@ const ReviewTransactionsPage = () => {
 		));
 	};
 
-	const handleInstallmentNumberChange = (fitId: string, number: string) => {
-		const numberValue = parseInt(number);
-		if (isNaN(numberValue) || numberValue < 1) return;
-
+	const handleRecurringIntervalChange = (fitId: string, interval: "DAILY" | "MONTHLY" | "WEEKLY" | "YEARLY" | null) => {
 		setTransactions(transactions.map(transaction => 
 			transaction.fitId === fitId 
-				? { ...transaction, installmentNumber: numberValue }
+				? { ...transaction, recurringInterval: interval }
 				: transaction
 		));
 	};
@@ -428,15 +425,23 @@ const ReviewTransactionsPage = () => {
 																	/>
 																</div>
 																<div>
-																	<label className="text-sm text-gray-600 mb-1 block">Parcela Atual</label>
-																	<Input
-																		type="number"
-																		min="1"
-																		max={transaction.installmentTotal || 48}
-																		placeholder="Ex: 1"
-																		value={transaction.installmentNumber || ""}
-																		onChange={(e) => handleInstallmentNumberChange(transaction.fitId, e.target.value)}
-																	/>
+																	<label className="text-sm text-gray-600 mb-1 block">Intervalo</label>
+																	<Select
+																		value={transaction.recurringInterval || ""}
+																		onValueChange={(value: "DAILY" | "MONTHLY" | "WEEKLY" | "YEARLY") => 
+																			handleRecurringIntervalChange(transaction.fitId, value)
+																		}
+																	>
+																		<SelectTrigger>
+																			<SelectValue placeholder="Selecione o intervalo" />
+																		</SelectTrigger>
+																		<SelectContent>
+																			<SelectItem value="DAILY">Diário</SelectItem>
+																			<SelectItem value="WEEKLY">Semanal</SelectItem>
+																			<SelectItem value="MONTHLY">Mensal</SelectItem>
+																			<SelectItem value="YEARLY">Anual</SelectItem>
+																		</SelectContent>
+																	</Select>
 																</div>
 															</div>
 														</div>
