@@ -28,12 +28,17 @@ const Category = () => {
 			header: (props) => (
 				<DataTableColumnHeader<CategoryResponse, unknown> column={props.column} title="Nome" />
 			),
+			cell: ({ row }) => {
+				const category = row.original;
+				return (
+					<div className="w-full truncate text-sm sm:text-base">
+						{category.name}
+					</div>
+				);
+			},
 		},
 		{
 			accessorKey: "icon",
-			header: (props) => (
-				<DataTableColumnHeader<CategoryResponse, unknown> column={props.column} title="Ícone" />
-			),
 			cell: ({ row }) => {
 				const category = row.original;
 				return (
@@ -54,9 +59,12 @@ const Category = () => {
 		},
 		{
 			accessorKey: "description",
-			header: (props) => (
-				<DataTableColumnHeader<CategoryResponse, unknown> column={props.column} title="Descrição" />
-			),
+			cell: ({ row }) => {
+				const category = row.original;
+				return (
+					<div className="w-full truncate text-sm sm:text-base">{category.description}</div>
+				);
+			},
 		},
 		{
 			id: "actions",

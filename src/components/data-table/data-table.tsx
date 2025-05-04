@@ -16,7 +16,15 @@ import {
 	getFilteredRowModel,
 	flexRender,
 	ColumnDef,
+	VisibilityState,
 } from "@tanstack/react-table";
+import { useState } from "react";
+import {
+	DropdownMenu,
+	DropdownMenuCheckboxItem,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -24,6 +32,8 @@ interface DataTableProps<TData, TValue> {
 }
 
 export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+
 	const table = useReactTable({
 		data,
 		columns,
@@ -31,11 +41,15 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
+		onColumnVisibilityChange: setColumnVisibility,
+		state: {
+			columnVisibility,
+		},
 	});
 
 	return (
 		<>
-			<div className="flex items-center py-4">
+			<div className="flex items-center justify-between py-4">
 				<Input
 					placeholder="Filtrar por nome..."
 					value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
@@ -44,9 +58,35 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
 					}
 					className="max-w-sm"
 				/>
+
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button variant="outline" className="ml-auto">
+							Colunas
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						{table
+							.getAllColumns()
+							.filter((column) => column.getCanHide())
+							.map((column) => {
+								if(column.id === "actions") return null;
+								return (
+									<DropdownMenuCheckboxItem
+										key={column.id}
+										className="capitalize"
+										checked={column.getIsVisible()}
+										onCheckedChange={(value) => column.toggleVisibility(!!value)}
+									>
+										{column.id}
+									</DropdownMenuCheckboxItem>
+								);
+							})}
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</div>
 			<div className="rounded-md border overflow-x-auto">
-				<Table className="min-w-[600px]">
+				<Table className="min-w-[100px]">
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
