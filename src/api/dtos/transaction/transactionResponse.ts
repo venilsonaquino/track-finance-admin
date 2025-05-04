@@ -7,15 +7,15 @@ export interface TransactionResponse {
   description: string;
   amount: string;
   fitId: string;
-  category: CategoryResponse | string | null;
-  wallet: WalletResponse | string | null;
+  category: CategoryResponse | null;
+  wallet: WalletResponse | null;
   isRecurring: boolean | null;
   recurrenceType: string | null;
   recurringInterval: string | null;
   recurringEndDate: string | null;
   isInstallment: boolean | null;
-  installmentTotal: number | null;
   installmentNumber: number | null;
+  installmentInterval: number | null;
   installmentEndDate: string | null;
   isFitIdAlreadyExists: boolean;
   bankName: string;

@@ -94,7 +94,7 @@ export const AdvancedSettings = ({
                       min="2"
                       max="48"
                       placeholder="Ex: 12"
-                      value={transaction.installmentTotal || ""}
+                      value={transaction.installmentNumber || ""}
                       onChange={(e) =>
                         onInstallmentTotalChange(transaction.fitId, e.target.value)
                       }

@@ -7,15 +7,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Save } from "lucide-react";
 import { TransactionResponse } from "@/api/dtos/transaction/transactionResponse";
 import { formatCurrency } from "@/utils/currency-utils";
-import { AdvancedSettings } from "./AdvancedSettings";
+import { AdvancedSettings } from "./advanced-settings";
+import { WalletResponse } from "@/api/dtos/wallet/wallet-response";
+import { CategoryResponse } from "@/api/dtos/category/category-response";
+import { Button } from "@/components/ui/button";
 
 interface TransactionCardProps {
   transaction: TransactionResponse;
-  wallets: Array<{ id: string; name: string }>;
-  categories: Array<{ id: string; name: string }>;
+  wallets: WalletResponse[];
+  categories: CategoryResponse[];
   errors: { [key: string]: string };
   onWalletChange: (fitId: string, walletId: string) => void;
   onCategoryChange: (fitId: string, categoryId: string) => void;
@@ -27,6 +30,7 @@ interface TransactionCardProps {
     fitId: string,
     interval: "DAILY" | "MONTHLY" | "WEEKLY" | "YEARLY" | null
   ) => void;
+  onSave: (transaction: TransactionResponse) => Promise<void>;
 }
 
 export const TransactionCard = ({
@@ -38,9 +42,7 @@ export const TransactionCard = ({
   onCategoryChange,
   onDescriptionChange,
   onRecurringChange,
-  onInstallmentChange,
-  onInstallmentTotalChange,
-  onRecurringIntervalChange,
+  onInstallmentChange
 }: TransactionCardProps) => {
   return (
     <Card
@@ -105,7 +107,7 @@ export const TransactionCard = ({
       </div>
 
       <div className="mt-4 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] items-end gap-4">
           <div>
             <label className="text-sm font-medium">Carteira</label>
             <Select
@@ -121,7 +123,7 @@ export const TransactionCard = ({
               </SelectTrigger>
               <SelectContent>
                 {wallets.map((wallet) => (
-                  <SelectItem key={wallet.id} value={wallet.id}>
+                  <SelectItem key={wallet.id!} value={wallet.id!}>
                     {wallet.name}
                   </SelectItem>
                 ))}
@@ -151,17 +153,31 @@ export const TransactionCard = ({
               </SelectContent>
             </Select>
           </div>
+
+          {!transaction.isFitIdAlreadyExists && (
+            <Button
+              onClick={() => onSave(transaction)}
+              size="default"
+              className="gap-2 h-10"
+              variant="outline"
+            >
+              <Save className="w-4 h-4" />
+              Salvar
+            </Button>
+          )}
         </div>
 
         {!transaction.isFitIdAlreadyExists && (
-          <AdvancedSettings
-            transaction={transaction}
-            errors={errors}
-            onRecurringChange={onRecurringChange}
-            onInstallmentChange={onInstallmentChange}
-            onInstallmentTotalChange={onInstallmentTotalChange}
-            onRecurringIntervalChange={onRecurringIntervalChange}
-          />
+          <>
+            <AdvancedSettings
+              transaction={transaction}
+              errors={errors}
+              onRecurringChange={onRecurringChange}
+              onInstallmentChange={onInstallmentChange}
+              onInstallmentTotalChange={onInstallmentTotalChange}
+              onRecurringIntervalChange={onRecurringIntervalChange}
+            />
+          </>
         )}
       </div>
       {transaction.isFitIdAlreadyExists && (

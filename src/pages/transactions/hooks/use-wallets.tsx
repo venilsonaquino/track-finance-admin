@@ -12,7 +12,7 @@ export const useWallets = () => {
     try {
       setLoading(true);
       const response = await WalletService.getWallets();
-      const { data } = response;
+      const { data }: { data: WalletResponse[] } = response;
       setWallets(Array.isArray(data) ? data : []);
     } catch (error) {
       setError(error as string);

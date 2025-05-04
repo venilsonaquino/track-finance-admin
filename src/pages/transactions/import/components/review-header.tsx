@@ -9,7 +9,6 @@ interface ReviewHeaderProps {
 export const ReviewHeader = ({ onCancel, onSaveAll }: ReviewHeaderProps) => {
   return (
     <>
-      <PageBreadcrumbNav title="Revisar Transações" />
       <div className="flex justify-between items-start mb-6">
         <div>
           <h2 className="text-2xl font-bold">Transações Importadas</h2>
