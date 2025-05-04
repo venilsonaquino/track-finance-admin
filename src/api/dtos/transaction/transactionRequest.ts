@@ -1,3 +1,5 @@
+import { IntervalType } from "@/types/Interval-type ";
+
 export interface TransactionRequest {
   id?: string;
   depositedDate: string;
@@ -8,6 +10,6 @@ export interface TransactionRequest {
   transferType: "DEBIT" | "CREDIT";
   isInstallment: boolean | null;
   installmentNumber: number | null;
-  installmentInterval: "MONTHLY" | "YEARLY" | "WEEKLY" | "DAILY" | null;
+  installmentInterval: IntervalType | null;
   isRecurring: boolean | null;
 }

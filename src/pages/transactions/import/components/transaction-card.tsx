@@ -14,7 +14,10 @@ import { formatCurrency } from "@/utils/currency-utils";
 import { WalletResponse } from "@/api/dtos/wallet/wallet-response";
 import { CategoryResponse } from "@/api/dtos/category/category-response";
 import { Button } from "@/components/ui/button";
-
+import { useTransactions } from "@/pages/transactions/hooks/use-transactions";
+import { TransactionRequest } from "@/api/dtos/transaction/transactionRequest";
+import { toast } from "sonner";
+import { IntervalType } from "@/types/Interval-type ";
 interface TransactionCardProps {
   transaction: TransactionResponse;
   wallets: WalletResponse[];
@@ -25,12 +28,36 @@ interface TransactionCardProps {
 
 const TransactionCard = React.memo(({ transaction, handleInputChange, index, wallets, categories }: TransactionCardProps) => {
   const [description, setDescription] = useState(transaction.description);
+  const { createTransaction } = useTransactions();
 
   const onChangeHandler = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setDescription(newValue);
     handleInputChange(e, index);
   }, [handleInputChange, index]);
+
+  const handleSave = (transaction: TransactionResponse) => {
+    try {
+      const transactionRequest: TransactionRequest = {
+        depositedDate: transaction.depositedDate,
+        description: transaction.description,
+        walletId: transaction.wallet?.id!,
+        categoryId: transaction.category?.id!,
+        amount: Number(transaction.amount),
+        transferType: transaction.transferType as "DEBIT" | "CREDIT",
+        isInstallment: transaction.isInstallment,
+        installmentNumber: transaction.installmentNumber,
+        installmentInterval: transaction.installmentInterval as IntervalType,
+        isRecurring: transaction.isRecurring,
+      };
+
+      createTransaction(transactionRequest);
+      toast.success("Transação salva com sucesso");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao salvar transação");
+    }
+  }
 
   const isNegative = Number(transaction.amount) < 0;
   const isDuplicate = transaction.isFitIdAlreadyExists;
@@ -134,7 +161,7 @@ const TransactionCard = React.memo(({ transaction, handleInputChange, index, wal
         </div>
 
         {/* Botão de salvar ou outro campo pode vir aqui */}
-        <Button variant="outline">
+        <Button variant="outline" onClick={() => handleSave(transaction)}>
           <Save className="w-4 h-4" />
           Salvar
         </Button>
