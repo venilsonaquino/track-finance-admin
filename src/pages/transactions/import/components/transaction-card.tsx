@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +18,7 @@ import { useTransactions } from "@/pages/transactions/hooks/use-transactions";
 import { TransactionRequest } from "@/api/dtos/transaction/transactionRequest";
 import { toast } from "sonner";
 import { IntervalType } from "@/types/Interval-type ";
+
 interface TransactionCardProps {
   transaction: TransactionResponse;
   wallets: WalletResponse[];
@@ -27,12 +28,9 @@ interface TransactionCardProps {
 }
 
 const TransactionCard = React.memo(({ transaction, handleInputChange, index, wallets, categories }: TransactionCardProps) => {
-  const [description, setDescription] = useState(transaction.description);
   const { createTransaction } = useTransactions();
 
   const onChangeHandler = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setDescription(newValue);
     handleInputChange(e, index);
   }, [handleInputChange, index]);
 
@@ -85,7 +83,7 @@ const TransactionCard = React.memo(({ transaction, handleInputChange, index, wal
               <Input
                 type="text"
                 name="description"
-                value={description}
+                value={transaction.description}
                 onChange={onChangeHandler}
                 className={`font-medium ${
                   transaction.isFitIdAlreadyExists ? "bg-transparent border-none p-0 text-muted-foreground" : ""
