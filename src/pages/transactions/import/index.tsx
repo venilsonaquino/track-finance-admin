@@ -7,18 +7,6 @@ const ImportTransactionPage = () => {
 	const [file, setFile] = useState<File | null>(null);
 	const [importedTransactions, setImportedTransactions] = useState<TransactionResponse[]>([]);
 
-	const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, index: number) => {
-		const { value } = e.target;
-		setImportedTransactions(prev => {
-			const transaction = prev[index];
-			if (transaction.description === value) return prev;
-			
-			const updated = [...prev];
-			updated[index] = { ...transaction, description: value };
-			return updated;
-		});
-	}, []);
-
 	return (
 		<>
 			{importedTransactions.length === 0 ? (
@@ -33,7 +21,7 @@ const ImportTransactionPage = () => {
 					<ReviewTransaction 
 						transactions={importedTransactions}
 						onCancel={() => setImportedTransactions([])}
-						handleInputChange={handleInputChange}
+						setImportedTransactions={setImportedTransactions}
 					/>
 				</>
 			) 

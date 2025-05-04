@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { TransactionResponse } from "@/api/dtos/transaction/transactionResponse";
 import { ReviewHeader } from "./review-header";
 import { useWallets } from "@/pages/wallet/hooks/use-wallets";
@@ -7,19 +7,32 @@ import TransactionCard from "./transaction-card";
 import { useTransactions } from "@/pages/transactions/hooks/use-transactions";
 import { TransactionRequest } from "@/api/dtos/transaction/transactionRequest";
 import { toast } from "sonner";
-
-type IntervalType = "DAILY" | "MONTHLY" | "WEEKLY" | "YEARLY" | null;
+import { IntervalType } from "@/types/Interval-type ";
 
 interface ReviewTransactionProps {
 	transactions: TransactionResponse[];
 	onCancel: () => void;
-	handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, index: number) => void;
+	setImportedTransactions: React.Dispatch<React.SetStateAction<TransactionResponse[]>>;
 }
 
-export const ReviewTransaction = ({ transactions, onCancel, handleInputChange }: ReviewTransactionProps) => {
+export const ReviewTransaction = ({ transactions, onCancel, setImportedTransactions  }: ReviewTransactionProps) => {
 	const { wallets } = useWallets();
 	const { categories } = useCategories();
 	const { createBatchTransactions } = useTransactions();
+
+	const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, index: number) => {
+		const { value } = e.target;
+		setImportedTransactions((prev: TransactionResponse[]) => {
+			const transaction = prev[index];
+			if (transaction.description === value) return prev;
+			
+			const updated = [...prev];
+			updated[index] = { ...transaction, description: value };
+			return updated;
+		});
+	}, []);
+
+
 
 	const handleSaveAll = () => {
 		const hasIncompleteTransactions = transactions.some(
