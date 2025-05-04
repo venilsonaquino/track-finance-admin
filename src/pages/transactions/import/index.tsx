@@ -9,6 +9,12 @@ import { Upload, CheckCircle2 } from "lucide-react";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import { toast } from "sonner";
 import { useFiles } from "../hooks/use-flies";
+import ReviewTransactionsPage from "./review";
+import { TransactionResponse } from "@/api/dtos/transaction/transactionResponse";
+
+interface ApiResponse {
+	data: TransactionResponse[];
+}
 
 const ImportTransactionPage = () => {
 	const navigate = useNavigate();
@@ -16,6 +22,7 @@ const ImportTransactionPage = () => {
 	const [file, setFile] = useState<File | null>(null);
 	const [isValid, setIsValid] = useState(false);
 	const [progress, setProgress] = useState(0);
+	const [importedTransactions, setImportedTransactions] = useState<TransactionResponse[]>([]);
 
 	const onDrop = useCallback((acceptedFiles: File[]) => {
 		const selectedFile = acceptedFiles[0];
@@ -48,16 +55,44 @@ const ImportTransactionPage = () => {
 
 		setProgress(0);
 		try {
-			await uploadFile(file);
-			setProgress(100);
-			toast.success("Arquivo importado com sucesso!", {
-				icon: <CheckCircle2 className="text-green-500" />,
-			});
-			navigate("/transacoes/importar/review");
+			const response = await uploadFile(file) as ApiResponse;
+			if (response?.data && response.data.length > 0) {
+				setImportedTransactions(response.data);
+				setProgress(100);
+				toast.success("Arquivo importado com sucesso!", {
+					icon: <CheckCircle2 className="text-green-500" />,
+				});
+			} else {
+				toast.error("Nenhuma transação encontrada no arquivo.");
+			}
 		} catch (error) {
 			toast.error("Erro ao importar arquivo. Tente novamente.");
 		}
 	};
+
+	const handleSaveTransactions = (transactions: TransactionResponse[]) => {
+		// Implementar a lógica para salvar todas as transações
+		console.log("Transações a serem salvas:", transactions);
+		// Após salvar, limpar o estado e redirecionar
+		setImportedTransactions([]);
+		navigate("/transacoes/lancamentos");
+	};
+
+	const handleCancel = () => {
+		setImportedTransactions([]);
+		setFile(null);
+		setIsValid(false);
+	};
+
+	if (importedTransactions.length > 0) {
+		return (
+			<ReviewTransactionsPage
+				transactions={importedTransactions}
+				onCancel={handleCancel}
+				onSave={handleSaveTransactions}
+			/>
+		);
+	}
 
 	return (
 		<>
