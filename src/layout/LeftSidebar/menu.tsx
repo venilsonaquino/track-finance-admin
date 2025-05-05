@@ -50,13 +50,6 @@ export const VERTICAL_MENU_ITEMS: MenuItemType[] = [
 		],
 	},
 	{
-		key: 'import-files',
-		label: 'Importar Arquivos',
-		isTitle: false,
-		url: '/importar-arquivos',
-		icon: <DynamicIcon name="file-up" className="h-4 w-4" />,
-	},
-	{
 		key: 'categories',
 		label: 'Categorias',
 		isTitle: false,
