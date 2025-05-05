@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,6 +39,7 @@ const TransactionCard = React.memo(({
   onTransactionSaved 
 }: TransactionCardProps) => {
   const { createTransaction } = useTransactions();
+  const [isExiting, setIsExiting] = useState(false);
 
   const onChangeHandler = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     handleInputChange(e, index);
@@ -67,8 +68,11 @@ const TransactionCard = React.memo(({
       };
 
       await createTransaction(transactionRequest);
+      setIsExiting(true);
+      setTimeout(() => {
+        onTransactionSaved?.(transaction.fitId);
+      }, 300); // Tempo da animação
       toast.success("Transação salva com sucesso");
-      onTransactionSaved?.(transaction.fitId);
     } catch (error) {
       console.error(error);
       toast.error("Erro ao salvar transação");
@@ -88,7 +92,11 @@ const TransactionCard = React.memo(({
 
   return (
     <Card
-      className={`p-4 transition-all ${
+      className={`p-4 transition-all duration-300 ${
+        isExiting 
+          ? "opacity-0 translate-x-full" 
+          : "opacity-100 translate-x-0"
+      } ${
         transaction.isFitIdAlreadyExists
           ? "bg-muted border-muted-foreground/20"
           : "hover:shadow-md"
