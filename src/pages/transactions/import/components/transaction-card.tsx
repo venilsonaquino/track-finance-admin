@@ -26,6 +26,7 @@ interface TransactionCardProps {
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, index: number) => void;
   handleSelectChange: (name: string, value: string, index: number) => void;
   index: number;
+  onTransactionSaved?: (fitId: string) => void;
 }
 
 const TransactionCard = React.memo(({ 
@@ -34,7 +35,8 @@ const TransactionCard = React.memo(({
   handleSelectChange,
   index, 
   wallets, 
-  categories 
+  categories,
+  onTransactionSaved 
 }: TransactionCardProps) => {
   const { createTransaction } = useTransactions();
 
@@ -42,7 +44,7 @@ const TransactionCard = React.memo(({
     handleInputChange(e, index);
   }, [handleInputChange, index]);
 
-  const handleSave = (transaction: TransactionResponse) => {
+  const handleSave = async (transaction: TransactionResponse) => {
     try {
       const transactionRequest: TransactionRequest = {
         depositedDate: transaction.depositedDate,
@@ -64,8 +66,9 @@ const TransactionCard = React.memo(({
         transactionSource: transaction.transactionSource,
       };
 
-      createTransaction(transactionRequest);
+      await createTransaction(transactionRequest);
       toast.success("Transação salva com sucesso");
+      onTransactionSaved?.(transaction.fitId);
     } catch (error) {
       console.error(error);
       toast.error("Erro ao salvar transação");

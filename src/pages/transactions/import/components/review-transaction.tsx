@@ -82,6 +82,10 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 		toast.success("Transações salvas com sucesso");
 	};
 
+	const handleTransactionSaved = useCallback((fitId: string) => {
+		setImportedTransactions(prev => prev.filter(transaction => transaction.fitId !== fitId));
+	}, []);
+
 	const transactionsList = useMemo(() => (
 		transactions.map((transaction, index) => (
 			<TransactionCard
@@ -92,9 +96,10 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 				handleInputChange={handleInputChange}
 				handleSelectChange={handleSelectChange}
 				index={index}
+				onTransactionSaved={handleTransactionSaved}
 			/>
 		))
-	), [transactions, wallets, categories, handleInputChange, handleSelectChange]);
+	), [transactions, wallets, categories, handleInputChange, handleSelectChange, handleTransactionSaved]);
 
 	return (
 		<>
