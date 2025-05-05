@@ -141,15 +141,18 @@ const TransactionCard = React.memo(({
             Carteira
           </label>
           <Select 
-            defaultValue={transaction.wallet?.id ?? undefined}
+            value={transaction.wallet?.id || undefined}
             onValueChange={(value) => handleSelectChange('wallet', value, index)}
+            disabled={transaction.isFitIdAlreadyExists}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione uma carteira" />
+            <SelectTrigger className={transaction.isFitIdAlreadyExists ? "bg-transparent border-none" : ""}>
+              <SelectValue>
+                {transaction.wallet?.name || "Selecione uma carteira"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {wallets.map((wallet) => (
-                <SelectItem key={wallet.id} value={wallet.id!}>
+              {wallets.filter(wallet => wallet.id).map((wallet) => (
+                <SelectItem key={wallet.id} value={wallet.id as string}>
                   {wallet.name}
                 </SelectItem>
               ))}
@@ -163,11 +166,14 @@ const TransactionCard = React.memo(({
             Categoria
           </label>
           <Select 
-            defaultValue={transaction.category?.id ?? undefined}
+            value={transaction.category?.id || undefined}
             onValueChange={(value) => handleSelectChange('category', value, index)}
+            disabled={transaction.isFitIdAlreadyExists}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione uma categoria" />
+            <SelectTrigger className={transaction.isFitIdAlreadyExists ? "bg-transparent border-none" : ""}>
+              <SelectValue>
+                {transaction.category?.name || "Selecione uma categoria"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {categories.map((category) => (
@@ -179,8 +185,12 @@ const TransactionCard = React.memo(({
           </Select>
         </div>
 
-        {/* Botão de salvar ou outro campo pode vir aqui */}
-        <Button variant="outline" onClick={() => handleSave(transaction)}>
+        {/* Botão de salvar */}
+        <Button 
+          variant="outline" 
+          onClick={() => handleSave(transaction)}
+          disabled={transaction.isFitIdAlreadyExists}
+        >
           <Save className="w-4 h-4" />
           Salvar
         </Button>
