@@ -32,7 +32,22 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 		});
 	}, []);
 
+	const handleSelectChange = useCallback((name: string, value: string, index: number) => {
+		setImportedTransactions((prev: TransactionResponse[]) => {
+			const updated = [...prev];
+			const transaction = updated[index];
 
+			if (name === 'wallet') {
+				const selectedWallet = wallets.find(w => w.id === value);
+				updated[index] = { ...transaction, wallet: selectedWallet || null };
+			} else if (name === 'category') {
+				const selectedCategory = categories.find(c => c.id === value);
+				updated[index] = { ...transaction, category: selectedCategory || null };
+			}
+
+			return updated;
+		});
+	}, [wallets, categories]);
 
 	const handleSaveAll = () => {
 		const hasIncompleteTransactions = transactions.some(
@@ -50,14 +65,21 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 			walletId: transaction.wallet?.id!,
 			categoryId: transaction.category?.id!,
 			amount: Number(transaction.amount),
-			transferType: transaction.transferType as "DEBIT" | "CREDIT",
 			isInstallment: transaction.isInstallment,
 			installmentNumber: transaction.installmentNumber,
 			installmentInterval: transaction.installmentInterval as IntervalType,
 			isRecurring: transaction.isRecurring,
+			bankName: transaction.bankName,
+			bankId: transaction.bankId,
+			accountId: transaction.accountId,
+			accountType: transaction.accountType,
+			currency: transaction.currency,
+			transactionDate: transaction.transactionDate,
+			transactionSource: transaction.transactionSource,
 		}));
 	
 		createBatchTransactions(transactionsToSave);
+		toast.success("Transações salvas com sucesso");
 	};
 
 	const transactionsList = useMemo(() => (
@@ -68,10 +90,11 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 				wallets={wallets}
 				categories={categories}
 				handleInputChange={handleInputChange}
+				handleSelectChange={handleSelectChange}
 				index={index}
 			/>
 		))
-	), [transactions, wallets, categories, handleInputChange]);
+	), [transactions, wallets, categories, handleInputChange, handleSelectChange]);
 
 	return (
 		<>

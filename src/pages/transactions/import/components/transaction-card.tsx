@@ -24,10 +24,18 @@ interface TransactionCardProps {
   wallets: WalletResponse[];
   categories: CategoryResponse[];
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, index: number) => void;
+  handleSelectChange: (name: string, value: string, index: number) => void;
   index: number;
 }
 
-const TransactionCard = React.memo(({ transaction, handleInputChange, index, wallets, categories }: TransactionCardProps) => {
+const TransactionCard = React.memo(({ 
+  transaction, 
+  handleInputChange, 
+  handleSelectChange,
+  index, 
+  wallets, 
+  categories 
+}: TransactionCardProps) => {
   const { createTransaction } = useTransactions();
 
   const onChangeHandler = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,11 +50,18 @@ const TransactionCard = React.memo(({ transaction, handleInputChange, index, wal
         walletId: transaction.wallet?.id!,
         categoryId: transaction.category?.id!,
         amount: Number(transaction.amount),
-        transferType: transaction.transferType as "DEBIT" | "CREDIT",
         isInstallment: transaction.isInstallment,
         installmentNumber: transaction.installmentNumber,
         installmentInterval: transaction.installmentInterval as IntervalType,
         isRecurring: transaction.isRecurring,
+        fitId: transaction.fitId,
+        bankName: transaction.bankName,
+        bankId: transaction.bankId,
+        accountId: transaction.accountId,
+        accountType: transaction.accountType,
+        currency: transaction.currency,
+        transactionDate: transaction.transactionDate,
+        transactionSource: transaction.transactionSource,
       };
 
       createTransaction(transactionRequest);
@@ -125,7 +140,10 @@ const TransactionCard = React.memo(({ transaction, handleInputChange, index, wal
           <label className="block text-sm font-medium text-muted-foreground mb-1">
             Carteira
           </label>
-          <Select defaultValue={transaction.wallet?.id ?? undefined}>
+          <Select 
+            defaultValue={transaction.wallet?.id ?? undefined}
+            onValueChange={(value) => handleSelectChange('wallet', value, index)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Selecione uma carteira" />
             </SelectTrigger>
@@ -144,7 +162,10 @@ const TransactionCard = React.memo(({ transaction, handleInputChange, index, wal
           <label className="block text-sm font-medium text-muted-foreground mb-1">
             Categoria
           </label>
-          <Select defaultValue={transaction.category?.id ?? undefined}>
+          <Select 
+            defaultValue={transaction.category?.id ?? undefined}
+            onValueChange={(value) => handleSelectChange('category', value, index)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Selecione uma categoria" />
             </SelectTrigger>

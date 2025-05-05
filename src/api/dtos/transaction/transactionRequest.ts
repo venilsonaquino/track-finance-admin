@@ -7,9 +7,16 @@ export interface TransactionRequest {
   walletId: string;
   categoryId: string;
   amount: number;
-  transferType: "DEBIT" | "CREDIT";
   isInstallment: boolean | null;
   installmentNumber: number | null;
   installmentInterval: IntervalType | null;
   isRecurring: boolean | null;
+  fitId?: string | null;
+  bankName: string;
+  bankId: string;
+  accountId: string;
+  accountType: string;
+  currency: string;
+  transactionDate: string;
+  transactionSource: string;
 }
