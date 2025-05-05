@@ -99,6 +99,7 @@ const TransactionCard = React.memo(({
                 type="text"
                 name="description"
                 value={transaction.description}
+                disabled={transaction.isFitIdAlreadyExists}
                 onChange={onChangeHandler}
                 className={`font-medium ${
                   transaction.isFitIdAlreadyExists ? "bg-transparent border-none p-0 text-muted-foreground" : ""
