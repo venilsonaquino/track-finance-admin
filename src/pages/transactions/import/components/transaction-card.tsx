@@ -92,15 +92,9 @@ const TransactionCard = React.memo(({
 
   return (
     <Card
-      className={`p-4 transition-all duration-300 ${
-        isExiting 
-          ? "opacity-0 translate-x-full" 
-          : "opacity-100 translate-x-0"
-      } ${
-        transaction.isFitIdAlreadyExists
-          ? "bg-muted border-muted-foreground/20"
-          : "hover:shadow-md"
-      }`}
+      className={`p-4 transition-all duration-300 
+        ${ isExiting  ? "opacity-0 translate-x-full" : "opacity-100 translate-x-0"} 
+        ${transaction.isFitIdAlreadyExists ? "bg-muted border-muted-foreground/20" : "hover:shadow-md"}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="space-y-2 flex-1">
