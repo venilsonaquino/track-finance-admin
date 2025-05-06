@@ -86,6 +86,24 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 		setImportedTransactions(prev => prev.filter(transaction => transaction.fitId !== fitId));
 	}, []);
 
+	const handleApplyWalletToAll = useCallback((walletId: string) => {
+		const selectedWallet = wallets.find(w => w.id === walletId);
+		if (!selectedWallet) return;
+
+		setImportedTransactions(prev => prev.map(transaction => {
+			if (transaction.isFitIdAlreadyExists) {
+				return transaction;
+			}
+			
+			return {
+				...transaction,
+				wallet: selectedWallet
+			};
+		}));
+
+		toast.success("Carteira aplicada às novas transações sem carteira definida");
+	}, [wallets]);
+
 	const transactionsList = useMemo(() => (
 		transactions.map((transaction, index) => (
 			<TransactionCard
@@ -103,7 +121,12 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 
 	return (
 		<>
-			<ReviewHeader onCancel={onCancel} onSaveAll={handleSaveAll} />
+			<ReviewHeader 
+				onCancel={onCancel} 
+				onSaveAll={handleSaveAll} 
+				wallets={wallets}
+				onApplyWalletToAll={handleApplyWalletToAll}
+			/>
 			<div className="container mx-auto py-8">
 				<div className="grid gap-3">
 					{transactionsList}
