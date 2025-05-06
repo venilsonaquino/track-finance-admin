@@ -152,16 +152,20 @@ const TransactionCard = React.memo(({
             disabled={transaction.isFitIdAlreadyExists}
           >
             <SelectTrigger className={transaction.isFitIdAlreadyExists ? "bg-transparent border-none" : ""}>
-              <SelectValue>
-                {transaction.wallet?.name || "Selecione uma carteira"}
+              <SelectValue placeholder="Escolha uma carteira">
+                {transaction.wallet?.name || "Escolha uma carteira"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {wallets.filter(wallet => wallet.id).map((wallet) => (
-                <SelectItem key={wallet.id} value={wallet.id as string}>
-                  {wallet.name}
-                </SelectItem>
-              ))}
+              {wallets.length === 0 ? (
+                <SelectItem value="empty" disabled>Nenhuma carteira disponível</SelectItem>
+              ) : (
+                wallets.filter(wallet => wallet.id).map((wallet) => (
+                  <SelectItem key={wallet.id} value={wallet.id as string}>
+                    {wallet.name}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -177,16 +181,20 @@ const TransactionCard = React.memo(({
             disabled={transaction.isFitIdAlreadyExists}
           >
             <SelectTrigger className={transaction.isFitIdAlreadyExists ? "bg-transparent border-none" : ""}>
-              <SelectValue>
-                {transaction.category?.name || "Selecione uma categoria"}
+              <SelectValue placeholder="Escolha uma categoria">
+                {transaction.category?.name || "Escolha uma categoria"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
+              {categories.length === 0 ? (
+                <SelectItem value="empty" disabled>Nenhuma categoria disponível</SelectItem>
+              ) : (
+                categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
