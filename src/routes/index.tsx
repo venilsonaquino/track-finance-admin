@@ -6,11 +6,11 @@ const Error404 = lazy(() => import('@/pages/authentication/Error404'))
 const Error500 = lazy(() => import('@/pages/authentication/Error500'))
 const Dashboard = lazy(() => import('@/pages/dashboard'))
 
-const ImportFile = lazy(() => import('@/pages/import-file'))
 const WorkTimeExpense = lazy(() => import('@/pages/work-time-expense'))
 const Wallet = lazy(() => import('@/pages/wallet'))
 const Transaction = lazy(() => import('@/pages/transaction'))
 const Categories = lazy(() => import('@/pages/category'))
+const ImportTransactionPage = lazy(() => import('@/pages/transactions/import'))
 
 type RoutesProps = {
     path: RouteProps['path']
@@ -64,18 +64,15 @@ const workTimeExpensesRoutes: RoutesProps[] = [
 
 const transactionsRoutes: RoutesProps[] = [
 	{
-		path: '/transacoes',
+		path: '/transacoes/lancamentos',
 		name: 'Transações',
 		element: <Transaction />,
 	},
-]
-
-const importFilesRoutes: RoutesProps[] = [
 	{
-		path: '/importar-arquivos',
-		name: 'Importar Arquivos',
-		element: <ImportFile />,
-	},
+		path: '/transacoes/importar',
+		name: 'Importar Transações',
+		element: <ImportTransactionPage />,
+	}
 ]
 
 const walletsRoutes: RoutesProps[] = [
@@ -98,7 +95,6 @@ const allAdminRoutes = [
 	...dashboardRoutes,
 	...workTimeExpensesRoutes,
 	...transactionsRoutes,
-	...importFilesRoutes,
 	...walletsRoutes,
 	...categoriesRoutes,
 ]

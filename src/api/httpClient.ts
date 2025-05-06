@@ -77,10 +77,22 @@ HttpClient.interceptors.response.use(
                     return HttpClient(originalRequest);
                 }
             } catch (refreshError) {
-                // Se falhar o refresh, redirecionar para login
+                // Se falhar o refresh (400 ou qualquer outro erro), limpar os cookies e redirecionar para login
+                if (hasCookie(authSessionKey)) {
+                    setCookie(authSessionKey, '', { maxAge: 0 });
+                }
                 window.location.href = '/auth/login';
                 return Promise.reject(refreshError);
             }
+        }
+        
+        // Se for um erro 400 e estivermos tentando refresh token, também redirecionamos para login
+        if (error.response?.status === 400 && originalRequest.url === '/auth/refresh-token') {
+            if (hasCookie(authSessionKey)) {
+                setCookie(authSessionKey, '', { maxAge: 0 });
+            }
+            window.location.href = '/auth/login';
+            return Promise.reject(error);
         }
         
         return Promise.reject(error);

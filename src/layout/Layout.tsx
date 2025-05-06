@@ -33,23 +33,24 @@ const Layout = ({ children }: { children: ReactNode }) => {
           <Suspense fallback={<div />}>
             <LeftSideBar />
           </Suspense>
-          <div className="page-wrapper flex-1 flex flex-col">
+          <div className="page-wrapper flex-1 flex flex-col min-w-0">
             <Suspense fallback={<div />}>
               <TopNavbar />
             </Suspense>
-            <div className="page-content flex-1 overflow-auto">
-              <div className="container-fluid p-4">
+            <div className="page-content flex-1 overflow-y-auto">
+              <div className="container-fluid p-4 min-w-0">
                 <div className="breadcrumb-container py-2">
-                  {/* Espaço reservado para breadcrumbs */}
                 </div>
                 <Suspense fallback={FallbackLoader}>
-                  {children}
+                  <div className="min-w-0 w-full">
+                    {children}
+                  </div>
                 </Suspense>
               </div>
             </div>
-            <Suspense fallback={<div />}>
+            {/* <Suspense fallback={<div />}>
               <Footer />
-            </Suspense>
+            </Suspense> */}
           </div>
         </div>
       </div>

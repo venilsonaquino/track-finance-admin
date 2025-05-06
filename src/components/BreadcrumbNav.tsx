@@ -10,7 +10,7 @@ import {
 import { Link } from 'react-router-dom';
 
 export interface BreadcrumbItem {
-  title: string;
+  title?: string;
   href?: string;
   icon?: ReactNode;
   children?: ReactNode;

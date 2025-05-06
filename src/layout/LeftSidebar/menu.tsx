@@ -1,4 +1,4 @@
-import { Home, Clock, Wallet, FileUp, FolderTree, CreditCard } from 'lucide-react';
+import { DynamicIcon } from 'lucide-react/dynamic';
 import { ReactNode } from 'react';
 
 export type MenuItemType = {
@@ -19,14 +19,14 @@ export type MenuItemType = {
 export const VERTICAL_MENU_ITEMS: MenuItemType[] = [
 	{
 		key: 'dashboard',
-		icon: <Home className="h-4 w-4" />,
+		icon: <DynamicIcon name="home" className="h-4 w-4" />,
 		label: 'Dashboard',
 		isTitle: false,
 		url: '/dashboard',
 	},
 	{
 		key: 'work-time-expenses',
-		icon: <Clock className="h-4 w-4" />,
+		icon: <DynamicIcon name="clock" className="h-4 w-4" />,
 		label: 'Horas e Despesas',
 		isTitle: false,
 		url: '/horas-e-despesas',
@@ -35,29 +35,33 @@ export const VERTICAL_MENU_ITEMS: MenuItemType[] = [
 		key: 'transactions',
 		label: 'Transações',
 		isTitle: false,
-		url: '/transacoes',
-		icon: <CreditCard className="h-4 w-4" />,
-	},
-	{
-		key: 'import-files',
-		label: 'Importar Arquivos',
-		isTitle: false,
-		url: '/importar-arquivos',
-		icon: <FileUp className="h-4 w-4" />,
+		icon: <DynamicIcon name="credit-card" className="h-4 w-4" />,
+		children: [
+			{
+				key: 'transactions-list',
+				label: 'Lançamentos',
+				url: '/transacoes/lancamentos',
+			},
+			{
+				key: 'transactions-import',
+				label: 'Importar',
+				url: '/transacoes/importar',
+			},
+		],
 	},
 	{
 		key: 'categories',
 		label: 'Categorias',
 		isTitle: false,
 		url: '/categorias',
-		icon: <FolderTree className="h-4 w-4" />,
+		icon: <DynamicIcon name="folder-tree" className="h-4 w-4" />,
 	},
 	{
 		key: 'wallets',
 		label: 'Carteiras',
 		isTitle: false,
 		url: '/carteiras',
-		icon: <Wallet className="h-4 w-4" />,
+		icon: <DynamicIcon name="wallet" className="h-4 w-4" />,
 	},
 ]
 

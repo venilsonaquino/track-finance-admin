@@ -4,8 +4,3 @@ export interface RegisterRequest {
   password: string;
   termsAccepted: boolean;
 }
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
