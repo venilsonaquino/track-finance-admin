@@ -104,6 +104,18 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 		toast.success("Carteira aplicada às novas transações sem carteira definida");
 	}, [wallets]);
 
+	const handleRemoveProcessed = useCallback(() => {
+		setImportedTransactions(prev => {
+			const filtered = prev.filter(transaction => !transaction.isFitIdAlreadyExists);
+			if (prev.length === filtered.length) {
+				toast.info("Não há transações processadas para remover");
+				return prev;
+			}
+			toast.success("Transações já processadas foram removidas");
+			return filtered;
+		});
+	}, []);
+
 	const transactionsList = useMemo(() => (
 		transactions.map((transaction, index) => (
 			<TransactionCard
@@ -126,6 +138,7 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 				onSaveAll={handleSaveAll} 
 				wallets={wallets}
 				onApplyWalletToAll={handleApplyWalletToAll}
+				onRemoveProcessed={handleRemoveProcessed}
 			/>
 			<div className="container mx-auto py-8">
 				<div className="grid gap-3">

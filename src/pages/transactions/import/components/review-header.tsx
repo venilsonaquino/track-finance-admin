@@ -7,37 +7,77 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { WalletResponse } from "@/api/dtos/wallet/wallet-response";
-import { Wallet } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
 
 interface ReviewHeaderProps {
   onCancel: () => void;
   onSaveAll: () => void;
   wallets: WalletResponse[];
   onApplyWalletToAll: (walletId: string) => void;
+  onRemoveProcessed: () => void;
 }
 
-export const ReviewHeader = ({ onCancel, onSaveAll, wallets, onApplyWalletToAll }: ReviewHeaderProps) => {
+export const ReviewHeader = ({ 
+  onCancel, 
+  onSaveAll, 
+  wallets, 
+  onApplyWalletToAll,
+  onRemoveProcessed 
+}: ReviewHeaderProps) => {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
   return (
     <>
       <PageBreadcrumbNav title="Revisar Transações" />
       <div className="container mx-auto py-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">Revisar Transações</h1>
-            <p className="text-muted-foreground mt-1">
-              Revise e configure suas transações importadas
-            </p>
-          </div>
+        <div className="flex justify-between items-center gap-4">
+          <p className="text-muted-foreground">
+            Revise e configure suas transações importadas
+          </p>
           
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="flex-1 sm:flex-initial w-[280px]">
-              <Select onValueChange={onApplyWalletToAll}>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsFilterOpen(true)}
+              className="shrink-0"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" onClick={onCancel}>
+              Cancelar
+            </Button>
+            <Button onClick={onSaveAll}>
+              Salvar
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Opções de Importação</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Carteira para novas transações
+              </label>
+              <Select onValueChange={(value) => {
+                onApplyWalletToAll(value);
+                setIsFilterOpen(false);
+              }}>
                 <SelectTrigger className="w-full">
-                  <div className="flex items-center gap-2">
-                    <Wallet className="w-4 h-4 shrink-0" />
-                    <SelectValue placeholder="Aplicar carteira às novas transações" />
-                  </div>
+                  <SelectValue placeholder="Selecione uma carteira" />
                 </SelectTrigger>
                 <SelectContent>
                   {wallets.map((wallet) => (
@@ -47,19 +87,31 @@ export const ReviewHeader = ({ onCancel, onSaveAll, wallets, onApplyWalletToAll 
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-sm text-muted-foreground">
+                A carteira será aplicada apenas às transações novas não processadas
+              </p>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={onCancel}>
-                Cancelar
-              </Button>
-              <Button onClick={onSaveAll}>
-                Salvar Todas
+
+            <div className="space-y-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  onRemoveProcessed();
+                  setIsFilterOpen(false);
+                }}
+                className="w-full justify-start h-auto py-2"
+              >
+                <div>
+                  <p className="font-medium">Remover transações processadas</p>
+                  <p className="text-sm text-muted-foreground text-left">
+                    Remove da lista as transações que já foram importadas anteriormente
+                  </p>
+                </div>
               </Button>
             </div>
           </div>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }; 
