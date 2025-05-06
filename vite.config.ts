@@ -11,6 +11,11 @@ export default defineConfig({
     }
   },
   server: {
-    host: true // permite acesso externo (ex: pelo celular na mesma rede)
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true, // Garante que não troque a porta automaticamente
+    watch: {
+      usePolling: true // Necessário em alguns ambientes Docker
+    }
   }
 })
