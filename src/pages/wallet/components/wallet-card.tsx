@@ -9,6 +9,10 @@ interface WalletCardProps {
 }
 
 export const WalletCard = ({ wallet, onEdit, onDelete }: WalletCardProps) => {
+
+  const balanceValue = Number(wallet.balance ?? 0);
+  const formattedBalance = balanceValue.toFixed(2);
+
   return (
     <Card style={{ backgroundColor: wallet.color + "20" }}>
       <CardHeader>
@@ -25,7 +29,7 @@ export const WalletCard = ({ wallet, onEdit, onDelete }: WalletCardProps) => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onDelete(wallet.id)}
+              onClick={() => onDelete(wallet.id || '')}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -36,7 +40,7 @@ export const WalletCard = ({ wallet, onEdit, onDelete }: WalletCardProps) => {
         <p className="text-sm text-gray-600 mb-2">{wallet.description}</p>
         <div className="flex justify-between text-sm">
           <span>Tipo: {wallet.walletType}</span>
-          <span>Saldo: R$ {wallet.balance.toFixed(2)}</span>
+          <span>Saldo: R$ {formattedBalance}</span>
         </div>
       </CardContent>
     </Card>
