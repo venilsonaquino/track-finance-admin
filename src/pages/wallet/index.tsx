@@ -18,8 +18,6 @@ const Wallet = () => {
 	const [formData, setFormData] = useState<Partial<WalletResponse>>({
 		name: "",
 		description: "",
-		color: "#000000",
-		icon: "wallet",
 		balance: 0,
 		walletType: "personal",
 		bankId: undefined,
@@ -38,8 +36,6 @@ const Wallet = () => {
 			setFormData({
 				name: "",
 				description: "",
-				color: "#000000",
-				icon: "wallet",
 				balance: 0,
 				walletType: "personal",
 				bankId: undefined,
@@ -66,6 +62,20 @@ const Wallet = () => {
 	const handleDelete = async (id: string) => {
 		setWalletToDelete(id);
 		setIsDeleteDialogOpen(true);
+	};
+
+	const handleDialogOpenChange = (open: boolean) => {
+		if (!open) {
+			setFormData({
+				name: "",
+				description: "",
+				balance: 0,
+				walletType: "personal",
+				bankId: undefined,
+			});
+			setEditingWallet(null);
+		}
+		setIsDialogOpen(open);
 	};
 
 	const confirmDelete = async () => {
@@ -123,7 +133,7 @@ const Wallet = () => {
 
 			<WalletDialog 
 				open={isDialogOpen}
-				onOpenChange={setIsDialogOpen}
+				onOpenChange={handleDialogOpenChange}
 				formData={formData}
 				onSubmit={handleSubmit}
 				onInputChange={handleInputChange}
