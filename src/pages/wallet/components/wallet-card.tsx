@@ -15,9 +15,10 @@ export const WalletCard = ({ wallet, onEdit, onDelete }: WalletCardProps) => {
   const balanceValue = Number(wallet.balance ?? 0);
   const formattedBalance = balanceValue.toFixed(2);
   const bank = wallet.bankId ? getBankById(wallet.bankId) : null;
+  const color = bank?.color || "#000000";
 
   return (
-    <Card style={{ backgroundColor: wallet.color + "20" }}>
+    <Card style={{ backgroundColor: color + "20" }}>
       <CardHeader>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">

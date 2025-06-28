@@ -18,10 +18,8 @@ import { BankSelector } from "@/components/bank-selector";
 const schema = yup.object().shape({
   name: yup.string().required("Nome é obrigatório"),
   description: yup.string().required("Descrição é obrigatória"),
-  color: yup.string().required("Cor é obrigatória"),
   walletType: yup.string().required("Tipo é obrigatório"),
   balance: yup.number().required("Saldo inicial é obrigatório"),
-  icon: yup.string().default("wallet"),
   bankId: yup.string().optional(),
 });
 
@@ -56,7 +54,12 @@ export const WalletForm = ({
   };
 
   const handleFormSubmit = (data: WalletRequest) => {
-    onSubmit(data);
+    console.log("Form submitted with data:", data);
+    const formData = {
+      ...data,
+      balance: Number(data.balance),
+    };
+    onSubmit(formData);
   };
 
   return (
@@ -92,16 +95,6 @@ export const WalletForm = ({
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="color">Cor</label>
-        <Input
-          type="color"
-          id="color"
-          {...register("color")}
-        />
-        {errors.color && <p className="text-red-500">{errors.color.message}</p>}
-      </div>
-
-      <div className="space-y-2">
         <label htmlFor="type">Tipo</label>
         <Select
           value={watch("walletType")}
@@ -119,6 +112,7 @@ export const WalletForm = ({
             <SelectItem value="savings">Poupança</SelectItem>
           </SelectContent>
         </Select>
+        {errors.walletType && <p className="text-red-500">{errors.walletType.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -132,7 +126,7 @@ export const WalletForm = ({
       </div>
 
       <Button type="submit" className="w-full">
-        {initialData ? "Salvar Alterações" : "Criar Carteira"}
+        {initialData ? "Salvar Alterações OPA" : "Criar Carteira"}
       </Button>
     </form>
   );
