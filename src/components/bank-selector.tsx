@@ -42,6 +42,7 @@ export function BankSelector({
                 src={selectedBank.logo}
                 alt={selectedBank.name}
                 className="w-6 h-6 object-contain"
+                loading="lazy"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}

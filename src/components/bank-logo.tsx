@@ -33,6 +33,7 @@ export function BankLogo({
     <img
       src={bank.logo}
       alt={bank.name}
+      loading="lazy"
       className={`${sizeClasses[size]} object-contain ${className}`}
       onError={(e) => {
         e.currentTarget.style.display = 'none';
