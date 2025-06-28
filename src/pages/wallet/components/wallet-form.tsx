@@ -13,6 +13,7 @@ import * as yup from "yup";
 import { WalletRequest } from "@/api/dtos/wallet/wallet-request";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { BankSelector } from "@/components/bank-selector";
 
 const schema = yup.object().shape({
   name: yup.string().required("Nome é obrigatório"),
@@ -21,6 +22,7 @@ const schema = yup.object().shape({
   walletType: yup.string().required("Tipo é obrigatório"),
   balance: yup.number().required("Saldo inicial é obrigatório"),
   icon: yup.string().default("wallet"),
+  bankId: yup.string().optional(),
 });
 
 interface WalletFormProps {
@@ -33,18 +35,32 @@ interface WalletFormProps {
 export const WalletForm = ({
   initialData,
   onSubmit,
+  onInputChange,
 }: WalletFormProps) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
+    watch,
   } = useForm<WalletRequest>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema) as any,
     defaultValues: initialData,
   });
 
+  const bankId = watch("bankId");
+
+  const handleBankChange = (value: string) => {
+    setValue("bankId", value);
+    onInputChange("bankId", value);
+  };
+
+  const handleFormSubmit = (data: WalletRequest) => {
+    onSubmit(data);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="space-y-2">
         <label htmlFor="name">Nome</label>
         <Input
@@ -64,6 +80,18 @@ export const WalletForm = ({
       </div>
 
       <div className="space-y-2">
+        <label htmlFor="bank">Banco</label>
+        <BankSelector
+          value={bankId}
+          onValueChange={handleBankChange}
+          placeholder="Selecione um banco (opcional)"
+        />
+        <p className="text-sm text-muted-foreground">
+          O logo do banco será usado como ícone da carteira
+        </p>
+      </div>
+
+      <div className="space-y-2">
         <label htmlFor="color">Cor</label>
         <Input
           type="color"
@@ -76,7 +104,11 @@ export const WalletForm = ({
       <div className="space-y-2">
         <label htmlFor="type">Tipo</label>
         <Select
-          {...register("walletType")}
+          value={watch("walletType")}
+          onValueChange={(value) => {
+            setValue("walletType", value);
+            onInputChange("walletType", value);
+          }}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione o tipo" />

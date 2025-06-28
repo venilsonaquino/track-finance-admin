@@ -3,9 +3,9 @@ export interface WalletResponse {
     name: string;
     description: string;
     walletType: string;
-    icon: string;
     color: string;
     balance: number;
+    bankId?: string;
     userId: string;
     created_at: string;
     updated_at: string;

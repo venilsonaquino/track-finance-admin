@@ -22,6 +22,7 @@ const Wallet = () => {
 		icon: "wallet",
 		balance: 0,
 		walletType: "personal",
+		bankId: undefined,
 	});
 
 	const handleSubmit = async (data: WalletRequest) => {
@@ -41,6 +42,7 @@ const Wallet = () => {
 				icon: "wallet",
 				balance: 0,
 				walletType: "personal",
+				bankId: undefined,
 			});
 			setEditingWallet(null);
 		} catch (error) {
@@ -113,8 +115,8 @@ const Wallet = () => {
 					<WalletCard
 						key={wallet.id}
 						wallet={wallet}
-						onEdit={() => handleEdit(wallet.id)}
-						onDelete={() => handleDelete(wallet.id)}
+						onEdit={() => handleEdit(wallet.id!)}
+						onDelete={() => handleDelete(wallet.id!)}
 					/>
 				))}
 			</div>
