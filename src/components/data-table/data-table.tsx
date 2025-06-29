@@ -29,9 +29,10 @@ import {
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
+	toolbar?: React.ReactNode;
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, toolbar }: DataTableProps<TData, TValue>) {
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
 	const table = useReactTable({
@@ -49,17 +50,19 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
 
 	return (
 		<>
-			<div className="flex items-center justify-between py-4">
-				<Input
+			<div className="flex items-center justify-center py-4 ">
+				{/* <Input
 					placeholder="Filtrar por nome..."
 					value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
 					onChange={(event) =>
 						table.getColumn("name")?.setFilterValue(event.target.value)
 					}
 					className="max-w-sm"
-				/>
+				/> */}
 
-				<DropdownMenu>
+					{toolbar}
+
+				{/* <DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button variant="outline" className="ml-auto">
 							Colunas
@@ -83,7 +86,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
 								);
 							})}
 					</DropdownMenuContent>
-				</DropdownMenu>
+				</DropdownMenu> */}
 			</div>
 			<div className="rounded-md border overflow-x-auto">
 				<Table className="min-w-[100px]">

@@ -1,7 +1,3 @@
-// import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-// import { Button } from "@/components/ui/button";
-// import { Plus } from "lucide-react";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import { formatCurrency } from "@/utils/currency-utils";
 import { useTransactions } from "./hooks/use-transactions";
@@ -12,7 +8,7 @@ import { MoreVertical, Plus, Wallet } from "lucide-react";
 import { DataTable } from "@/components/data-table/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { TransactionResponse } from "@/api/dtos/transaction/transactionResponse";
-import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -23,11 +19,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { BankLogo } from "@/components/bank-logo";
 import { DynamicIcon } from "lucide-react/dynamic";
+import { MonthYearPicker } from "./components/MonthYearPicker";
 
 const TransactionsPage = () => {
 	// const navigate = useNavigate();
 	const { getTransactions } = useTransactions();
 	const [transactionsData, setTransactionsData] = useState<TransactionsRecordResponse | null>(null);
+	const [currentDate, setCurrentDate] = useState(new Date());
 
 	useEffect(() => {
 		const loadTransactions = async () => {
@@ -177,6 +175,10 @@ const TransactionsPage = () => {
 		},
 	];
 
+	const handleMonthYearChange = (date: Date) => {
+		setCurrentDate(date);
+	};
+
 	return (
 		<>
 			<div className="flex justify-between items-center">
@@ -184,11 +186,17 @@ const TransactionsPage = () => {
 				<Button onClick={() => {
 				}}>
 					<Plus className="h-4 w-4 mr-2" />
-					Nova Categoria
+					Nova Transação
 				</Button>
 			</div>
 
-			<DataTable columns={columns} data={allTransactions} />
+			<DataTable 
+				columns={columns} 
+				data={allTransactions} 
+				toolbar={
+					<MonthYearPicker date={currentDate} onChange={handleMonthYearChange} />
+				}
+			/>
 		</>
 	);
 };
