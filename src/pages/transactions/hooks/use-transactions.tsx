@@ -1,3 +1,4 @@
+import TransactionsRecordResponse from "@/api/dtos/transaction/transactionRecordResponse";
 import { TransactionRequest } from "@/api/dtos/transaction/transactionRequest";
 import { TransactionResponse } from "@/api/dtos/transaction/transactionResponse";
 import { TransactionService } from "@/api/services/transactionService";
@@ -63,11 +64,12 @@ export const useTransactions = () => {
     }
   }
 
-  const getTransactions = async (startDate: string, endDate: string, categoryIds: string[]) => {
+  const getTransactions = async (startDate: string, endDate: string, categoryIds?: string[] | null) => {
     try {
       setLoading(true);
       const response = await TransactionService.getTransactions(startDate, endDate, categoryIds);
       setTransactions(response.data);
+      return response.data;
     } catch (error) {
       setError(error as string);
       throw error;

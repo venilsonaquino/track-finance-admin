@@ -17,7 +17,7 @@ interface FileUploadProps {
 	setImportedTransactions: (transactions: TransactionResponse[]) => void;
 }
 
-export const FileUpload = ({ file, setFile, importedTransactions, setImportedTransactions }: FileUploadProps) => {
+export const FileUpload = ({ file, setFile, setImportedTransactions }: FileUploadProps) => {
 	const { uploadFile, loading: isUploading } = useFiles();
 	const [isValid, setIsValid] = useState(false);
 	const [progress, setProgress] = useState(0);
