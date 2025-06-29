@@ -27,6 +27,8 @@ interface TransactionCardProps {
   handleSelectChange: (name: string, value: string, index: number) => void;
   index: number;
   onTransactionSaved?: (fitId: string) => void;
+  isSaved?: boolean;
+  isSaving?: boolean;
 }
 
 const TransactionCard = React.memo(({ 
@@ -36,7 +38,9 @@ const TransactionCard = React.memo(({
   index, 
   wallets, 
   categories,
-  onTransactionSaved 
+  onTransactionSaved,
+  isSaved = false,
+  isSaving = false
 }: TransactionCardProps) => {
   const { createTransaction } = useTransactions();
   const [isExiting, setIsExiting] = useState(false);
@@ -92,10 +96,19 @@ const TransactionCard = React.memo(({
 
   return (
     <Card
-      className={`p-4 transition-all duration-300 
-        ${ isExiting  ? "opacity-0 translate-x-full" : "opacity-100 translate-x-0"} 
+      className={`p-4 transition-all duration-500 ease-in-out
+        ${isExiting ? "opacity-0 translate-x-full scale-95" : "opacity-100 translate-x-0 scale-100"} 
+        ${isSaved ? "bg-green-50 border-green-200 shadow-lg" : ""}
         ${transaction.isFitIdAlreadyExists ? "bg-muted border-muted-foreground/20" : "hover:shadow-md"}`}
     >
+      {isSaved && (
+        <div className="absolute top-2 right-2 z-10">
+          <div className="bg-green-500 text-white rounded-full p-1 animate-pulse">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+        </div>
+      )}
+      
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="space-y-2 flex-1">
           <div className="flex items-center gap-2">
@@ -104,7 +117,7 @@ const TransactionCard = React.memo(({
                 type="text"
                 name="description"
                 value={transaction.description}
-                disabled={transaction.isFitIdAlreadyExists}
+                disabled={transaction.isFitIdAlreadyExists || isSaving}
                 onChange={onChangeHandler}
                 className={`font-medium ${
                   transaction.isFitIdAlreadyExists ? "bg-transparent border-none p-0 text-muted-foreground" : ""
@@ -149,7 +162,7 @@ const TransactionCard = React.memo(({
           <Select 
             value={transaction.wallet?.id || undefined}
             onValueChange={(value) => handleSelectChange('wallet', value, index)}
-            disabled={transaction.isFitIdAlreadyExists}
+            disabled={transaction.isFitIdAlreadyExists || isSaving}
           >
             <SelectTrigger className={transaction.isFitIdAlreadyExists ? "bg-transparent border-none" : ""}>
               <SelectValue placeholder="Escolha uma carteira">
@@ -178,7 +191,7 @@ const TransactionCard = React.memo(({
           <Select 
             value={transaction.category?.id || undefined}
             onValueChange={(value) => handleSelectChange('category', value, index)}
-            disabled={transaction.isFitIdAlreadyExists}
+            disabled={transaction.isFitIdAlreadyExists || isSaving}
           >
             <SelectTrigger className={transaction.isFitIdAlreadyExists ? "bg-transparent border-none" : ""}>
               <SelectValue placeholder="Escolha uma categoria">
@@ -203,10 +216,11 @@ const TransactionCard = React.memo(({
         <Button 
           variant="outline" 
           onClick={() => handleSave(transaction)}
-          disabled={transaction.isFitIdAlreadyExists}
+          disabled={transaction.isFitIdAlreadyExists || isSaving}
+          className={isSaving ? "opacity-50" : ""}
         >
           <Save className="w-4 h-4" />
-          Salvar
+          {isSaving ? "Salvando..." : "Salvar"}
         </Button>
       </div>
 

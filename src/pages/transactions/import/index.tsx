@@ -7,6 +7,8 @@ const ImportTransactionPage = () => {
 	const [file, setFile] = useState<File | null>(null);
 	const [importedTransactions, setImportedTransactions] = useState<TransactionResponse[]>([]);
 
+	console.log(importedTransactions)
+
 	return (
 		<>
 			{importedTransactions.length === 0 ? (

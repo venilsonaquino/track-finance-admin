@@ -8,7 +8,7 @@ const Dashboard = lazy(() => import('@/pages/dashboard'))
 
 const WorkTimeExpense = lazy(() => import('@/pages/work-time-expense'))
 const Wallet = lazy(() => import('@/pages/wallet'))
-const Transaction = lazy(() => import('@/pages/transaction'))
+const Transaction = lazy(() => import('@/pages/transactions'))
 const Categories = lazy(() => import('@/pages/category'))
 const ImportTransactionPage = lazy(() => import('@/pages/transactions/import'))
 

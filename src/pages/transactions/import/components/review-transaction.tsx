@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { TransactionResponse } from "@/api/dtos/transaction/transactionResponse";
 import { ReviewHeader } from "./review-header";
 import { useWallets } from "@/pages/wallet/hooks/use-wallets";
@@ -8,6 +8,7 @@ import { useTransactions } from "@/pages/transactions/hooks/use-transactions";
 import { TransactionRequest } from "@/api/dtos/transaction/transactionRequest";
 import { toast } from "sonner";
 import { IntervalType } from "@/types/Interval-type ";
+import { useNavigate } from "react-router-dom";
 
 interface ReviewTransactionProps {
 	transactions: TransactionResponse[];
@@ -16,9 +17,12 @@ interface ReviewTransactionProps {
 }
 
 export const ReviewTransaction = ({ transactions, onCancel, setImportedTransactions  }: ReviewTransactionProps) => {
+	const navigate = useNavigate();
 	const { wallets } = useWallets();
 	const { categories } = useCategories();
 	const { createBatchTransactions } = useTransactions();
+	const [isSaving, setIsSaving] = useState(false);
+	const [savedTransactions, setSavedTransactions] = useState<Set<string>>(new Set());
 
 	const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, index: number) => {
 		const { value } = e.target;
@@ -49,7 +53,7 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 		});
 	}, [wallets, categories]);
 
-	const handleSaveAll = () => {
+	const handleSaveAll = async () => {
 		const hasIncompleteTransactions = transactions.some(
 			(transaction) => !transaction.wallet?.id || !transaction.category?.id
 		);
@@ -58,32 +62,57 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 			toast.error("Preencha todas as carteiras e categorias antes de salvar.");
 			return;
 		}
+
+		setIsSaving(true);
 	
-		const transactionsToSave: TransactionRequest[] = transactions.map((transaction) => ({
-			depositedDate: transaction.depositedDate,
-			description: transaction.description,
-			walletId: transaction.wallet?.id!,
-			categoryId: transaction.category?.id!,
-			amount: Number(transaction.amount),
-			isInstallment: transaction.isInstallment,
-			installmentNumber: transaction.installmentNumber,
-			installmentInterval: transaction.installmentInterval as IntervalType,
-			isRecurring: transaction.isRecurring,
-			bankName: transaction.bankName,
-			bankId: transaction.bankId,
-			accountId: transaction.accountId,
-			accountType: transaction.accountType,
-			currency: transaction.currency,
-			transactionDate: transaction.transactionDate,
-			transactionSource: transaction.transactionSource,
-		}));
-	
-		createBatchTransactions(transactionsToSave);
-		toast.success("Transações salvas com sucesso");
+		try {
+			const transactionsToSave: TransactionRequest[] = transactions.map((transaction) => ({
+				depositedDate: transaction.depositedDate,
+				description: transaction.description,
+				walletId: transaction.wallet?.id!,
+				categoryId: transaction.category?.id!,
+				fitId: transaction.fitId,
+				amount: Number(transaction.amount),
+				isInstallment: transaction.isInstallment,
+				installmentNumber: transaction.installmentNumber,
+				installmentInterval: transaction.installmentInterval as IntervalType,
+				isRecurring: transaction.isRecurring,
+				bankName: transaction.bankName,
+				bankId: transaction.bankId,
+				accountId: transaction.accountId,
+				accountType: transaction.accountType,
+				currency: transaction.currency,
+				transactionDate: transaction.transactionDate,
+				transactionSource: transaction.transactionSource,
+			}));
+		
+			await createBatchTransactions(transactionsToSave);
+			
+			// Adicionar efeito visual para todas as transações salvas
+			const allFitIds = transactions.map(t => t.fitId);
+			setSavedTransactions(new Set(allFitIds));
+			
+			toast.success("Transações salvas com sucesso");
+			
+			// Aguardar um pouco para mostrar o efeito visual antes de redirecionar
+			setTimeout(() => {
+				navigate("/transacoes/lancamentos");
+			}, 1500);
+			
+		} catch (error) {
+			toast.error("Erro ao salvar transações");
+		} finally {
+			setIsSaving(false);
+		}
 	};
 
 	const handleTransactionSaved = useCallback((fitId: string) => {
-		setImportedTransactions(prev => prev.filter(transaction => transaction.fitId !== fitId));
+		setSavedTransactions(prev => new Set([...prev, fitId]));
+		
+		// Remover a transação após um delay para mostrar o efeito
+		setTimeout(() => {
+			setImportedTransactions(prev => prev.filter(transaction => transaction.fitId !== fitId));
+		}, 800);
 	}, []);
 
 	const handleApplyWalletToAll = useCallback((walletId: string) => {
@@ -127,9 +156,11 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 				handleSelectChange={handleSelectChange}
 				index={index}
 				onTransactionSaved={handleTransactionSaved}
+				isSaved={savedTransactions.has(transaction.fitId)}
+				isSaving={isSaving}
 			/>
 		))
-	), [transactions, wallets, categories, handleInputChange, handleSelectChange, handleTransactionSaved]);
+	), [transactions, wallets, categories, handleInputChange, handleSelectChange, handleTransactionSaved, savedTransactions, isSaving]);
 
 	return (
 		<>
@@ -139,6 +170,7 @@ export const ReviewTransaction = ({ transactions, onCancel, setImportedTransacti
 				wallets={wallets}
 				onApplyWalletToAll={handleApplyWalletToAll}
 				onRemoveProcessed={handleRemoveProcessed}
+				isSaving={isSaving}
 			/>
 			<div className="container mx-auto py-8">
 				<div className="grid gap-3">

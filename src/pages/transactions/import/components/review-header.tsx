@@ -23,6 +23,7 @@ interface ReviewHeaderProps {
   wallets: WalletResponse[];
   onApplyWalletToAll: (walletId: string) => void;
   onRemoveProcessed: () => void;
+  isSaving?: boolean;
 }
 
 export const ReviewHeader = ({ 
@@ -30,7 +31,8 @@ export const ReviewHeader = ({
   onSaveAll, 
   wallets, 
   onApplyWalletToAll,
-  onRemoveProcessed 
+  onRemoveProcessed,
+  isSaving = false
 }: ReviewHeaderProps) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -49,14 +51,15 @@ export const ReviewHeader = ({
               size="icon"
               onClick={() => setIsFilterOpen(true)}
               className="shrink-0"
+              disabled={isSaving}
             >
               <SlidersHorizontal className="w-4 h-4" />
             </Button>
-            <Button variant="outline" onClick={onCancel}>
+            <Button variant="outline" onClick={onCancel} disabled={isSaving}>
               Cancelar
             </Button>
-            <Button onClick={onSaveAll}>
-              Salvar
+            <Button onClick={onSaveAll} disabled={isSaving} className={isSaving ? "opacity-75" : ""}>
+              {isSaving ? "Salvando..." : "Salvar"}
             </Button>
           </div>
         </div>
