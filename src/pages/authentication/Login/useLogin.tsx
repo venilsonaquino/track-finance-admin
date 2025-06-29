@@ -34,7 +34,7 @@ export default function useLogin() {
 
 	type LoginFormFields = yup.InferType<typeof schemaResolver>
 
-	const redirectUrl = searchParams.get('next') ?? '/dashboards/analytics'
+	const redirectUrl = searchParams.get('next') ?? '/'
 
 	const login = handleSubmit(async function (values: LoginFormFields) {
 		setLoading(true)
