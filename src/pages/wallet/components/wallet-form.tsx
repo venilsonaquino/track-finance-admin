@@ -54,7 +54,6 @@ export const WalletForm = ({
   };
 
   const handleFormSubmit = (data: WalletRequest) => {
-    console.log("Form submitted with data:", data);
     const formData = {
       ...data,
       balance: Number(data.balance),
