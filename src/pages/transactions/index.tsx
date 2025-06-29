@@ -20,6 +20,7 @@ import {
 import { BankLogo } from "@/components/bank-logo";
 import { DynamicIcon } from "lucide-react/dynamic";
 import { MonthYearPicker } from "./components/MonthYearPicker";
+import { DateUtils } from "@/utils/date-utils";
 
 const TransactionsPage = () => {
 	// const navigate = useNavigate();
@@ -27,17 +28,20 @@ const TransactionsPage = () => {
 	const [transactionsData, setTransactionsData] = useState<TransactionsRecordResponse | null>(null);
 	const [currentDate, setCurrentDate] = useState(new Date());
 
+	// Carrega transações sempre que currentDate mudar
 	useEffect(() => {
-		const loadTransactions = async () => {
+		const loadTransactionsForDate = async () => {
 			try {
-				const response = await getTransactions("2024-01-01", "2024-12-31", []);
+				const { startDate, endDate } = DateUtils.getMonthStartAndEnd(currentDate);
+				const response = await getTransactions(startDate, endDate, []);
 				setTransactionsData(response);
 			} catch (error) {
 				console.error("Erro ao carregar transações:", error);
 			}
 		};
-		loadTransactions();
-	}, []);
+
+		loadTransactionsForDate();
+	}, [currentDate, getTransactions]);
 
 	const allTransactions = transactionsData?.records?.flatMap(record => record.transactions) || [];
 
@@ -144,9 +148,7 @@ const TransactionsPage = () => {
 			id: "actions",
 			header: () => <div className="text-right">Ações</div>,
 			size: 80,
-			cell: ({ row }) => {
-				const transaction = row.original;
-
+			cell: () => {
 				return (
 					<div className="text-right">
 						<DropdownMenu>

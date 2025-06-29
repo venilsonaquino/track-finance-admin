@@ -1,15 +1,14 @@
-import TransactionsRecordResponse from "@/api/dtos/transaction/transactionRecordResponse";
 import { TransactionRequest } from "@/api/dtos/transaction/transactionRequest";
 import { TransactionResponse } from "@/api/dtos/transaction/transactionResponse";
 import { TransactionService } from "@/api/services/transactionService";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 export const useTransactions = () => {
 	const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createBatchTransactions = async (transactions: TransactionRequest[]) => {
+  const createBatchTransactions = useCallback(async (transactions: TransactionRequest[]) => {
     try {
       setLoading(true);
       const response = await TransactionService.batchCreateTransactions(transactions);
@@ -20,9 +19,9 @@ export const useTransactions = () => {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  const createTransaction = async (transaction: TransactionRequest) => {
+  const createTransaction = useCallback(async (transaction: TransactionRequest) => {
     try {
       setLoading(true);
       const response = await TransactionService.createTransaction(transaction);
@@ -33,13 +32,13 @@ export const useTransactions = () => {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  const clearTransactions = () => {
+  const clearTransactions = useCallback(() => {
     setTransactions([]);
-  };
+  }, []);
 
-  const updateTransaction = async (transaction: TransactionRequest) => {
+  const updateTransaction = useCallback(async (transaction: TransactionRequest) => {
     try {
       setLoading(true);
       const response = await TransactionService.updateTransaction(transaction.id!, transaction);
@@ -50,9 +49,9 @@ export const useTransactions = () => {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  const deleteTransaction = async (id: string) => {
+  const deleteTransaction = useCallback(async (id: string) => {
     try {
       setLoading(true);
       await TransactionService.deleteTransaction(id);
@@ -62,9 +61,9 @@ export const useTransactions = () => {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  const getTransactions = async (startDate: string, endDate: string, categoryIds?: string[] | null) => {
+  const getTransactions = useCallback(async (startDate: string, endDate: string, categoryIds?: string[] | null) => {
     try {
       setLoading(true);
       const response = await TransactionService.getTransactions(startDate, endDate, categoryIds);
@@ -76,9 +75,9 @@ export const useTransactions = () => {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  const getTransactionById = async (id: string) => {
+  const getTransactionById = useCallback(async (id: string) => {
     try {
       setLoading(true);
       const response = await TransactionService.getTransactionById(id);
@@ -89,7 +88,7 @@ export const useTransactions = () => {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   return { 
     transactions, 
