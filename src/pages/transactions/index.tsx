@@ -22,6 +22,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BankLogo } from "@/components/bank-logo";
+import { DynamicIcon } from "lucide-react/dynamic";
 
 const TransactionsPage = () => {
 	// const navigate = useNavigate();
@@ -73,23 +74,30 @@ const TransactionsPage = () => {
 		},
 		{
 			accessorKey: "category",
-			header: () => <div className="text-center">Categoria</div>,
+			header: () => <div className="text-start">Categoria</div>,
 			size: 150,
 			cell: ({ row }) => {
 				const category = row.getValue("category") as any;
 				if (!category) return <div className="text-center">-</div>;
-				
+
 				return (
-					<div className="text-center">
-						<div className="flex items-center justify-center">
+					<div
+						className="flex items-center"
+						style={{ minHeight: 40 }}
+					>
+						<div className="flex-shrink-0 w-10 flex justify-center items-center">
 							<div
-								className="w-[30px] h-[30px] rounded-full flex justify-center items-center text-white mr-2"
+								className="w-10 h-10 rounded-full flex items-center justify-center text-white"
 								style={{ backgroundColor: category.color }}
 							>
-								<i className={`dripicons-${category.icon}`}></i>
+								<DynamicIcon
+									name={category.icon as any}
+									size={22}
+									className="text-white"
+								/>
 							</div>
-							<span className="truncate">{category.name}</span>
 						</div>
+						<span className="ml-2 text-sm truncate">{category.name}</span>
 					</div>
 				);
 			},
@@ -107,8 +115,8 @@ const TransactionsPage = () => {
 						<div className="flex items-center justify-center">
 							<BankLogo 
 								bankId={wallet.bankId} 
-								size="sm" 
-								fallbackIcon={<Wallet className="w-4 h-4" />}
+								size="md" 
+								fallbackIcon={<Wallet className="w-7 h-4" />}
 								className="mr-2 flex-shrink-0"
 							/>
 							<span className="truncate">{wallet.name}</span>
