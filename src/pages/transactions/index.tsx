@@ -21,19 +21,40 @@ import { BankLogo } from "@/components/bank-logo";
 import { DynamicIcon } from "lucide-react/dynamic";
 import { MonthYearPicker } from "./components/MonthYearPicker";
 import { DateUtils } from "@/utils/date-utils";
+import { FilterSheet } from "./components/FilterSheet";
 
 const TransactionsPage = () => {
 	// const navigate = useNavigate();
 	const { getTransactions } = useTransactions();
 	const [transactionsData, setTransactionsData] = useState<TransactionsRecordResponse | null>(null);
 	const [currentDate, setCurrentDate] = useState(new Date());
+	const [activeFilters, setActiveFilters] = useState<{
+		startDate: string;
+		endDate: string;
+		categoryIds: string[];
+	} | null>(null);
 
-	// Carrega transações sempre que currentDate mudar
+	// Carrega transações sempre que currentDate mudar ou filtros mudarem
 	useEffect(() => {
 		const loadTransactionsForDate = async () => {
 			try {
-				const { startDate, endDate } = DateUtils.getMonthStartAndEnd(currentDate);
-				const response = await getTransactions(startDate, endDate, []);
+				let startDate: string;
+				let endDate: string;
+				let categoryIds: string[] = [];
+
+				if (activeFilters) {
+					// Usar filtros personalizados
+					startDate = activeFilters.startDate;
+					endDate = activeFilters.endDate;
+					categoryIds = activeFilters.categoryIds;
+				} else {
+					// Usar mês atual
+					const monthDates = DateUtils.getMonthStartAndEnd(currentDate);
+					startDate = monthDates.startDate;
+					endDate = monthDates.endDate;
+				}
+
+				const response = await getTransactions(startDate, endDate, categoryIds);
 				setTransactionsData(response);
 			} catch (error) {
 				console.error("Erro ao carregar transações:", error);
@@ -41,7 +62,21 @@ const TransactionsPage = () => {
 		};
 
 		loadTransactionsForDate();
-	}, [currentDate, getTransactions]);
+	}, [currentDate, getTransactions, activeFilters]);
+
+	const handleApplyFilters = (filters: {
+		startDate: string;
+		endDate: string;
+		categoryIds: string[];
+	}) => {
+		setActiveFilters(filters);
+	};
+
+	const handleMonthYearChange = (date: Date) => {
+		setCurrentDate(date);
+		// Limpar filtros personalizados quando mudar o mês
+		setActiveFilters(null);
+	};
 
 	const allTransactions = transactionsData?.records?.flatMap(record => record.transactions) || [];
 
@@ -177,10 +212,6 @@ const TransactionsPage = () => {
 		},
 	];
 
-	const handleMonthYearChange = (date: Date) => {
-		setCurrentDate(date);
-	};
-
 	return (
 		<>
 			<div className="flex justify-between items-center">
@@ -190,13 +221,16 @@ const TransactionsPage = () => {
 					<Plus className="h-4 w-4 mr-2" />
 					Nova Transação
 				</Button>
+				<FilterSheet onApplyFilters={handleApplyFilters} />
 			</div>
 
 			<DataTable 
 				columns={columns} 
 				data={allTransactions} 
 				toolbar={
-					<MonthYearPicker date={currentDate} onChange={handleMonthYearChange} />
+					<div className="flex items-center gap-2">
+						<MonthYearPicker date={currentDate} onChange={handleMonthYearChange} />
+					</div>
 				}
 			/>
 		</>
