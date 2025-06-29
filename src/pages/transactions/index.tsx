@@ -1,15 +1,30 @@
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+// import { Button } from "@/components/ui/button";
+// import { Plus } from "lucide-react";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
-// import { formatCurrency } from "@/utils/currency-utils";
+import { formatCurrency } from "@/utils/currency-utils";
 import { useTransactions } from "./hooks/use-transactions";
 import { useEffect, useState } from "react";
 import TransactionsRecordResponse from "@/api/dtos/transaction/transactionRecordResponse";
+import { Button } from "@/components/ui/button";
+import { MoreVertical, Plus, Wallet } from "lucide-react";
+import { DataTable } from "@/components/data-table/data-table";
+import { ColumnDef } from "@tanstack/react-table";
+import { TransactionResponse } from "@/api/dtos/transaction/transactionResponse";
+import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { BankLogo } from "@/components/bank-logo";
 
 const TransactionsPage = () => {
-	const navigate = useNavigate();
+	// const navigate = useNavigate();
 	const { getTransactions } = useTransactions();
 	const [transactionsData, setTransactionsData] = useState<TransactionsRecordResponse | null>(null);
 
@@ -17,7 +32,7 @@ const TransactionsPage = () => {
 		const loadTransactions = async () => {
 			try {
 				const response = await getTransactions("2024-01-01", "2024-12-31", []);
-				setTransactionsData(response.data);
+				setTransactionsData(response);
 			} catch (error) {
 				console.error("Erro ao carregar transações:", error);
 			}
@@ -25,20 +40,147 @@ const TransactionsPage = () => {
 		loadTransactions();
 	}, []);
 
+	const allTransactions = transactionsData?.records?.flatMap(record => record.transactions) || [];
+
+	const columns: ColumnDef<TransactionResponse>[] = [
+		{
+			accessorKey: "depositedDate",
+			header: () => <div className="text-left">Data</div>,
+			size: 100,
+			cell: ({ row }) => {
+				const date = new Date(row.getValue("depositedDate")).toLocaleDateString("pt-BR");
+				return <div className="text-left">{date}</div>;
+			},
+		},
+		{
+			accessorKey: "description",
+			header: () => <div className="text-center">Descrição</div>,
+			size: 300,
+			cell: ({ row }) => {
+				const description = row.getValue("description") as string;
+				
+				return (
+					<div className="text-center">
+						<span
+							title={description}
+							className="block truncate"
+						>
+							{description}
+						</span>
+					</div>
+				);
+			},
+		},
+		{
+			accessorKey: "category",
+			header: () => <div className="text-center">Categoria</div>,
+			size: 150,
+			cell: ({ row }) => {
+				const category = row.getValue("category") as any;
+				if (!category) return <div className="text-center">-</div>;
+				
+				return (
+					<div className="text-center">
+						<div className="flex items-center justify-center">
+							<div
+								className="w-[30px] h-[30px] rounded-full flex justify-center items-center text-white mr-2"
+								style={{ backgroundColor: category.color }}
+							>
+								<i className={`dripicons-${category.icon}`}></i>
+							</div>
+							<span className="truncate">{category.name}</span>
+						</div>
+					</div>
+				);
+			},
+		},
+		{
+			accessorKey: "wallet",
+			header: () => <div className="text-center">Conta</div>,
+			size: 150,
+			cell: ({ row }) => {
+				const wallet = row.getValue("wallet") as any;
+				if (!wallet) return <div className="text-center">-</div>;
+				
+				return (
+					<div className="text-center">
+						<div className="flex items-center justify-center">
+							<BankLogo 
+								bankId={wallet.bankId} 
+								size="sm" 
+								fallbackIcon={<Wallet className="w-4 h-4" />}
+								className="mr-2 flex-shrink-0"
+							/>
+							<span className="truncate">{wallet.name}</span>
+						</div>
+					</div>
+				);
+			},
+		},
+		{
+			accessorKey: "amount",
+			header: () => <div className="text-right">Valor</div>,
+			size: 120,
+			cell: ({ row }) => {
+				const amount = Number(row.getValue("amount"));
+				const isNegative = amount < 0;
+				
+				return (
+					<div className="text-right">
+						<span className={isNegative ? "text-red-500" : "text-green-500"}>
+							{formatCurrency(amount)}
+						</span>
+					</div>
+				);
+			},
+		},
+		{
+			id: "actions",
+			header: () => <div className="text-right">Ações</div>,
+			size: 80,
+			cell: ({ row }) => {
+				const transaction = row.original;
+
+				return (
+					<div className="text-right">
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="ghost" className="h-8 w-8 p-0">
+									<span className="sr-only">Abrir menu</span>
+									<MoreVertical className="h-4 w-4" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuLabel>Ações</DropdownMenuLabel>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem>
+									<Edit className="mr-2 h-4 w-4" />
+									Editar
+								</DropdownMenuItem>
+								<DropdownMenuItem className="text-red-600">
+									<Trash2 className="mr-2 h-4 w-4" />
+									Excluir
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
+				);
+			},
+		},
+	];
+
 	return (
 		<>
-			<PageBreadcrumbNav title="Transações" />
-			
-			<div className="container mx-auto py-8">
-
-				<div className="grid gap-4">
-					{transactionsData?.records.map(record => (
-						<Card key={record.date} className="p-4">
-							{/* Renderização do card com base no tipo de registro */}
-						</Card>
-					))}
-				</div>
+			<div className="flex justify-between items-center">
+				<PageBreadcrumbNav title="Transações" />
+				<Button onClick={() => {
+				}}>
+					<Plus className="h-4 w-4 mr-2" />
+					Nova Categoria
+				</Button>
 			</div>
+
+			<DataTable columns={columns} data={allTransactions} />
 		</>
 	);
 };
