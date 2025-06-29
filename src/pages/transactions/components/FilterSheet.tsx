@@ -63,7 +63,7 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({ onApplyFilters }) => {
 	return (
 		<Sheet open={isOpen} onOpenChange={setIsOpen}>
 			<SheetTrigger asChild>
-				<Button variant="outline" size="sm" className="relative">
+				<Button variant="outline">
 					<Filter className="h-4 w-4 mr-2" />
 					Filtros
 					{hasActiveFilters && (

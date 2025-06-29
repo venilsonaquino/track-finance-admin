@@ -216,12 +216,14 @@ const TransactionsPage = () => {
 		<>
 			<div className="flex justify-between items-center">
 				<PageBreadcrumbNav title="Transações" />
-				<Button onClick={() => {
-				}}>
-					<Plus className="h-4 w-4 mr-2" />
-					Nova Transação
-				</Button>
-				<FilterSheet onApplyFilters={handleApplyFilters} />
+				<div className="flex justify-end gap-2 mb-4">
+					<Button onClick={() => {
+					}}>
+						<Plus className="h-4 w-4 mr-2" />
+						Nova Transação
+					</Button>
+					<FilterSheet onApplyFilters={handleApplyFilters} />
+				</div>
 			</div>
 
 			<DataTable 
