@@ -1,7 +1,6 @@
 import { Suspense, lazy, type ReactNode, useState, useEffect } from 'react';
 import { Progress } from "@/components/ui/progress";
 
-const Footer = lazy(() => import('@/layout/Footer'));
 const LeftSideBar = lazy(() => import('@/layout/LeftSidebar'));
 const TopNavbar = lazy(() => import('@/layout/TopNavbar'));
 

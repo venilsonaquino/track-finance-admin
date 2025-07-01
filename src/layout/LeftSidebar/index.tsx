@@ -157,7 +157,6 @@ const LeftSidebar = () => {
           side="left" 
           className="p-0 w-64" 
           title="Menu de navegação Track Finance"
-          description="Painel lateral com links de navegação do sistema. Pressione Escape para fechar."
         >
           <SidebarMenu />
         </SheetContent>
