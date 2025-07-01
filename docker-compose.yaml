@@ -5,7 +5,7 @@ services:
     container_name: track-finance-frontend
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile.dev
     networks:
       - trackfinannet
     ports:
