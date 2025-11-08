@@ -1,15 +1,23 @@
-import { useState } from "react";
+import { useMemo, useState, useCallback } from "react";
+import {
+  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
+} from "@/components/ui/sheet";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-// removed Input import (not used in this layout)
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-// using native overflow for scroll areas
 import { Check, Tag, ChevronDown, ListTodo, X } from "lucide-react";
 import { toast } from "sonner";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
-const mockCategories = [
+type ID = string;
+type Category = { id: ID; name: string; color: string };
+type Group = { id: ID; name: string; color: string };
+type Assignments = Record<ID, ID[]>;
+
+/* =============================================================================
+ * MOCKS
+ * ========================================================================== */
+const CATEGORIES: Category[] = [
   { id: "1", name: "Viagem", color: "#3b82f6" },
   { id: "2", name: "Vestuário", color: "#ef4444" },
   { id: "3", name: "Transporte", color: "#0ea5e9" },
@@ -30,309 +38,396 @@ const mockCategories = [
   { id: "18", name: "Assinaturas", color: "#10b981" },
   { id: "19", name: "Combustível", color: "#f59e0b" },
   { id: "20", name: "Outros", color: "#6b7280" },
-  { id: "g1", name: "Sem Grupo", color: "#9ca3af" },
-  { id: "g2", name: "Gastos Essenciais", color: "#ef4444" },
-  { id: "g3", name: "Lazer", color: "#3b82f6" },
-  { id: "g4", name: "Investimentos", color: "#f59e0b" },
-
 ];
 
-const mockGroups = [
+const GROUPS: Group[] = [
   { id: "g1", name: "Sem Grupo", color: "#9ca3af" },
   { id: "g2", name: "Gastos Essenciais", color: "#ef4444" },
   { id: "g3", name: "Lazer", color: "#3b82f6" },
   { id: "g4", name: "Investimentos", color: "#f59e0b" },
   { id: "g5", name: "Outros", color: "#6b7280" },
-  { id: "g6", name: "Gastos Essenciais", color: "#ef4444" },
-  { id: "g7", name: "Lazer", color: "#3b82f6" },
-  { id: "g8", name: "Investimentos", color: "#f59e0b" },
-  { id: "g9", name: "Outros", color: "#6b7280" },
-  { id: "g10", name: "Diversão", color: "#22c55e" },
-  { id: "g11", name: "Saúde", color: "#14b8a6" },
-  { id: "g12", name: "Educação", color: "#f97316" },
-  { id: "g13", name: "Transporte", color: "#0ea5e9" },
-  { id: "g14", name: "Alimentação", color: "#f59e0b" },
-  { id: "g15", name: "Moradia", color: "#ef4444" },
+  { id: "g6", name: "Diversão", color: "#22c55e" },
+  { id: "g7", name: "Saúde", color: "#14b8a6" },
+  { id: "g8", name: "Educação", color: "#f97316" },
+  { id: "g9", name: "Transporte", color: "#0ea5e9" },
+  { id: "g10", name: "Alimentação", color: "#f59e0b" },
+  { id: "g11", name: "Moradia", color: "#ef4444" },
 ];
 
-export interface ManageGroupsSheetProps {
-  labelButton?: string;
+
+const cloneAssignments = (a: Assignments): Assignments =>
+  JSON.parse(JSON.stringify(a));
+
+const removeFromAll = (a: Assignments, id: ID): Assignments => {
+  const next: Assignments = {};
+  for (const [g, ids] of Object.entries(a)) next[g] = ids.filter(x => x !== id);
+  return next;
+};
+
+const addToGroup = (a: Assignments, groupId: ID, id: ID): Assignments => {
+  const next = cloneAssignments(a);
+  next[groupId] ??= [];
+  if (!next[groupId].includes(id)) next[groupId].push(id);
+  return next;
+};
+
+const equalAssignments = (a: Assignments, b: Assignments | null) =>
+  b ? JSON.stringify(a) === JSON.stringify(b) : true;
+
+function ColumnHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <CardHeader className="flex-row items-center justify-between border-b">
+      <CardTitle className="flex items-center gap-2">
+        {icon} {title}
+      </CardTitle>
+    </CardHeader>
+  );
 }
 
-export const ManageGroupsSheet: React.FC<ManageGroupsSheetProps> = ({ labelButton = "Organizar" }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [selectedGroup, setSelectedGroup] = useState<string | undefined>(undefined);
-  const [openGroups, setOpenGroups] = useState<string[]>(mockGroups.map((g) => g.id));
-  const [assignments, setAssignments] = useState<Record<string, string[]>>(Object.fromEntries(
-    mockGroups.map((g) => [g.id, [] as string[]])
-  ));
-  const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
-  const toggleGroup = (id: string) =>
-    setOpenGroups((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
-
-  const unassignedCategories = mockCategories.filter(
-    (c) => /^[0-9]+$/.test(c.id) && !Object.values(assignments).flat().includes(c.id)
+function CategoryRow({
+  cat, selected, onToggle, draggable, onDragStart,
+}: {
+  cat: Category;
+  selected: boolean;
+  onToggle: () => void;
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+}) {
+  return (
+    <button
+      key={cat.id}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onClick={onToggle}
+      className={[
+        "w-full flex items-center justify-between rounded-lg border px-3 py-2 text-left transition",
+        "hover:bg-muted/50",
+        selected ? "border-blue-200 bg-blue-50/50" : "border-border",
+      ].join(" ")}
+    >
+      <div className="flex items-center gap-3">
+        <span className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
+        <span className="text-sm font-medium">{cat.name}</span>
+      </div>
+      {selected && <Check className="h-4 w-4 text-blue-600" />}
+    </button>
   );
+}
 
-  const handleDragStart = (e: React.DragEvent, categoryId: string) => {
-    e.dataTransfer.setData("text/plain", categoryId);
-    e.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDragOver = (e: React.DragEvent, groupId: string) => {
-    e.preventDefault();
-    setDragOverGroup(groupId);
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDragLeave = (_e: React.DragEvent) => setDragOverGroup(null);
-
-  const handleDrop = (e: React.DragEvent, groupId: string) => {
-    e.preventDefault();
-    const categoryId = e.dataTransfer.getData("text/plain");
-    if (!categoryId) return;
-
-    setAssignments((prev) => {
-      // remove from any other group
-      const cleaned = Object.fromEntries(
-        Object.entries(prev).map(([k, v]) => [k, v.filter((id) => id !== categoryId)])
-      ) as Record<string, string[]>;
-
-      if (!cleaned[groupId].includes(categoryId)) {
-        cleaned[groupId] = [...cleaned[groupId], categoryId];
-      }
-      return cleaned;
-    });
-
-    setSelected((prev) => prev.filter((id) => id !== categoryId));
-    setDragOverGroup(null);
-    // short visual feedback
-    setLastDroppedGroup(groupId);
-    window.setTimeout(() => setLastDroppedGroup(null), 700);
-
-    const cat = mockCategories.find((m) => m.id === categoryId);
-    const group = mockGroups.find((g) => g.id === groupId);
-    const catName = cat?.name ?? "Categoria";
-    const groupName = group?.name ?? "grupo";
-    toast.success(`${catName} adicionada a ${groupName}`);
-  };
-
-  const [lastDroppedGroup, setLastDroppedGroup] = useState<string | null>(null);
-
-  const handleDropToUnassigned = (e: React.DragEvent) => {
-    e.preventDefault();
-    const categoryId = e.dataTransfer.getData("text/plain");
-    if (!categoryId) return;
-
-    setAssignments((prev) => {
-      const cleaned = Object.fromEntries(
-        Object.entries(prev).map(([k, v]) => [k, v.filter((id) => id !== categoryId)])
-      ) as Record<string, string[]>;
-      return cleaned;
-    });
-
-    setSelected((prev) => prev.filter((id) => id !== categoryId));
-    setDragOverGroup(null);
-    // visual feedback when returned to unassigned
-    setLastDroppedGroup("unassigned");
-    window.setTimeout(() => setLastDroppedGroup(null), 700);
-
-    const cat = mockCategories.find((m) => m.id === categoryId);
-    const catName = cat?.name ?? "Categoria";
-    toast.success(`${catName} removida do grupo`);
-  };
-
-  const handleRemoveFromGroup = (categoryId: string, groupId: string) => {
-    setAssignments((prev) => ({
-      ...prev,
-      [groupId]: prev[groupId].filter((id) => id !== categoryId),
-    }));
-    toast.success("Categoria removida do grupo");
-  };
-
-  const handleMoveSelected = () => {
-    if (!selectedGroup) return;
-    const toMove = selected;
-    if (!toMove.length) return;
-
-    setAssignments((prev) => {
-      const cleaned = Object.fromEntries(
-        Object.entries(prev).map(([k, v]) => [k, v.filter((id) => !toMove.includes(id))])
-      ) as Record<string, string[]>;
-      cleaned[selectedGroup] = [...(cleaned[selectedGroup] || []), ...toMove.filter((id) => !cleaned[selectedGroup].includes(id))];
-      return cleaned;
-    });
-
-    const groupName = mockGroups.find((g) => g.id === selectedGroup)?.name || "grupo";
-    toast.success(`${toMove.length} categoria${toMove.length > 1 ? "s" : ""} movida${toMove.length > 1 ? "s" : ""} para ${groupName}`);
-    setSelected([]);
-    setSelectedGroup(undefined);
-  };
+function GroupCard({
+  group,
+  count,
+  open,
+  onToggle,
+  children,
+  dragState,
+  onDragOver,
+  onDrop,
+  onDragLeave,
+}: {
+  group: Group;
+  count: number;
+  open: boolean;
+  onToggle: () => void;
+  children?: React.ReactNode;
+  dragState?: "over" | "pulse" | null;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onDragLeave: () => void;
+}) {
+  const ring = dragState === "over" ? "ring-2 ring-blue-200" : "";
+  const pulse = dragState === "pulse" ? "bg-green-50" : "";
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <div
+      className={`rounded-xl border bg-background ${ring} ${pulse}`}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragLeave={onDragLeave}
+    >
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-t-xl"
+        style={{ borderLeft: `4px solid ${group.color}` }}
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">{group.name}</span>
+          <Badge variant="secondary">{count}</Badge>
+        </div>
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="border-t px-3 py-2 text-sm text-muted-foreground rounded-b-xl">
+          {count === 0 ? (
+            <div className="px-3 py-6 text-center border-dashed">
+              Solte categorias aqui ou use “Mover”.
+            </div>
+          ) : (
+            <div className="space-y-2">{children}</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MoveBar({
+  groups, selectedCount, selectedGroup, onChangeGroup, onMove,
+}: {
+  groups: Group[];
+  selectedCount: number;
+  selectedGroup?: ID;
+  onChangeGroup: (id: ID) => void;
+  onMove: () => void;
+}) {
+  return (
+    <CardFooter className="border-t bg-background/95 py-3 flex items-center justify-between px-4">
+      <span className="text-xs text-muted-foreground">
+        {selectedCount} selecionada{selectedCount !== 1 ? "s" : ""}
+      </span>
+      <div className="flex items-center gap-2">
+        <Select value={selectedGroup} onValueChange={onChangeGroup}>
+          <SelectTrigger className="h-9 w-40">
+            <SelectValue placeholder="Mover para..." />
+          </SelectTrigger>
+          <SelectContent>
+            {groups.map((g) => (
+              <SelectItem key={g.id} value={g.id}>
+                <span className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: g.color }} />
+                  {g.name}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button size="sm" disabled={!selectedCount || !selectedGroup} onClick={onMove}>
+          Mover
+        </Button>
+      </div>
+    </CardFooter>
+  );
+}
+
+
+type ManageGroupsSheetProps = { 
+  labelButton?: string; 
+}
+
+export default function ManageGroupsSheet({ labelButton = "Organizar" }: ManageGroupsSheetProps) {
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<ID[]>(GROUPS.map(g => g.id));
+  const [dragOverGroup, setDragOverGroup] = useState<ID | null>(null);
+  const [pulseGroup, setPulseGroup] = useState<ID | null>(null);
+
+  const [selectedIds, setSelectedIds] = useState<ID[]>([]);
+
+  const toggleSelected = (id: ID) =>
+    setSelectedIds(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]));
+  
+  const clearSelection = () => setSelectedIds([]);
+
+  const [assignments, setAssignments] = useState<Assignments>(
+    Object.fromEntries(GROUPS.map(g => [g.id, []]))
+  );
+
+  const [initialAssignments, setInitialAssignments] = useState<Assignments | null>(null);
+
+  const assignedSet = useMemo(
+    () => new Set(Object.values(assignments).flat()),
+    [assignments]
+  );
+
+  const unassigned = useMemo(
+    () => CATEGORIES.filter(c => !assignedSet.has(c.id)),
+    [assignedSet]
+  );
+
+  const openSheet = (open: boolean) => {
+    if (open) setInitialAssignments(cloneAssignments(assignments));
+    setIsOpen(open);
+  };
+
+  const cancelChanges = () => {
+    if (initialAssignments) setAssignments(cloneAssignments(initialAssignments));
+    clearSelection();
+    setIsOpen(false);
+  };
+
+  const saveChanges = () => {
+    setInitialAssignments(cloneAssignments(assignments));
+    clearSelection();
+    setIsOpen(false);
+    toast.success("Alterações salvas");
+  };
+
+  const moveIdsToGroup = useCallback((ids: ID[], groupId: ID) => {
+    if (!ids.length) return;
+    setAssignments(prev => {
+      let next = cloneAssignments(prev);
+      ids.forEach(id => { next = addToGroup(removeFromAll(next, id), groupId, id); });
+      return next;
+    });
+    const gname = GROUPS.find(g => g.id === groupId)?.name ?? "grupo";
+    toast.success(`${ids.length} categoria${ids.length > 1 ? "s" : ""} movida${ids.length > 1 ? "s" : ""} para ${gname}`);
+    clearSelection();
+  }, []);
+
+  const removeFromGroup = (id: ID, groupId: ID) =>
+    setAssignments(prev => ({ ...prev, [groupId]: prev[groupId].filter(x => x !== id) }));
+
+  // Drag & Drop
+  const onDragStart = (e: React.DragEvent, id: ID) => {
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const onDragOverGroup = (e: React.DragEvent, gid: ID) => {
+    e.preventDefault();
+    setDragOverGroup(gid);
+  };
+  const onDropToGroup = (e: React.DragEvent, gid: ID) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/plain");
+    if (!id) return;
+    moveIdsToGroup([id], gid);
+    setDragOverGroup(null);
+    setPulseGroup(gid);
+    setTimeout(() => setPulseGroup(null), 700);
+  };
+  const onDragLeaveGroup = () => setDragOverGroup(null);
+
+  const onDropToUnassigned = (e: React.DragEvent) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/plain");
+    if (!id) return;
+    setAssignments(prev => removeFromAll(prev, id));
+    toast.success("Categoria removida do grupo");
+    setPulseGroup("unassigned");
+    setTimeout(() => setPulseGroup(null), 700);
+  };
+
+  const [targetGroup, setTargetGroup] = useState<ID | undefined>(undefined);
+
+  const toggleGroupOpen = (gid: ID) =>
+    setOpenGroups(list => (list.includes(gid) ? list.filter(x => x !== gid) : [...list, gid]));
+
+  return (
+    <Sheet open={isOpen} onOpenChange={openSheet}>
       <SheetTrigger asChild>
         <Button>
           <ListTodo className="h-4 w-4 mr-2" />
           {labelButton}
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[720px] sm:w-[820px] sm:max-w-[820px] p-0 h-full">
+
+      <SheetContent side="right" className="w-[720px] sm:w-[820px] p-0 h-full">
         <div className="flex flex-col h-full">
           <SheetHeader className="px-6 py-4 border-b">
             <SheetTitle className="text-lg font-semibold">Organizar Grupos & Categorias</SheetTitle>
           </SheetHeader>
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 min-h-0">
-            {/* Coluna de categorias */}
-            <Card className="overflow-hidden flex flex-col h-full min-h-0">
-              <CardHeader className="flex-row items-center justify-between border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <Tag className="h-4 w-4 text-muted-foreground" /> Categorias sem grupo
-                </CardTitle>
-              </CardHeader>
 
-              {/* Lista de categorias ocupa toda a altura entre header e footer */}
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 min-h-0">
+            {/* CATEGORIAS SEM GRUPO */}
+            <Card className="overflow-hidden flex flex-col h-full min-h-0">
+              <ColumnHeader icon={<Tag className="h-4 w-4 text-muted-foreground" />} title="Categorias sem grupo" />
+
               <div
-                className={`p-4 pt-3 flex-1 flex flex-col min-h-0 ${dragOverGroup === "unassigned" ? "ring-2 ring-blue-200" : ""} ${lastDroppedGroup === "unassigned" ? "bg-green-50" : ""}`}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOverGroup("unassigned");
-                }}
-                onDrop={handleDropToUnassigned}
+                className={[
+                  "p-4 pt-3 flex-1 flex flex-col min-h-0",
+                  dragOverGroup === "unassigned" ? "ring-2 ring-blue-200" : "",
+                  pulseGroup === "unassigned" ? "bg-green-50" : "",
+                ].join(" ")}
+                onDragOver={(e) => { e.preventDefault(); setDragOverGroup("unassigned"); }}
+                onDrop={onDropToUnassigned}
                 onDragLeave={() => setDragOverGroup(null)}
               >
                 <div className="space-y-2 overflow-y-auto pr-2 flex-1">
-                  {unassignedCategories.map((c) => {
-                    const isSelected = selected.includes(c.id);
-                    return (
-                      <button
-                        key={c.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, c.id)}
-                        onClick={() =>
-                          setSelected((prev) =>
-                            prev.includes(c.id)
-                              ? prev.filter((id) => id !== c.id)
-                              : [...prev, c.id]
-                          )
-                        }
-                        className={`w-full flex items-center justify-between rounded-lg border px-3 py-2 text-left transition hover:bg-muted/50 ${isSelected ? "border-blue-200 bg-blue-50/50" : "border-border"
-                          }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: c.color }} />
-                          <span className="text-sm font-medium">{c.name}</span>
-                        </div>
-                        {isSelected && <Check className="h-4 w-4 text-blue-600" />}
-                      </button>
-                    );
-                  })}
-                  </div>
+                  {unassigned.map(cat => (
+                    <CategoryRow
+                      key={cat.id}
+                      cat={cat}
+                      selected={selectedIds.includes(cat.id)}
+                      onToggle={() => toggleSelected(cat.id)}
+                      draggable
+                      onDragStart={(e) => onDragStart(e, cat.id)}
+                    />
+                  ))}
                 </div>
+              </div>
 
-              <CardFooter className="border-t bg-background/95 py-3 flex items-center justify-between px-4">
-                <span className="text-xs text-muted-foreground">
-                  {selected.length} selecionada{selected.length !== 1 ? "s" : ""}
-                </span>
-                <div className="flex items-center gap-2">
-                  <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                    <SelectTrigger className="h-9 w-40">
-                      <SelectValue placeholder="Mover para..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mockGroups.map((g) => (
-                        <SelectItem key={g.id} value={g.id}>
-                          <span className="flex items-center gap-2">
-                            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: g.color }} />
-                            {g.name}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button size="sm" disabled={!selected.length || !selectedGroup} onClick={handleMoveSelected}>Mover</Button>
-                </div>
-              </CardFooter>
+              <MoveBar
+                groups={GROUPS}
+                selectedCount={selectedIds.length}
+                selectedGroup={targetGroup}
+                onChangeGroup={setTargetGroup}
+                onMove={() => targetGroup && moveIdsToGroup(selectedIds, targetGroup)}
+              />
             </Card>
 
-            {/* Coluna de grupos */}
             <Card className="overflow-hidden flex flex-col h-full min-h-0">
-              <CardHeader className="flex-row items-center justify-between border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <Tag className="h-4 w-4 text-muted-foreground" /> Grupos
-                </CardTitle>
-              </CardHeader>
+              <ColumnHeader icon={<Tag className="h-4 w-4 text-muted-foreground" />} title="Grupos" />
+
               <div className="p-4 pt-3 flex-1 flex flex-col min-h-0">
                 <div className="space-y-2 overflow-y-auto pr-2 flex-1">
-                  {mockGroups.map((g) => (
-                    <div
+                  {GROUPS.map(g => (
+                    <GroupCard
                       key={g.id}
-                      className={`rounded-xl border bg-background ${dragOverGroup === g.id ? "ring-2 ring-blue-200" : ""} ${lastDroppedGroup === g.id ? "bg-green-50" : ""}`}
-                      onDragOver={(e) => handleDragOver(e, g.id)}
-                      onDrop={(e) => handleDrop(e, g.id)}
-                      onDragLeave={handleDragLeave}
+                      group={g}
+                      count={assignments[g.id]?.length ?? 0}
+                      open={openGroups.includes(g.id)}
+                      onToggle={() => toggleGroupOpen(g.id)}
+                      dragState={
+                        dragOverGroup === g.id ? "over" : pulseGroup === g.id ? "pulse" : null
+                      }
+                      onDragOver={(e) => onDragOverGroup(e, g.id)}
+                      onDrop={(e) => onDropToGroup(e, g.id)}
+                      onDragLeave={onDragLeaveGroup}
                     >
-                      <button
-                        onClick={() => toggleGroup(g.id)}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-t-xl"
-                        style={{ borderLeft: `4px solid ${g.color}` }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{g.name}</span>
-                          <Badge variant="secondary">{assignments[g.id]?.length ?? 0}</Badge>
-                        </div>
-                        <ChevronDown className={`h-4 w-4 transition-transform ${openGroups.includes(g.id) ? "rotate-180" : ""}`} />
-                      </button>
-                      {openGroups.includes(g.id) && (
-                        <div className="border-t px-3 py-2 text-sm text-muted-foreground rounded-b-xl">
-                          {assignments[g.id] && assignments[g.id].length > 0 ? (
-                            <div className="space-y-2">
-                              {assignments[g.id].map((catId) => {
-                                const cat = mockCategories.find((m) => m.id === catId);
-                                if (!cat) return null;
-                                return (
-                                  <div
-                                    key={cat.id}
-                                    draggable
-                                    onDragStart={(e) => handleDragStart(e, cat.id)}
-                                    className="w-full flex items-center justify-between rounded-lg border px-3 py-2 text-left bg-white"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                                      <span className="text-sm font-medium">{cat.name}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleRemoveFromGroup(cat.id, g.id)}
-                                        className="h-7 w-7 p-0"
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                      {(assignments[g.id] ?? []).map(catId => {
+                        const cat = CATEGORIES.find(c => c.id === catId)!;
+                        return (
+                          <div
+                            key={cat.id}
+                            draggable
+                            onDragStart={(e) => onDragStart(e, cat.id)}
+                            className="w-full flex items-center justify-between rounded-lg border px-3 py-2 bg-white"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
+                              <span className="text-sm font-medium">{cat.name}</span>
                             </div>
-                          ) : (
-                            <div className="px-3 py-6 text-center text-sm text-muted-foreground border-dashed">
-                              Solte categorias aqui ou use “Mover”.
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeFromGroup(cat.id, g.id)}
+                              className="h-7 w-7 p-0"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </GroupCard>
                   ))}
                 </div>
               </div>
             </Card>
           </div>
+
+          <SheetFooter className="px-6 py-4 border-t bg-muted/20">
+            <div className="flex gap-3 w-full">
+              <Button variant="ghost" onClick={cancelChanges} className="flex-1 h-10">
+                Cancelar
+              </Button>
+              <Button onClick={saveChanges} className="flex-1 h-10">
+                Salvar
+              </Button>
+            </div>
+          </SheetFooter>
         </div>
       </SheetContent>
     </Sheet>
   );
 }
-
-export default ManageGroupsSheet;

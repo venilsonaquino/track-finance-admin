@@ -5,9 +5,7 @@ import { BUDGET_MOCK } from "./budget.mock";
 import ReadOnlyBlock from "./components/ReadOnlyBlock";
 import EditableBlock from "./components/EditableBlock";
 import { EditableSectionState, MonthKey, SectionEditable } from "./types";
-import { ListTodo } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ManageGroupsSheet } from "./components/ManageGroupsSheet";
+import ManageGroupsSheet from "./components/ManageGroupsSheet";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
