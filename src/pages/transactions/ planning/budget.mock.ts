@@ -66,7 +66,7 @@ export const BUDGET_MOCK: BudgetPayload = {
     id: "01JB9QF7D0SALDO0000001",
     title: "SALDO",
     kind: "computed",
-    color: "zinc-900",
+    color: "border-zinc-900",
     rows: [
       { id: "01JB9QF7D0RECEITAS001", label: "Receitas",           refSectionTitle: "RECEITAS",          agg: "sum" },
       { id: "01JB9QF7D0ESSENC001", label: "Gastos Essenciais",  refSectionTitle: "GASTOS ESSENCIAIS", agg: "sum" },
@@ -83,7 +83,7 @@ export const BUDGET_MOCK: BudgetPayload = {
       id: "01JB9QF7D0RECEITAS001",
       title: "RECEITAS",
       kind: "editable",
-      color: "emerald-50",
+      color: "border-emerald-500",
       footerLabel: "Total receitas",
       rows: [
         { id: "01JB9QF7D0REC001SAL", label: "Salário", values: zeroYear() }
@@ -93,7 +93,7 @@ export const BUDGET_MOCK: BudgetPayload = {
       id: "01JB9QF7D0ESSENC001",
       title: "GASTOS ESSENCIAIS",
       kind: "editable",
-      color: "red-50",
+      color: "border-red-500",
       footerLabel: "Total essenciais",
       rows: [
         // { id: "01JB9QF7D0ESS001", label: "Aluguel/Financiamento", values: zeroYear() },
@@ -115,7 +115,7 @@ export const BUDGET_MOCK: BudgetPayload = {
       id: "01JB9QF7D0DIVPOUP01",
       title: "DÍVIDAS/POUPAR",
       kind: "editable",
-      color: "zinc-900",
+      color: "border-yellow-500",
       footerLabel: "Total dívidas/poupar",
       rows: [
         { id: "01JB9QF7D0DIV001", label: "Dívidas/Poupar", values: zeroYear() },
@@ -125,7 +125,7 @@ export const BUDGET_MOCK: BudgetPayload = {
       id: "01JB9QF7D0OUTROS001",
       title: "OUTROS GASTOS",
       kind: "editable",
-      color: "blue-50",
+      color: "border-blue-500",
       footerLabel: "Total outros",
       rows: [
         { id: "01JB9QF7D0OUT001", label: "Outros Gastos", values: zeroYear() },

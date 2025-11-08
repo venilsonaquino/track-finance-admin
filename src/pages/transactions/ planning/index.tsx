@@ -59,6 +59,7 @@ const toValuesArray = (monthOrder: MonthKey[], values: Record<MonthKey, number>)
 
 type EditableSectionState = {
   id: string;
+  color?: string;
   title: SectionEditable["title"];
   footerLabel: string;
   rows: Row[];
@@ -68,12 +69,14 @@ export default function PlanningPage() {
   const monthOrder = BUDGET_MOCK.months;
   const monthLabels = useMemo(() => monthOrder.map((key) => MONTH_LABELS_MAP[key]), [monthOrder]);
 
+  const computedSection = BUDGET_MOCK.sectionsComputed;
+
   const [editableSections, setEditableSections] = useState<EditableSectionState[]>(() =>
     BUDGET_MOCK.sectionsEditable
-      .filter((section): section is SectionEditable => section.kind === "editable")
       .map((section) => ({
         id: section.id,
         title: section.title,
+        color: section.color,
         footerLabel: section.footerLabel,
         rows: section.rows.map((row) => ({
           id: row.id,
@@ -83,7 +86,6 @@ export default function PlanningPage() {
       }))
   );
 
-  const computedSection = BUDGET_MOCK.sectionsComputed;
 
   const totalsBySectionTitle = useMemo(() => {
     const length = monthOrder.length;
@@ -139,47 +141,49 @@ export default function PlanningPage() {
 
   return (
 		<>
-		<PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Planejamento", href: "/transacoes/planejamento" }]} />
-		<div className="flex justify-between items-center">
-      <Card className="shadow-sm">
-        <CardContent className="space-y-6">
-          <ReadOnlyBlock
-            title="SALDO"
-            months={monthLabels}
-            rows={computedRows}
-            footer={computedSection?.footer ? { label: computedSection.footer.label, values: saldoValues } : undefined}
-          />
-          {editableSections.map((section) => (
-            <EditableBlock
-              key={section.id}
-              title={section.title}
+      <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Planejamento", href: "/transacoes/planejamento" }]} />
+      <div className="flex justify-between items-center">
+        <Card className="shadow-sm">
+          <CardContent className="space-y-6">
+            <ReadOnlyBlock
+              title="SALDO"
+              color={computedSection?.color}
               months={monthLabels}
-              rows={section.rows}
-              footerLabel={section.footerLabel}
-              footerValues={totalsBySectionTitle[section.title] ?? monthOrder.map(() => 0)}
-              onUpdateCell={(rowId, monthIndex, factory) => updateCell(section.id, rowId, monthIndex, factory)}
+              rows={computedRows}
+              footer={computedSection?.footer ? { label: computedSection.footer.label, values: saldoValues } : undefined}
             />
-          ))}
-        </CardContent>
-      </Card>
-		</div>
+            {editableSections.map((section) => (
+              <EditableBlock
+                key={section.id}
+                title={section.title}
+                color={section.color}
+                months={monthLabels}
+                rows={section.rows}
+                footerLabel={section.footerLabel}
+                footerValues={totalsBySectionTitle[section.title] ?? monthOrder.map(() => 0)}
+                onUpdateCell={(rowId, monthIndex, factory) => updateCell(section.id, rowId, monthIndex, factory)}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      </div>
 		</>
   );
 }
 
-function SectionTitle({ label }: { label: string }) {
+function SectionTitle({ label, color }: { label: string; color?: string }) {
   return (
     <div className="flex items-center gap-3 mb-2">
-      <div className="border-l-8 border-zinc-700 h-6 rounded-sm" />
+      <div className={`border-l-8 h-6 rounded-sm ${color ? color : 'border-zinc-700'}`} />
       <div className="tracking-wide text-sm font-semibold text-muted-foreground">{label}</div>
     </div>
   );
 }
 
-function ReadOnlyBlock({ title, months, rows, footer }: { title: string; months: string[]; rows: Row[]; footer?: { label: string; values: number[] } }) {
+function ReadOnlyBlock({ title, months, rows, footer, color }: { title: string; months: string[]; rows: Row[]; footer?: { label: string; values: number[] }; color?: string }) {
   return (
     <div>
-      <SectionTitle label={title} />
+      <SectionTitle label={title} color={color} />
       <div className="overflow-x-auto border rounded-md">
         <Table className="table-fixed w-full">
           <ColGroup months={months} />
@@ -226,6 +230,7 @@ function EditableBlock({
   title,
   months,
   rows,
+  color,
   footerLabel,
   footerValues,
   onUpdateCell,
@@ -234,6 +239,7 @@ function EditableBlock({
   title: string;
   months: string[];
   rows: Row[];
+  color?: string;
   footerLabel: string;
   footerValues: number[];
   onUpdateCell: (rowId: string, monthIndex: number, nextValueFactory: (current: number) => number) => void;
@@ -241,7 +247,7 @@ function EditableBlock({
 }) {
   return (
     <div>
-      <SectionTitle label={title} />
+      <SectionTitle label={title} color={color} />
       <div className="overflow-x-auto border rounded-md">
         <Table className="table-fixed w-full">
           <ColGroup months={months} />
