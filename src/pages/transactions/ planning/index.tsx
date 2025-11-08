@@ -1,12 +1,12 @@
-import React, { useMemo, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { X, Plus, History } from "lucide-react";
+import { History } from "lucide-react";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
+import { BUDGET_MOCK, MonthKey, SectionEditable } from "./budget.mock";
 
 // =============================================
 // Planilha estilo imagem com "Somar" rápido para mobile (com Popover)
@@ -16,30 +16,30 @@ import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 // - Sempre SOMA (não subtrai)
 // =============================================
 
-const MONTHS = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
-] as const;
+const MONTH_LABELS_MAP: Record<MonthKey, string> = {
+  Jan: "Janeiro",
+  Fev: "Fevereiro",
+  Mar: "Março",
+  Abr: "Abril",
+  Mai: "Maio",
+  Jun: "Junho",
+  Jul: "Julho",
+  Ago: "Agosto",
+  Set: "Setembro",
+  Out: "Outubro",
+  Nov: "Novembro",
+  Dez: "Dezembro",
+};
 
 // Larguras fixas para alinhar todas as tabelas
 const LABEL_COL_W = 240; // px
 const MONTH_COL_W = 120; // px
 
-function ColGroup() {
+function ColGroup({ months }: { months: string[] }) {
   return (
     <colgroup>
       <col style={{ width: `${LABEL_COL_W}px` }} />
-      {MONTHS.map((_, i) => (
+      {months.map((_, i) => (
         <col key={i} style={{ width: `${MONTH_COL_W}px` }} />
       ))}
     </colgroup>
@@ -53,10 +53,6 @@ type Row = {
   values: number[]; // 12 meses
 };
 
-function uuid() {
-  return Math.random().toString(36).slice(2, 9);
-}
-
 function BRL(n: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 }
@@ -68,71 +64,112 @@ function parseBRDecimal(v: string) {
   return Number.isFinite(n) ? n : 0;
 }
 
-export default function BudgetSheetQuickAddPopover() {
-  const [incomes, setIncomes] = useState<Row[]>([
-    { id: uuid(), label: "Salário", values: Array(12).fill(0) },
-    { id: uuid(), label: "Fonte 2", values: Array(12).fill(0) },
-    { id: uuid(), label: "Fonte 3", values: Array(12).fill(0) },
-    { id: uuid(), label: "Fonte 4", values: Array(12).fill(0) },
-  ]);
+const toValuesArray = (monthOrder: MonthKey[], values: Record<MonthKey, number>) =>
+  monthOrder.map((month) => values[month] ?? 0);
 
-  const [essentials, setEssentials] = useState<Row[]>([
-    { id: uuid(), label: "Aluguel/Financiamento", values: Array(12).fill(0) },
-    { id: uuid(), label: "Condomínio", values: Array(12).fill(0) },
-    { id: uuid(), label: "IPTU", values: Array(12).fill(0) },
-    { id: uuid(), label: "Alimentação", values: Array(12).fill(0) },
-    { id: uuid(), label: "Conta de luz", values: Array(12).fill(0) },
-    { id: uuid(), label: "Conta de Internet", values: Array(12).fill(0) },
-    { id: uuid(), label: "Assinatura de TV", values: Array(12).fill(0) },
-    { id: uuid(), label: "Conta de água", values: Array(12).fill(0) },
-    { id: uuid(), label: "Gás", values: Array(12).fill(0) },
-    { id: uuid(), label: "Água potável", values: Array(12).fill(0) },
-    { id: uuid(), label: "Inglês", values: Array(12).fill(0) },
-    { id: uuid(), label: "Consertos e manutenção", values: Array(12).fill(0) },
-    { id: uuid(), label: "Transporte", values: Array(12).fill(0) },
-  ]);
+type EditableSectionState = {
+  id: string;
+  title: SectionEditable["title"];
+  footerLabel: string;
+  rows: Row[];
+};
 
-  const [debts, setDebts] = useState<Row[]>([
-    { id: uuid(), label: "Dívidas/Poupar", values: Array(12).fill(0) },
-  ]);
-  const [others, setOthers] = useState<Row[]>([
-    { id: uuid(), label: "Outros Gastos", values: Array(12).fill(0) },
-  ]);
+export default function PlanningPage() {
+  const monthOrder = BUDGET_MOCK.months;
+  const monthLabels = useMemo(() => monthOrder.map((key) => MONTH_LABELS_MAP[key]), [monthOrder]);
 
-  const totals = useMemo(() => {
-    const sumCols = (rows: Row[]) => MONTHS.map((_, m) => rows.reduce((acc, r) => acc + (r.values[m] || 0), 0));
-    const tIncomes = sumCols(incomes);
-    const tEssentials = sumCols(essentials);
-    const tDebts = sumCols(debts);
-    const tOthers = sumCols(others);
-    const saldo = MONTHS.map((_, m) => tIncomes[m] - tEssentials[m] - tDebts[m] - tOthers[m]);
-    return { tIncomes, tEssentials, tDebts, tOthers, saldo };
-  }, [incomes, essentials, debts, others]);
+  const [editableSections, setEditableSections] = useState<EditableSectionState[]>(() =>
+    BUDGET_MOCK.sections
+      .filter((section): section is SectionEditable => section.kind === "editable")
+      .map((section) => ({
+        id: section.id,
+        title: section.title,
+        footerLabel: section.footerLabel,
+        rows: section.rows.map((row) => ({
+          id: row.id,
+          label: row.label,
+          values: toValuesArray(monthOrder, row.values),
+        })),
+      }))
+  );
+
+  const computedSection = BUDGET_MOCK.sections.find((section) => section.kind === "computed");
+
+  const totalsBySectionTitle = useMemo(() => {
+    const length = monthOrder.length;
+    return editableSections.reduce((acc, section) => {
+      const totals = Array.from({ length }, (_, idx) =>
+        section.rows.reduce((sum, row) => sum + (row.values[idx] || 0), 0)
+      );
+      acc[section.title] = totals;
+      return acc;
+    }, {} as Partial<Record<SectionEditable["title"], number[]>>);
+  }, [editableSections, monthOrder]);
+
+  const computedRows = (computedSection?.rows ?? []).map((row) => ({
+    id: row.id,
+    label: row.label,
+    values: totalsBySectionTitle[row.refSectionTitle] ?? monthOrder.map(() => 0),
+  }));
+
+  const saldoValues = useMemo(
+    () =>
+      monthOrder.map((_, monthIdx) =>
+        computedRows.reduce((acc, row, rowIndex) =>
+          rowIndex === 0 ? row.values[monthIdx] : acc - (row.values[monthIdx] || 0),
+        0)
+      ),
+    [computedRows, monthOrder]
+  );
+
+  const updateCell = (
+    sectionId: string,
+    rowId: string,
+    monthIndex: number,
+    nextValueFactory: (current: number) => number
+  ) => {
+    setEditableSections((prev) =>
+      prev.map((section) => {
+        if (section.id !== sectionId) return section;
+        return {
+          ...section,
+          rows: section.rows.map((row) => {
+            if (row.id !== rowId) return row;
+            const currentValue = row.values[monthIndex] || 0;
+            const nextValue = nextValueFactory(currentValue);
+            return {
+              ...row,
+              values: row.values.map((value, idx) => (idx === monthIndex ? nextValue : value)),
+            };
+          }),
+        };
+      })
+    );
+  };
 
   return (
 		<>
-		<PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Movimentações", href: "/transacoes/movimentacoes" }]} />
+		<PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Planejamento", href: "/transacoes/planejamento" }]} />
 		<div className="flex justify-between items-center">
       <Card className="shadow-sm">
         <CardContent className="space-y-6">
           <ReadOnlyBlock
             title="SALDO"
-            rows={[
-              { id: "r-Receitas", label: "Receitas", values: totals.tIncomes },
-              { id: "r-Essenciais", label: "Gastos Essenciais", values: totals.tEssentials },
-              { id: "r-Dividas", label: "Dívidas/Poupar", values: totals.tDebts },
-              { id: "r-Outros", label: "Outros Gastos", values: totals.tOthers },
-            ]}
-            footer={{ label: "Saldo", values: totals.saldo }}
+            months={monthLabels}
+            rows={computedRows}
+            footer={computedSection?.footer ? { label: computedSection.footer.label, values: saldoValues } : undefined}
           />
-
-          <EditableBlock title="RECEITAS" rows={incomes} setRows={setIncomes} footerLabel="Total receitas" footerValues={totals.tIncomes} />
-          <EditableBlock title="GASTOS ESSENCIAIS" rows={essentials} setRows={setEssentials} footerLabel="Total essenciais" footerValues={totals.tEssentials} />
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <EditableBlock title="DÍVIDAS / POUPAR" rows={debts} setRows={setDebts} footerLabel="Total dívidas/poupar" footerValues={totals.tDebts} compact />
-            <EditableBlock title="OUTROS GASTOS" rows={others} setRows={setOthers} footerLabel="Total outros" footerValues={totals.tOthers} compact />
-          </div>
+          {editableSections.map((section) => (
+            <EditableBlock
+              key={section.id}
+              title={section.title}
+              months={monthLabels}
+              rows={section.rows}
+              footerLabel={section.footerLabel}
+              footerValues={totalsBySectionTitle[section.title] ?? monthOrder.map(() => 0)}
+              onUpdateCell={(rowId, monthIndex, factory) => updateCell(section.id, rowId, monthIndex, factory)}
+            />
+          ))}
         </CardContent>
       </Card>
 		</div>
@@ -149,24 +186,24 @@ function SectionTitle({ label }: { label: string }) {
   );
 }
 
-function ReadOnlyBlock({ title, rows, footer }: { title: string; rows: Row[]; footer?: { label: string; values: number[] } }) {
+function ReadOnlyBlock({ title, months, rows, footer }: { title: string; months: string[]; rows: Row[]; footer?: { label: string; values: number[] } }) {
   return (
     <div>
       <SectionTitle label={title} />
       <div className="overflow-x-auto border rounded-md">
         <Table className="table-fixed w-full">
-          <ColGroup />
+          <ColGroup months={months} />
           <TableHeader>
-            <TableRow className="bg-zinc-900/90 text-white">
+            <TableRow className="bg-zinc-900/90 text-white hover:bg-zinc-900/90">
               <TableHead className="text-white">Meses</TableHead>
-              {MONTHS.map((m) => (
+              {months.map((m) => (
                 <TableHead key={m} className="text-right text-white">{m}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.map((r) => (
-              <TableRow key={r.id}>
+              <TableRow key={r.id} className="hover:bg-transparent">
                 <TableCell className="font-medium">{r.label}</TableCell>
                 {r.values.map((v, i) => (
                   <TableCell key={i} className="text-right align-middle whitespace-nowrap">{BRL(v)}</TableCell>
@@ -176,10 +213,15 @@ function ReadOnlyBlock({ title, rows, footer }: { title: string; rows: Row[]; fo
           </TableBody>
           {footer && (
             <TableFooter>
-              <TableRow className="bg-amber-50">
-                <TableCell className="font-semibold">{footer.label}</TableCell>
+              <TableRow className="bg-amber-50 hover:bg-amber-50 dark:bg-amber-900/30 dark:hover:bg-amber-900/30">
+                <TableCell className="font-semibold text-zinc-800 dark:text-amber-200">{footer.label}</TableCell>
                 {footer.values.map((v, i) => (
-                  <TableCell key={i} className="text-right font-semibold whitespace-nowrap">{BRL(v)}</TableCell>
+                  <TableCell
+                    key={i}
+                    className="text-right font-semibold whitespace-nowrap text-zinc-800 dark:text-amber-200"
+                  >
+                    {BRL(v)}
+                  </TableCell>
                 ))}
               </TableRow>
             </TableFooter>
@@ -190,35 +232,51 @@ function ReadOnlyBlock({ title, rows, footer }: { title: string; rows: Row[]; fo
   );
 }
 
-function EditableBlock({ title, rows, setRows, footerLabel, footerValues, compact = false }: { title: string; rows: Row[]; setRows: React.Dispatch<React.SetStateAction<Row[]>>; footerLabel: string; footerValues: number[]; compact?: boolean }) {
-  const updateCell = (rowId: string, monthIndex: number, nextValue: number) => {
-    setRows((prev) => prev.map((r) => (r.id === rowId ? { ...r, values: r.values.map((v, i) => (i === monthIndex ? nextValue : v)) } : r)));
-  };
-
+function EditableBlock({
+  title,
+  months,
+  rows,
+  footerLabel,
+  footerValues,
+  onUpdateCell,
+  compact = false,
+}: {
+  title: string;
+  months: string[];
+  rows: Row[];
+  footerLabel: string;
+  footerValues: number[];
+  onUpdateCell: (rowId: string, monthIndex: number, nextValueFactory: (current: number) => number) => void;
+  compact?: boolean;
+}) {
   return (
     <div>
       <SectionTitle label={title} />
       <div className="overflow-x-auto border rounded-md">
         <Table className="table-fixed w-full">
-          <ColGroup />
+          <ColGroup months={months} />
           <TableHeader>
-            <TableRow className="bg-zinc-900/90 text-white">
+            <TableRow className="bg-zinc-900/90 text-white hover:bg-zinc-900/90">
               <TableHead className="w-[240px] text-white">Meses</TableHead>
-              {MONTHS.map((m) => (
+              {months.map((m) => (
                 <TableHead key={m} className="w-[120px] text-right text-white">{m}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow key={row.id} className="hover:bg-transparent">
                 <TableCell className="font-medium">{row.label}</TableCell>
-                {MONTHS.map((_, mi) => (
+                {months.map((_, mi) => (
                   <TableCell key={mi} className="text-right align-middle">
                     <CellSumOnlyPopover
                       value={row.values[mi] || 0}
-                      onAdd={(delta) => updateCell(row.id, mi, (row.values[mi] || 0) + delta)}
-                      onUndo={(delta) => updateCell(row.id, mi, Math.max(0, (row.values[mi] || 0) - delta))}
+                      onAdd={(delta) =>
+                        onUpdateCell(row.id, mi, (current) => (current || 0) + delta)
+                      }
+                      onUndo={(delta) =>
+                        onUpdateCell(row.id, mi, (current) => Math.max(0, (current || 0) - delta))
+                      }
                       compact={compact}
                     />
                   </TableCell>
@@ -227,10 +285,15 @@ function EditableBlock({ title, rows, setRows, footerLabel, footerValues, compac
             ))}
           </TableBody>
           <TableFooter>
-            <TableRow className="bg-zinc-100">
-              <TableCell className="font-semibold">{footerLabel}</TableCell>
+            <TableRow className="bg-zinc-100 hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-800">
+              <TableCell className="font-semibold text-zinc-800 dark:text-zinc-200">{footerLabel}</TableCell>
               {footerValues.map((v, i) => (
-                <TableCell key={i} className="text-right font-semibold">{BRL(v)}</TableCell>
+                <TableCell
+                  key={i}
+                  className="text-right font-semibold text-zinc-800 dark:text-zinc-200"
+                >
+                  {BRL(v)}
+                </TableCell>
               ))}
             </TableRow>
           </TableFooter>
@@ -284,7 +347,7 @@ function CellSumOnlyPopover({ value, onAdd, onUndo, compact = false }: { value: 
               autoFocus
               inputMode="decimal"
               className={`text-right ${compact ? "h-8" : "h-9"}`}
-              placeholder="31,20"
+              placeholder="0,00"
               value={temp}
               onChange={(e) => setTemp(e.target.value)}
               onKeyDown={(e) => {
