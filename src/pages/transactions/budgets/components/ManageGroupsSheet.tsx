@@ -314,7 +314,7 @@ export default function ManageGroupsSheet({ labelButton = "Organizar" }: ManageG
     setOpenGroups(list => (list.includes(gid) ? list.filter(x => x !== gid) : [...list, gid]));
 
   return (
-    <Sheet open={isOpen} onOpenChange={openSheet}>
+    <Sheet open={isOpen} onOpenChange={openSheet} >
       <SheetTrigger asChild>
         <Button>
           <ListTodo className="h-4 w-4 mr-2" />
