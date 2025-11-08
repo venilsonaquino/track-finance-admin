@@ -8,14 +8,6 @@ import { History } from "lucide-react";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import { BUDGET_MOCK, MonthKey, SectionEditable } from "./budget.mock";
 
-// =============================================
-// Planilha estilo imagem com "Somar" rápido para mobile (com Popover)
-// - Célula exibe o total atual (readOnly)
-// - Botão "Adicionar" abre um Popover compacto para digitar acréscimos
-// - Popover mostra histórico recente (local) e Undo do último
-// - Sempre SOMA (não subtrai)
-// =============================================
-
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
   Fev: "Fevereiro",
@@ -31,7 +23,6 @@ const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Dez: "Dezembro",
 };
 
-// Larguras fixas para alinhar todas as tabelas
 const LABEL_COL_W = 240; // px
 const MONTH_COL_W = 120; // px
 
@@ -54,11 +45,10 @@ type Row = {
 };
 
 function BRL(n: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
+  return new Intl.NumberFormat(BUDGET_MOCK.locale, { style: "currency", currency: BUDGET_MOCK.currency }).format(n || 0);
 }
 
 function parseBRDecimal(v: string) {
-  // aceita 1.234,56 ou 1234.56
   const norm = v.replace(/\s/g, "").replace(/\./g, "").replace(/,/g, ".");
   const n = Number(norm);
   return Number.isFinite(n) ? n : 0;
@@ -79,7 +69,7 @@ export default function PlanningPage() {
   const monthLabels = useMemo(() => monthOrder.map((key) => MONTH_LABELS_MAP[key]), [monthOrder]);
 
   const [editableSections, setEditableSections] = useState<EditableSectionState[]>(() =>
-    BUDGET_MOCK.sections
+    BUDGET_MOCK.sectionsEditable
       .filter((section): section is SectionEditable => section.kind === "editable")
       .map((section) => ({
         id: section.id,
@@ -93,7 +83,7 @@ export default function PlanningPage() {
       }))
   );
 
-  const computedSection = BUDGET_MOCK.sections.find((section) => section.kind === "computed");
+  const computedSection = BUDGET_MOCK.sectionsComputed;
 
   const totalsBySectionTitle = useMemo(() => {
     const length = monthOrder.length;
@@ -331,7 +321,6 @@ function CellSumOnlyPopover({ value, onAdd, onUndo, compact = false }: { value: 
   return (
     <div className="relative">
       <Popover open={open} onOpenChange={setOpen}>
-        {/* O INPUT age como TRIGGER: nada aparece até clicar (estilo Excel) */}
         <PopoverTrigger asChild>
           <Input
             readOnly
