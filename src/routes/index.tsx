@@ -9,7 +9,7 @@ const Dashboard = lazy(() => import('@/pages/dashboard'))
 const WorkTimeExpense = lazy(() => import('@/pages/work-time-expense'))
 const Wallet = lazy(() => import('@/pages/wallet'))
 const Movement = lazy(() => import('@/pages/transactions/movements'))
-const Planning = lazy(() => import('@/pages/transactions/ planning'))
+const Budget = lazy(() => import('@/pages/transactions/budgets'))
 const Categories = lazy(() => import('@/pages/category'))
 const ImportTransactionPage = lazy(() => import('@/pages/transactions/import'))
 
@@ -75,9 +75,9 @@ const transactionsRoutes: RoutesProps[] = [
 		element: <ImportTransactionPage />,
 	},
 	{
-		path: '/transacoes/planejamento',
-		name: 'Planejamento',
-		element: <Planning />,
+		path: '/transacoes/orcamento',
+		name: 'Orçamentos',
+		element: <Budget />,
 	},
 ]
 

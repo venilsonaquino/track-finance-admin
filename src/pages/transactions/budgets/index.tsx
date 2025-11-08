@@ -24,7 +24,7 @@ const MONTH_LABELS_MAP: Record<MonthKey, string> = {
 const toValuesArray = (monthOrder: MonthKey[], values: Record<MonthKey, number>) =>
   monthOrder.map((month) => values[month] ?? 0);
 
-export default function PlanningPage() {
+export default function BudgetPage() {
   const monthOrder = BUDGET_MOCK.months;
   const monthLabels = useMemo(() => monthOrder.map((key) => MONTH_LABELS_MAP[key]), [monthOrder]);
 
@@ -99,7 +99,7 @@ export default function PlanningPage() {
 
   return (
 		<>
-      <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Planejamento", href: "/transacoes/planejamento" }]} />
+      <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
       <div className="flex justify-between items-center">
         <Card className="shadow-sm">
           <CardContent className="space-y-6">

@@ -35,7 +35,7 @@ export const BUDGET_MOCK: BudgetPayload = {
       color: "border-emerald-500",
       footerLabel: "Total receitas",
       rows: [
-        { id: "01JB9QF7D0REC001SAL", label: "Salário", values: zeroYear() }
+        { id: "01JB9QF7D0REC001SAL", label: "Salário", values: { Jan: 300, Fev: 250, Mar: 350, Abr: 280, Mai: 320, Jun: 260, Jul: 380, Ago: 290, Set: 310, Out: 330, Nov: 270, Dez: 400 } }
       ],
     },
     {

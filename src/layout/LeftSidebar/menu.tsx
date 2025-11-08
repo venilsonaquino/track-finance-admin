@@ -49,8 +49,8 @@ export const VERTICAL_MENU_ITEMS: MenuItemType[] = [
 			},
 			{
 				key: 'transactions-planning',
-				label: 'Planejamento',
-				url: '/transacoes/planejamento',
+				label: 'Orçamentos',
+				url: '/transacoes/orcamento',
 			},
 		],
 	},
