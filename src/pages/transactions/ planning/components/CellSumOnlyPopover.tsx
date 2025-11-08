@@ -6,8 +6,14 @@ import { History } from "lucide-react";
 import { BUDGET_MOCK } from "../budget.mock";
 import { formatCurrency } from "@/utils/currency-utils";
 
+type CellSumOnlyPopoverProps = {
+  value: number;
+  onAdd: (delta: number) => void;
+  onUndo: (delta: number) => void;
+  compact?: boolean;
+};
 
-export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = false }: { value: number; onAdd: (delta: number) => void; onUndo: (delta: number) => void; compact?: boolean }) {
+export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = false }: CellSumOnlyPopoverProps) {
   const [open, setOpen] = useState(false);
   const [temp, setTemp] = useState("");
   const [flash, setFlash] = useState<string | null>(null);

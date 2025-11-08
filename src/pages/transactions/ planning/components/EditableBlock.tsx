@@ -6,6 +6,17 @@ import SectionTitle from "./SectionTitle";
 import { Row } from "../types";
 import { formatCurrency } from "@/utils/currency-utils";
 
+type EditableBlockProps = {
+  title: string;
+  months: string[];
+  rows: Row[];
+  color?: string;
+  footerLabel: string;
+  footerValues: number[];
+  onUpdateCell: (rowId: string, monthIndex: number, nextValueFactory: (current: number) => number) => void;
+  compact?: boolean;
+};
+
 export default function EditableBlock({
   title,
   months,
@@ -15,16 +26,7 @@ export default function EditableBlock({
   footerValues,
   onUpdateCell,
   compact = false,
-}: {
-  title: string;
-  months: string[];
-  rows: Row[];
-  color?: string;
-  footerLabel: string;
-  footerValues: number[];
-  onUpdateCell: (rowId: string, monthIndex: number, nextValueFactory: (current: number) => number) => void;
-  compact?: boolean;
-}) {
+}: EditableBlockProps) {
 
   return (
     <div>

@@ -1,4 +1,9 @@
-export default function ColGroup({ months }: { months: string[] }) {
+
+type ColGroupProps = {
+  months: string[];
+};
+
+export default function ColGroup({ months }: ColGroupProps) {
 
   const LABEL_COL_W = 240; // px
   const MONTH_COL_W = 120; // px

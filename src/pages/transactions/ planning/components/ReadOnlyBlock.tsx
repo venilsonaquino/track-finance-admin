@@ -4,8 +4,16 @@ import ColGroup from "./ColGroup";
 import { Row } from "../types";
 import { formatCurrency } from "@/utils/currency-utils";
 
-export default function ReadOnlyBlock({ title, months, rows, footer, color }: { title: string; months: string[]; rows: Row[]; footer?: { label: string; values: number[] }; color?: string }) {
-  
+type ReadOnlyBlockProps = {
+  title: string;
+  months: string[];
+  rows: Row[];
+  footer?: { label: string; values: number[] };
+  color?: string;
+};
+
+export default function ReadOnlyBlock({ title, months, rows, footer, color }: ReadOnlyBlockProps) {
+
   return (
     <div>
       <SectionTitle label={title} color={color} />
