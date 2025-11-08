@@ -5,6 +5,9 @@ import { BUDGET_MOCK } from "./budget.mock";
 import ReadOnlyBlock from "./components/ReadOnlyBlock";
 import EditableBlock from "./components/EditableBlock";
 import { EditableSectionState, MonthKey, SectionEditable } from "./types";
+import { ListTodo } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ManageGroupsSheet } from "./components/ManageGroupsSheet";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
@@ -99,7 +102,14 @@ export default function BudgetPage() {
 
   return (
 		<>
-      <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
+      <div className="flex justify-between items-center">
+        <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
+        <div className="flex justify-end gap-2 mb-4">
+          <div className="flex justify-end gap-2 mb-4">
+            <ManageGroupsSheet labelButton="Organizar Grupos"/>
+				  </div>
+        </div>
+      </div>
       <div className="flex justify-between items-center">
         <Card className="shadow-sm">
           <CardContent className="space-y-6">
