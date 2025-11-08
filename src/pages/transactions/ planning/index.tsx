@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
-import { BUDGET_MOCK, MonthKey, SectionEditable } from "./budget.mock";
+import { BUDGET_MOCK } from "./budget.mock";
 import ReadOnlyBlock from "./components/ReadOnlyBlock";
 import EditableBlock from "./components/EditableBlock";
-import { EditableSectionState } from "./types";
+import { EditableSectionState, MonthKey, SectionEditable } from "./types";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",

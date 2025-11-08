@@ -1,56 +1,5 @@
-// budget.mock.ts
-// Mock "backend-like" para a tela de Planilha Rápida
+import { BudgetPayload, ValuesByMonth } from "./types";
 
-export type MonthKey =
-  | "Jan" | "Fev" | "Mar" | "Abr" | "Mai" | "Jun"
-  | "Jul" | "Ago" | "Set" | "Out" | "Nov" | "Dez";
-
-export type ValuesByMonth = Record<MonthKey, number>; // ótimo para gráficos
-
-export type RowItem = {
-  id: string;           // ULID
-  label: string;
-  values: ValuesByMonth; // 12 meses, número absoluto (sempre soma)
-};
-
-export type SectionEditable = {
-  id: string;           // ULID
-  title: string;
-  kind: "editable";
-  color?: string;      // opcional: cor de fundo suave
-  rows: RowItem[];
-  footerLabel: string;
-};
-
-export type SectionComputed = {
-  id: string;           // ULID
-  title: string;
-  kind: "computed";
-  color: string;       
-  rows: Array<{
-    id: string;         // ULID
-    label: string;
-    refSectionTitle: SectionEditable["title"];
-    agg: string;
-  }>;
-  footer: {
-    label: string;
-    formula: string;
-  };
-};
-
-export type BudgetPayload = {
-  version: number;
-  year: number;
-  currency: string;
-  locale: string;
-  months: MonthKey[];
-
-  sectionsEditable: SectionEditable[];
-  sectionsComputed: SectionComputed;
-};
-
-// Helper para criar um “vetor de meses” zerado
 const zeroYear = (): ValuesByMonth => ({
   Jan: 0, Fev: 0, Mar: 0, Abr: 0, Mai: 0, Jun: 0,
   Jul: 0, Ago: 0, Set: 0, Out: 0, Nov: 0, Dez: 0,

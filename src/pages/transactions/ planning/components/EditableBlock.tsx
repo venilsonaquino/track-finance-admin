@@ -4,6 +4,7 @@ import { BUDGET_MOCK } from "../budget.mock";
 import ColGroup from "./ColGroup";
 import SectionTitle from "./SectionTitle";
 import { Row } from "../types";
+import { formatCurrency } from "@/utils/currency-utils";
 
 export default function EditableBlock({
   title,
@@ -24,10 +25,6 @@ export default function EditableBlock({
   onUpdateCell: (rowId: string, monthIndex: number, nextValueFactory: (current: number) => number) => void;
   compact?: boolean;
 }) {
-
-  function BRL(n: number) {
-    return new Intl.NumberFormat(BUDGET_MOCK.locale, { style: "currency", currency: BUDGET_MOCK.currency }).format(n || 0);
-  }
 
   return (
     <div>
@@ -67,12 +64,12 @@ export default function EditableBlock({
           <TableFooter>
             <TableRow className="bg-zinc-100 hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-800">
               <TableCell className="font-semibold text-zinc-800 dark:text-zinc-200">{footerLabel}</TableCell>
-              {footerValues.map((v, i) => (
+              {footerValues.map((value, i) => (
                 <TableCell
                   key={i}
                   className="text-right font-semibold text-zinc-800 dark:text-zinc-200"
                 >
-                  {BRL(v)}
+                  {formatCurrency(value, BUDGET_MOCK.locale, BUDGET_MOCK.currency)}
                 </TableCell>
               ))}
             </TableRow>

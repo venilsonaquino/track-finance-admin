@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { History } from "lucide-react";
 import { BUDGET_MOCK } from "../budget.mock";
+import { formatCurrency } from "@/utils/currency-utils";
 
 
 export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = false }: { value: number; onAdd: (delta: number) => void; onUndo: (delta: number) => void; compact?: boolean }) {
@@ -18,16 +19,12 @@ export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = fal
     return Number.isFinite(n) ? n : 0;
   }
 
-  function BRL(n: number) {
-    return new Intl.NumberFormat(BUDGET_MOCK.locale, { style: "currency", currency: BUDGET_MOCK.currency }).format(n || 0);
-  }
-
   const commit = () => {
     const delta = parseBRDecimal(temp);
     if (delta > 0) {
       onAdd(delta);
       setHistory((h) => [delta, ...h].slice(0, 5));
-      setFlash(`+ ${BRL(delta)}`);
+      setFlash(`+ ${formatCurrency(delta, BUDGET_MOCK.locale, BUDGET_MOCK.currency)}`);
       setTimeout(() => setFlash(null), 900);
       setTemp("");
     }
@@ -47,7 +44,7 @@ export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = fal
           <Input
             readOnly
             className={`text-right ${compact ? "h-8" : "h-9"} w-full`}
-            value={BRL(value)}
+            value={formatCurrency(value, BUDGET_MOCK.locale, BUDGET_MOCK.currency)}
             placeholder="0,00"
           />
         </PopoverTrigger>
@@ -77,9 +74,9 @@ export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = fal
               <div className="text-xs text-muted-foreground mt-1">Nenhum lançamento ainda.</div>
             ) : (
               <ul className="mt-1 max-h-24 overflow-auto pr-1 space-y-1">
-                {history.map((h, i) => (
+                {history.map((value, i) => (
                   <li key={i} className="text-xs flex items-center justify-between bg-muted/40 rounded px-2 py-1">
-                    <span>{BRL(h)}</span>
+                    <span>{formatCurrency(value, BUDGET_MOCK.locale, BUDGET_MOCK.currency)}</span>
                     {i === 0 && (
                       <button onClick={undoLast} className="text-[11px] underline">desfazer</button>
                     )}
