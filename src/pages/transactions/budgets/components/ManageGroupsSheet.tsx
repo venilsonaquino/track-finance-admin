@@ -71,9 +71,6 @@ const addToGroup = (a: Assignments, groupId: ID, id: ID): Assignments => {
   return next;
 };
 
-const equalAssignments = (a: Assignments, b: Assignments | null) =>
-  b ? JSON.stringify(a) === JSON.stringify(b) : true;
-
 function ColumnHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <CardHeader className="flex-row items-center justify-between border-b">
@@ -182,13 +179,13 @@ function MoveBar({
   onMove: () => void;
 }) {
   return (
-    <CardFooter className="border-t bg-background/95 py-3 flex items-center justify-between px-4">
+    <CardFooter className="border-t bg-background/95 py-3 px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <span className="text-xs text-muted-foreground">
         {selectedCount} selecionada{selectedCount !== 1 ? "s" : ""}
       </span>
-      <div className="flex items-center gap-2">
+      <div className="flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <Select value={selectedGroup} onValueChange={onChangeGroup}>
-          <SelectTrigger className="h-9 w-40">
+          <SelectTrigger className="h-9 w-full sm:w-40">
             <SelectValue placeholder="Mover para..." />
           </SelectTrigger>
           <SelectContent>
@@ -202,7 +199,7 @@ function MoveBar({
             ))}
           </SelectContent>
         </Select>
-        <Button size="sm" disabled={!selectedCount || !selectedGroup} onClick={onMove}>
+        <Button size="sm" className="w-full sm:w-auto" disabled={!selectedCount || !selectedGroup} onClick={onMove}>
           Mover
         </Button>
       </div>
@@ -215,7 +212,7 @@ type ManageGroupsSheetProps = {
   labelButton?: string; 
 }
 
-export default function ManageGroupsSheet({ labelButton = "Organizar" }: ManageGroupsSheetProps) {
+export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProps) {
 
   const [isOpen, setIsOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<ID[]>(GROUPS.map(g => g.id));
@@ -322,13 +319,16 @@ export default function ManageGroupsSheet({ labelButton = "Organizar" }: ManageG
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-[720px] sm:w-[820px] p-0 h-full">
+      <SheetContent
+        side="right"
+        className="w-full sm:w-[720px] md:w-[820px] sm:max-w-[820px] p-0 h-full sm:rounded-l-lg rounded-t-lg"
+      >
         <div className="flex flex-col h-full">
           <SheetHeader className="px-6 py-4 border-b">
             <SheetTitle className="text-lg font-semibold">Organizar Grupos & Categorias</SheetTitle>
           </SheetHeader>
 
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 min-h-0">
+          <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 flex-1 min-h-0">
             {/* CATEGORIAS SEM GRUPO */}
             <Card className="overflow-hidden flex flex-col h-full min-h-0">
               <ColumnHeader icon={<Tag className="h-4 w-4 text-muted-foreground" />} title="Categorias sem grupo" />
@@ -366,6 +366,7 @@ export default function ManageGroupsSheet({ labelButton = "Organizar" }: ManageG
               />
             </Card>
 
+            {/* GRUPOS */}
             <Card className="overflow-hidden flex flex-col h-full min-h-0">
               <ColumnHeader icon={<Tag className="h-4 w-4 text-muted-foreground" />} title="Grupos" />
 
