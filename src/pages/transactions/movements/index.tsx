@@ -1,6 +1,6 @@
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import { formatCurrency } from "@/utils/currency-utils";
-import { useTransactions } from "./hooks/use-transactions";
+import { useTransactions } from "../hooks/use-transactions";
 import { useEffect, useState } from "react";
 import TransactionsRecordResponse from "@/api/dtos/transaction/transactionRecordResponse";
 import { Button } from "@/components/ui/button";

@@ -39,13 +39,18 @@ export const VERTICAL_MENU_ITEMS: MenuItemType[] = [
 		children: [
 			{
 				key: 'transactions-list',
-				label: 'Lançamentos',
-				url: '/transacoes/lancamentos',
+				label: 'Movimentações',
+				url: '/transacoes/Movimentacoes',
 			},
 			{
 				key: 'transactions-import',
 				label: 'Importar',
 				url: '/transacoes/importar',
+			},
+			{
+				key: 'transactions-planning',
+				label: 'Planejamento',
+				url: '/transacoes/planejamento',
 			},
 		],
 	},
