@@ -1,12 +1,12 @@
-"use client";
 import { useState } from "react";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+// removed Input import (not used in this layout)
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Check, Search, Tag, ChevronDown, ListTodo } from "lucide-react";
+// using native overflow for scroll areas
+import { Check, Tag, ChevronDown, ListTodo, X } from "lucide-react";
+import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const mockCategories = [
@@ -64,8 +64,111 @@ export const ManageGroupsSheet: React.FC<ManageGroupsSheetProps> = ({ labelButto
   const [selected, setSelected] = useState<string[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string | undefined>(undefined);
   const [openGroups, setOpenGroups] = useState<string[]>(mockGroups.map((g) => g.id));
+  const [assignments, setAssignments] = useState<Record<string, string[]>>(Object.fromEntries(
+    mockGroups.map((g) => [g.id, [] as string[]])
+  ));
+  const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
   const toggleGroup = (id: string) =>
     setOpenGroups((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
+
+  const unassignedCategories = mockCategories.filter(
+    (c) => /^[0-9]+$/.test(c.id) && !Object.values(assignments).flat().includes(c.id)
+  );
+
+  const handleDragStart = (e: React.DragEvent, categoryId: string) => {
+    e.dataTransfer.setData("text/plain", categoryId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, groupId: string) => {
+    e.preventDefault();
+    setDragOverGroup(groupId);
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDragLeave = (_e: React.DragEvent) => setDragOverGroup(null);
+
+  const handleDrop = (e: React.DragEvent, groupId: string) => {
+    e.preventDefault();
+    const categoryId = e.dataTransfer.getData("text/plain");
+    if (!categoryId) return;
+
+    setAssignments((prev) => {
+      // remove from any other group
+      const cleaned = Object.fromEntries(
+        Object.entries(prev).map(([k, v]) => [k, v.filter((id) => id !== categoryId)])
+      ) as Record<string, string[]>;
+
+      if (!cleaned[groupId].includes(categoryId)) {
+        cleaned[groupId] = [...cleaned[groupId], categoryId];
+      }
+      return cleaned;
+    });
+
+    setSelected((prev) => prev.filter((id) => id !== categoryId));
+    setDragOverGroup(null);
+    // short visual feedback
+    setLastDroppedGroup(groupId);
+    window.setTimeout(() => setLastDroppedGroup(null), 700);
+
+    const cat = mockCategories.find((m) => m.id === categoryId);
+    const group = mockGroups.find((g) => g.id === groupId);
+    const catName = cat?.name ?? "Categoria";
+    const groupName = group?.name ?? "grupo";
+    toast.success(`${catName} adicionada a ${groupName}`);
+  };
+
+  const [lastDroppedGroup, setLastDroppedGroup] = useState<string | null>(null);
+
+  const handleDropToUnassigned = (e: React.DragEvent) => {
+    e.preventDefault();
+    const categoryId = e.dataTransfer.getData("text/plain");
+    if (!categoryId) return;
+
+    setAssignments((prev) => {
+      const cleaned = Object.fromEntries(
+        Object.entries(prev).map(([k, v]) => [k, v.filter((id) => id !== categoryId)])
+      ) as Record<string, string[]>;
+      return cleaned;
+    });
+
+    setSelected((prev) => prev.filter((id) => id !== categoryId));
+    setDragOverGroup(null);
+    // visual feedback when returned to unassigned
+    setLastDroppedGroup("unassigned");
+    window.setTimeout(() => setLastDroppedGroup(null), 700);
+
+    const cat = mockCategories.find((m) => m.id === categoryId);
+    const catName = cat?.name ?? "Categoria";
+    toast.success(`${catName} removida do grupo`);
+  };
+
+  const handleRemoveFromGroup = (categoryId: string, groupId: string) => {
+    setAssignments((prev) => ({
+      ...prev,
+      [groupId]: prev[groupId].filter((id) => id !== categoryId),
+    }));
+    toast.success("Categoria removida do grupo");
+  };
+
+  const handleMoveSelected = () => {
+    if (!selectedGroup) return;
+    const toMove = selected;
+    if (!toMove.length) return;
+
+    setAssignments((prev) => {
+      const cleaned = Object.fromEntries(
+        Object.entries(prev).map(([k, v]) => [k, v.filter((id) => !toMove.includes(id))])
+      ) as Record<string, string[]>;
+      cleaned[selectedGroup] = [...(cleaned[selectedGroup] || []), ...toMove.filter((id) => !cleaned[selectedGroup].includes(id))];
+      return cleaned;
+    });
+
+    const groupName = mockGroups.find((g) => g.id === selectedGroup)?.name || "grupo";
+    toast.success(`${toMove.length} categoria${toMove.length > 1 ? "s" : ""} movida${toMove.length > 1 ? "s" : ""} para ${groupName}`);
+    setSelected([]);
+    setSelectedGroup(undefined);
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -90,13 +193,23 @@ export const ManageGroupsSheet: React.FC<ManageGroupsSheetProps> = ({ labelButto
               </CardHeader>
 
               {/* Lista de categorias ocupa toda a altura entre header e footer */}
-              <div className="p-4 pt-3 flex-1 flex flex-col min-h-0">
+              <div
+                className={`p-4 pt-3 flex-1 flex flex-col min-h-0 ${dragOverGroup === "unassigned" ? "ring-2 ring-blue-200" : ""} ${lastDroppedGroup === "unassigned" ? "bg-green-50" : ""}`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOverGroup("unassigned");
+                }}
+                onDrop={handleDropToUnassigned}
+                onDragLeave={() => setDragOverGroup(null)}
+              >
                 <div className="space-y-2 overflow-y-auto pr-2 flex-1">
-                  {mockCategories.map((c) => {
+                  {unassignedCategories.map((c) => {
                     const isSelected = selected.includes(c.id);
                     return (
                       <button
                         key={c.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, c.id)}
                         onClick={() =>
                           setSelected((prev) =>
                             prev.includes(c.id)
@@ -115,8 +228,8 @@ export const ManageGroupsSheet: React.FC<ManageGroupsSheetProps> = ({ labelButto
                       </button>
                     );
                   })}
+                  </div>
                 </div>
-              </div>
 
               <CardFooter className="border-t bg-background/95 py-3 flex items-center justify-between px-4">
                 <span className="text-xs text-muted-foreground">
@@ -138,7 +251,7 @@ export const ManageGroupsSheet: React.FC<ManageGroupsSheetProps> = ({ labelButto
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button size="sm" disabled={!selected.length || !selectedGroup}>Mover</Button>
+                  <Button size="sm" disabled={!selected.length || !selectedGroup} onClick={handleMoveSelected}>Mover</Button>
                 </div>
               </CardFooter>
             </Card>
@@ -153,7 +266,13 @@ export const ManageGroupsSheet: React.FC<ManageGroupsSheetProps> = ({ labelButto
               <div className="p-4 pt-3 flex-1 flex flex-col min-h-0">
                 <div className="space-y-2 overflow-y-auto pr-2 flex-1">
                   {mockGroups.map((g) => (
-                    <div key={g.id} className="rounded-xl border bg-background">
+                    <div
+                      key={g.id}
+                      className={`rounded-xl border bg-background ${dragOverGroup === g.id ? "ring-2 ring-blue-200" : ""} ${lastDroppedGroup === g.id ? "bg-green-50" : ""}`}
+                      onDragOver={(e) => handleDragOver(e, g.id)}
+                      onDrop={(e) => handleDrop(e, g.id)}
+                      onDragLeave={handleDragLeave}
+                    >
                       <button
                         onClick={() => toggleGroup(g.id)}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-t-xl"
@@ -161,13 +280,47 @@ export const ManageGroupsSheet: React.FC<ManageGroupsSheetProps> = ({ labelButto
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">{g.name}</span>
-                          <Badge variant="secondary">0</Badge>
+                          <Badge variant="secondary">{assignments[g.id]?.length ?? 0}</Badge>
                         </div>
                         <ChevronDown className={`h-4 w-4 transition-transform ${openGroups.includes(g.id) ? "rotate-180" : ""}`} />
                       </button>
                       {openGroups.includes(g.id) && (
-                        <div className="border-t px-3 py-4 text-sm text-muted-foreground flex items-center justify-center h-16 rounded-b-xl border-dashed">
-                          Solte categorias aqui ou use “Mover”.
+                        <div className="border-t px-3 py-2 text-sm text-muted-foreground rounded-b-xl">
+                          {assignments[g.id] && assignments[g.id].length > 0 ? (
+                            <div className="space-y-2">
+                              {assignments[g.id].map((catId) => {
+                                const cat = mockCategories.find((m) => m.id === catId);
+                                if (!cat) return null;
+                                return (
+                                  <div
+                                    key={cat.id}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, cat.id)}
+                                    className="w-full flex items-center justify-between rounded-lg border px-3 py-2 text-left bg-white"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
+                                      <span className="text-sm font-medium">{cat.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleRemoveFromGroup(cat.id, g.id)}
+                                        className="h-7 w-7 p-0"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="px-3 py-6 text-center text-sm text-muted-foreground border-dashed">
+                              Solte categorias aqui ou use “Mover”.
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
