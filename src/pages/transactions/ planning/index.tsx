@@ -3,8 +3,7 @@ import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 const PlanningPage = () => {
 	return (
     <div className="flex justify-between items-center">
-      {/* <PageBreadcrumbNav paths={[{ label: 'Transações', href: '/transacoes/planejamento' }]} /> */}
-      <PageBreadcrumbNav title="Planejamento" />
+      <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Planejamento", href: "/transacoes/planejamento" }]} />
 		</div>
 	);
 };

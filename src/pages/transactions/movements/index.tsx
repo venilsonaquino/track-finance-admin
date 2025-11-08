@@ -215,7 +215,7 @@ const TransactionsPage = () => {
 	return (
 		<>
 			<div className="flex justify-between items-center">
-				<PageBreadcrumbNav title="Transações" />
+				<PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Movimentações", href: "/transacoes/movimentacoes" }]} />
 				<div className="flex justify-end gap-2 mb-4">
 					<Button onClick={() => {
 					}}>
