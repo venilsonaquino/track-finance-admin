@@ -42,12 +42,7 @@ export type SectionComputed = {
     id: string;         // ULID
     label: string;
     refSectionTitle: SectionEditable["title"];
-    agg: string;
   }>;
-  footer: {
-    label: string;
-    formula: string;
-  };
 };
 
 export type BudgetPayload = {

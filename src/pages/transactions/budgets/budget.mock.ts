@@ -17,15 +17,11 @@ export const BUDGET_MOCK: BudgetPayload = {
     kind: "computed",
     color: "border-zinc-900",
     rows: [
-      { id: "01JB9QF7D0RECEITAS001", label: "Receitas",           refSectionTitle: "RECEITAS",          agg: "sum" },
-      { id: "01JB9QF7D0ESSENC001", label: "Gastos Essenciais",  refSectionTitle: "GASTOS ESSENCIAIS", agg: "sum" },
-      { id: "01JB9QF7D0DIVPOUP01",  label: "Dívidas/Poupar",     refSectionTitle: "DÍVIDAS/POUPAR",    agg: "sum" },
-      { id: "01JB9QF7D0OUTROS001",  label: "Outros Gastos",      refSectionTitle: "OUTROS GASTOS",     agg: "sum" },
-    ],
-    footer: {
-      label: "Saldo",
-      formula: "Receitas - Gastos Essenciais - Dívidas/Poupar - Outros Gastos",
-    },
+      { id: "01JB9QF7D0RECEITAS001", label: "Receitas",           refSectionTitle: "RECEITAS" },
+      { id: "01JB9QF7D0ESSENC001", label: "Gastos Essenciais",  refSectionTitle: "GASTOS ESSENCIAIS" },
+      { id: "01JB9QF7D0DIVPOUP01",  label: "Dívidas/Poupar",     refSectionTitle: "DÍVIDAS/POUPAR" },
+      { id: "01JB9QF7D0OUTROS001",  label: "Outros Gastos",      refSectionTitle: "OUTROS GASTOS" },
+    ]
   },
   sectionsEditable: [
     {
