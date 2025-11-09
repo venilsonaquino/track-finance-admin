@@ -63,4 +63,4 @@ export type BudgetPayload = {
 
 export type Category = { id: string; name: string; color: string };
 export type Group = { id: string; name: string; color: string };
-export type Assignments = Record<string, string[]>;
+export type CategoryIdsByGroup = Record<string, string[]>;

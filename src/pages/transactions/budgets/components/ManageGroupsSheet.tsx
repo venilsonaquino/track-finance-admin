@@ -2,16 +2,15 @@ import { useMemo, useState, useCallback } from "react";
 import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Tag, ListTodo, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCategories } from "@/pages/category/hooks/use-categories";
-import { Assignments, Category, Group } from "../types";
+import { Category, CategoryIdsByGroup, Group } from "../types";
 import { CategoryCardSheet, GroupCardSheet } from "./CardSheet";
 import MoveBarSheet from "./MoveBarSheet";
 import ColumnHeader from "./ColumnHeaderSheet";
@@ -30,48 +29,58 @@ const GROUPS: Group[] = [
   { id: "g11", name: "Moradia", color: "#ef4444" },
 ];
 
-const cloneAssignments = (a: Assignments): Assignments => JSON.parse(JSON.stringify(a));
+const cloneCategoriesByGroup = (a: CategoryIdsByGroup): CategoryIdsByGroup => JSON.parse(JSON.stringify(a));
 
-const removeFromAll = (a: Assignments, id: string): Assignments => {
-  const next: Assignments = {};
-  for (const [g, ids] of Object.entries(a)) next[g] = ids.filter(x => x !== id);
-  return next;
-};
+function removeCategoryFromAll(map: CategoryIdsByGroup, id: string): CategoryIdsByGroup {
+  return Object.fromEntries(
+    Object.entries(map).map(([g, ids]) => [g, ids.filter(x => x !== id)])
+  ) as CategoryIdsByGroup;
+}
 
-const addToGroup = (a: Assignments, groupId: string, id: string): Assignments => {
-  const next = cloneAssignments(a);
-  next[groupId] ??= [];
+function addCategoryToGroup(map: CategoryIdsByGroup, groupId: string, id: string): CategoryIdsByGroup {
+  const next = { ...map, [groupId]: [...(map[groupId] ?? [])] };
   if (!next[groupId].includes(id)) next[groupId].push(id);
   return next;
-};
-
-
+}
 
 type ManageGroupsSheetProps = { 
   labelButton?: string; 
 }
 
 export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProps) {
-
   const [isOpen, setIsOpen] = useState(false);
   const [groups, setGroups] = useState<Group[]>(GROUPS);
   const [openGroups, setOpenGroups] = useState<string[]>(GROUPS.map(g => g.id));
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
   const [pulseGroup, setPulseGroup] = useState<string | null>(null);
-
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupColor, setNewGroupColor] = useState("#3b82f6");
+  const [categoriesByGroup, setCategoriesByGroup] = useState<CategoryIdsByGroup>({});
+  const [initialCategoriesByGroup, setInitialCategoriesByGroup] = useState<CategoryIdsByGroup | null>(null);
+  const [targetGroup, setTargetGroup] = useState<string | undefined>(undefined);
+
+  const { categories: fetchedCategories, loading: categoriesLoading } = useCategories();
+
+  const categories = useMemo<Category[]>(
+    () => (fetchedCategories ?? []).map(category => ({ id: category.id, name: category.name, color: (category as any).color ?? "#6b7280" })),
+    [fetchedCategories]
+  );
+
+  const assignedSet = useMemo(
+    () => new Set(Object.values(categoriesByGroup).flat()),
+    [categoriesByGroup]
+  );
+
+  const unassigned = useMemo(
+    () => categories.filter(c => !assignedSet.has(c.id)),
+    [assignedSet, categories]
+  );
 
   const toggleSelected = (id: string) =>
     setSelectedIds(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]));
   
   const clearSelection = () => setSelectedIds([]);
-
-  const [assignments, setAssignments] = useState<Assignments>(
-    Object.fromEntries(GROUPS.map(g => [g.id, []]))
-  );
-
-  const [newGroupName, setNewGroupName] = useState("");
-  const [newGroupColor, setNewGroupColor] = useState("#3b82f6");
 
   const createGroup = () => {
     const name = newGroupName.trim();
@@ -82,45 +91,27 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
     const id = `g${Date.now()}`;
     const g: Group = { id, name, color: newGroupColor };
     setGroups(prev => [...prev, g]);
-    setAssignments(prev => ({ ...prev, [id]: [] }));
+    setCategoriesByGroup(prev => ({ ...prev, [id]: [] }));
     setOpenGroups(prev => [...prev, id]);
     setNewGroupName("");
     setNewGroupColor("#3b82f6");
     toast.success(`Grupo "${name}" criado`);
   };
 
-  const [initialAssignments, setInitialAssignments] = useState<Assignments | null>(null);
-
-  const { categories: fetchedCategories, loading: categoriesLoading } = useCategories();
-
-  const categories = useMemo<Category[]>(
-    () => (fetchedCategories ?? []).map(category => ({ id: category.id, name: category.name, color: (category as any).color ?? "#6b7280" })),
-    [fetchedCategories]
-  );
-
-  const assignedSet = useMemo(
-    () => new Set(Object.values(assignments).flat()),
-    [assignments]
-  );
-
-  const unassigned = useMemo(
-    () => categories.filter(c => !assignedSet.has(c.id)),
-    [assignedSet, categories]
-  );
-
   const openSheet = (open: boolean) => {
-    if (open) setInitialAssignments(cloneAssignments(assignments));
+    if (open) setInitialCategoriesByGroup(cloneCategoriesByGroup(categoriesByGroup));
+    else if (initialCategoriesByGroup) setCategoriesByGroup(cloneCategoriesByGroup(initialCategoriesByGroup));
     setIsOpen(open);
   };
 
   const cancelChanges = () => {
-    if (initialAssignments) setAssignments(cloneAssignments(initialAssignments));
+    if (initialCategoriesByGroup) setCategoriesByGroup(cloneCategoriesByGroup(initialCategoriesByGroup));
     clearSelection();
     setIsOpen(false);
   };
 
   const saveChanges = () => {
-    setInitialAssignments(cloneAssignments(assignments));
+    setInitialCategoriesByGroup(cloneCategoriesByGroup(categoriesByGroup));
     clearSelection();
     setIsOpen(false);
     toast.success("Alterações salvas");
@@ -128,16 +119,16 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
 
   const moveIdsToGroup = useCallback((ids: string[], groupId: string) => {
     if (!ids.length) return;
-    setAssignments(prev => {
-      let next = cloneAssignments(prev);
-      ids.forEach(id => { next = addToGroup(removeFromAll(next, id), groupId, id); });
+    setCategoriesByGroup(prev => {
+      let next = cloneCategoriesByGroup(prev);
+      ids.forEach(id => { next = addCategoryToGroup(removeCategoryFromAll(next, id), groupId, id); });
       return next;
     });
     clearSelection();
   }, []);
 
   const removeFromGroup = (id: string, groupId: string) =>
-    setAssignments(prev => ({ ...prev, [groupId]: prev[groupId].filter(x => x !== id) }));
+    setCategoriesByGroup(prev => ({ ...prev, [groupId]: prev[groupId].filter(x => x !== id) }));
 
   // Drag & Drop
   const onDragStart = (e: React.DragEvent, id: string) => {
@@ -150,15 +141,20 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
     setDragOverGroup(gid);
   };
 
-  const onDropToGroup = (e: React.DragEvent, gid: string) => {
-    e.preventDefault();
-    const id = e.dataTransfer.getData("text/plain");
-    if (!id) return;
-    moveIdsToGroup([id], gid);
-    setDragOverGroup(null);
-    setPulseGroup(gid);
-    setTimeout(() => setPulseGroup(null), 700);
-  };
+const onDropToGroup = (e: React.DragEvent, gid: string) => {
+  e.preventDefault();
+  const draggedId = e.dataTransfer.getData("text/plain");
+  if (!draggedId) return;
+
+  const payload = selectedIds.includes(draggedId)
+    ? selectedIds
+    : [draggedId];
+
+  moveIdsToGroup(payload, gid);
+  setDragOverGroup(null);
+  setPulseGroup(gid);
+  setTimeout(() => setPulseGroup(null), 700);
+};
 
   const onDragLeaveGroup = () => setDragOverGroup(null);
 
@@ -166,13 +162,12 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
     e.preventDefault();
     const id = e.dataTransfer.getData("text/plain");
     if (!id) return;
-    setAssignments(prev => removeFromAll(prev, id));
+    setCategoriesByGroup(prev => removeCategoryFromAll(prev, id));
     toast.success("Categoria removida do grupo");
     setPulseGroup("unassigned");
     setTimeout(() => setPulseGroup(null), 700);
   };
 
-  const [targetGroup, setTargetGroup] = useState<string | undefined>(undefined);
 
   const toggleGroupOpen = (gid: string) =>
     setOpenGroups(list => (list.includes(gid) ? list.filter(x => x !== gid) : [...list, gid]));
@@ -287,7 +282,7 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
                     <GroupCardSheet
                       key={g.id}
                       group={g}
-                      count={assignments[g.id]?.length ?? 0}
+                      count={categoriesByGroup[g.id]?.length ?? 0}
                       open={openGroups.includes(g.id)}
                       onToggle={() => toggleGroupOpen(g.id)}
                       dragState={
@@ -297,8 +292,9 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
                       onDrop={(e) => onDropToGroup(e, g.id)}
                       onDragLeave={onDragLeaveGroup}
                     >
-                      {(assignments[g.id] ?? []).map(catId => {
-                        const cat = categories.find(c => c.id === catId)!;
+                      {(categoriesByGroup[g.id] ?? []).map(catId => {
+                        const cat = categories.find(c => c.id === catId);
+                        if (!cat) return null;
                         return (
                           <div
                             key={cat.id}
