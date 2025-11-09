@@ -6,39 +6,17 @@ import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Check, Tag, ChevronDown, ListTodo, Plus } from "lucide-react";
+import { Check, Tag, ChevronDown, ListTodo, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCategories } from "@/pages/category/hooks/use-categories";
 
 type ID = string;
 type Category = { id: ID; name: string; color: string };
 type Group = { id: ID; name: string; color: string };
 type Assignments = Record<ID, ID[]>;
-
-const CATEGORIES: Category[] = [
-  { id: "1", name: "Viagem", color: "#3b82f6" },
-  { id: "2", name: "Vestuário", color: "#ef4444" },
-  { id: "3", name: "Transporte", color: "#0ea5e9" },
-  { id: "4", name: "Supermercado", color: "#f59e0b" },
-  { id: "5", name: "Streaming", color: "#8b5cf6" },
-  { id: "6", name: "Restaurantes", color: "#10b981" },
-  { id: "7", name: "Educação", color: "#f97316" },
-  { id: "8", name: "Saúde", color: "#14b8a6" },
-  { id: "9", name: "Academia", color: "#6366f1" },
-  { id: "10", name: "Pets", color: "#ec4899" },
-  { id: "11", name: "Hobbies", color: "#22c55e" },
-  { id: "12", name: "Doações", color: "#f43f5e" },
-  { id: "13", name: "Impostos", color: "#eab308" },
-  { id: "14", name: "Cuidados Pessoais", color: "#3b82f6" },
-  { id: "15", name: "Presentes", color: "#f97316" },
-  { id: "16", name: "Eventos", color: "#8b5cf6" },
-  { id: "17", name: "Transações Bancárias", color: "#0ea5e9" },
-  { id: "18", name: "Assinaturas", color: "#10b981" },
-  { id: "19", name: "Combustível", color: "#f59e0b" },
-  { id: "20", name: "Outros", color: "#6b7280" },
-];
 
 const GROUPS: Group[] = [
   { id: "g1", name: "Sem Grupo", color: "#9ca3af" },
@@ -250,14 +228,21 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
 
   const [initialAssignments, setInitialAssignments] = useState<Assignments | null>(null);
 
+  const { categories: fetchedCategories, loading: categoriesLoading } = useCategories();
+
+  const categories = useMemo<Category[]>(
+    () => (fetchedCategories ?? []).map(category => ({ id: category.id, name: category.name, color: (category as any).color ?? "#6b7280" })),
+    [fetchedCategories]
+  );
+
   const assignedSet = useMemo(
     () => new Set(Object.values(assignments).flat()),
     [assignments]
   );
 
   const unassigned = useMemo(
-    () => CATEGORIES.filter(c => !assignedSet.has(c.id)),
-    [assignedSet]
+    () => categories.filter(c => !assignedSet.has(c.id)),
+    [assignedSet, categories]
   );
 
   const openSheet = (open: boolean) => {
@@ -400,16 +385,22 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
                 onDragLeave={() => setDragOverGroup(null)}
               >
                 <div className="space-y-2 overflow-y-auto pr-2 flex-1">
-                  {unassigned.map(cat => (
-                    <CategoryRow
-                      key={cat.id}
-                      cat={cat}
-                      selected={selectedIds.includes(cat.id)}
-                      onToggle={() => toggleSelected(cat.id)}
-                      draggable
-                      onDragStart={(e) => onDragStart(e, cat.id)}
-                    />
-                  ))}
+                  {categoriesLoading ? (
+                    Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="h-10 rounded-lg bg-muted/40 animate-pulse" />
+                    ))
+                  ) : (
+                    unassigned.map(cat => (
+                      <CategoryRow
+                        key={cat.id}
+                        cat={cat}
+                        selected={selectedIds.includes(cat.id)}
+                        onToggle={() => toggleSelected(cat.id)}
+                        draggable
+                        onDragStart={(e) => onDragStart(e, cat.id)}
+                      />
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -443,7 +434,7 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
                       onDragLeave={onDragLeaveGroup}
                     >
                       {(assignments[g.id] ?? []).map(catId => {
-                        const cat = CATEGORIES.find(c => c.id === catId)!;
+                        const cat = categories.find(c => c.id === catId)!;
                         return (
                           <div
                             key={cat.id}
@@ -461,6 +452,7 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
                               onClick={() => removeFromGroup(cat.id, g.id)}
                               className="h-7 w-7 p-0"
                             >
+                              <X className="h-4 w-4" />
                             </Button>
                           </div>
                         );
