@@ -49,7 +49,7 @@ export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = fal
         <PopoverTrigger asChild>
           <Input
             readOnly
-            className={`text-right ${compact ? "h-8" : "h-9"} w-full`}
+            className={`text-center ${compact ? "h-8" : "h-9"} w-full`}
             value={formatCurrency(value, BUDGET_MOCK.locale, BUDGET_MOCK.currency)}
             placeholder="0,00"
           />

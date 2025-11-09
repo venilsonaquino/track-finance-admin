@@ -38,7 +38,7 @@ export default function EditableBlock({
             <TableRow className="bg-zinc-900/90 text-white hover:bg-zinc-900/90">
               <TableHead className="w-[240px] text-white">Meses</TableHead>
               {months.map((m) => (
-                <TableHead key={m} className="w-[120px] text-right text-white">{m}</TableHead>
+                <TableHead key={m} className="w-[120px] text-center text-white">{m}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -69,7 +69,7 @@ export default function EditableBlock({
               {footerValues.map((value, i) => (
                 <TableCell
                   key={i}
-                  className="text-right font-semibold text-zinc-800 dark:text-zinc-200"
+                  className="text-center font-semibold text-zinc-800 dark:text-zinc-200"
                 >
                   {formatCurrency(value, BUDGET_MOCK.locale, BUDGET_MOCK.currency)}
                 </TableCell>

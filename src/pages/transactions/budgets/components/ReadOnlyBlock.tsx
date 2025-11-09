@@ -24,7 +24,7 @@ export default function ReadOnlyBlock({ title, months, rows, footer, color }: Re
             <TableRow className="bg-zinc-900/90 text-white hover:bg-zinc-900/90">
               <TableHead className="text-white">Meses</TableHead>
               {months.map((m) => (
-                <TableHead key={m} className="text-right text-white">{m}</TableHead>
+                <TableHead key={m} className="text-center text-white">{m}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -33,7 +33,7 @@ export default function ReadOnlyBlock({ title, months, rows, footer, color }: Re
               <TableRow key={r.id} className="hover:bg-transparent">
                 <TableCell className="font-medium">{r.label}</TableCell>
                 {r.values.map((value, i) => (
-                  <TableCell key={i} className="text-right align-middle whitespace-nowrap">{formatCurrency(value)}</TableCell>
+                  <TableCell key={i} className="text-center align-middle whitespace-nowrap">{formatCurrency(value)}</TableCell>
                 ))}
               </TableRow>
             ))}
@@ -45,7 +45,7 @@ export default function ReadOnlyBlock({ title, months, rows, footer, color }: Re
                 {footer.values.map((value, i) => (
                   <TableCell
                     key={i}
-                    className="text-right font-semibold whitespace-nowrap text-zinc-800 dark:text-amber-200"
+                    className="text-center font-semibold whitespace-nowrap text-zinc-800 dark:text-amber-200"
                   >
                     {formatCurrency(value)}
                   </TableCell>
