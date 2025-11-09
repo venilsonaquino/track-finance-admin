@@ -13,10 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCategories } from "@/pages/category/hooks/use-categories";
 
-type ID = string;
-type Category = { id: ID; name: string; color: string };
-type Group = { id: ID; name: string; color: string };
-type Assignments = Record<ID, ID[]>;
+type Category = { id: string; name: string; color: string };
+type Group = { id: string; name: string; color: string };
+type Assignments = Record<string, string[]>;
 
 const GROUPS: Group[] = [
   { id: "g1", name: "Sem Grupo", color: "#9ca3af" },
@@ -32,16 +31,15 @@ const GROUPS: Group[] = [
   { id: "g11", name: "Moradia", color: "#ef4444" },
 ];
 
-
 const cloneAssignments = (a: Assignments): Assignments => JSON.parse(JSON.stringify(a));
 
-const removeFromAll = (a: Assignments, id: ID): Assignments => {
+const removeFromAll = (a: Assignments, id: string): Assignments => {
   const next: Assignments = {};
   for (const [g, ids] of Object.entries(a)) next[g] = ids.filter(x => x !== id);
   return next;
 };
 
-const addToGroup = (a: Assignments, groupId: ID, id: ID): Assignments => {
+const addToGroup = (a: Assignments, groupId: string, id: string): Assignments => {
   const next = cloneAssignments(a);
   next[groupId] ??= [];
   if (!next[groupId].includes(id)) next[groupId].push(id);
@@ -150,8 +148,8 @@ function MoveBar({
 }: {
   groups: Group[];
   selectedCount: number;
-  selectedGroup?: ID;
-  onChangeGroup: (id: ID) => void;
+  selectedGroup?: string;
+  onChangeGroup: (id: string) => void;
   onMove: () => void;
 }) {
   return (
@@ -192,13 +190,13 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
 
   const [isOpen, setIsOpen] = useState(false);
   const [groups, setGroups] = useState<Group[]>(GROUPS);
-  const [openGroups, setOpenGroups] = useState<ID[]>(GROUPS.map(g => g.id));
-  const [dragOverGroup, setDragOverGroup] = useState<ID | null>(null);
-  const [pulseGroup, setPulseGroup] = useState<ID | null>(null);
+  const [openGroups, setOpenGroups] = useState<string[]>(GROUPS.map(g => g.id));
+  const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
+  const [pulseGroup, setPulseGroup] = useState<string | null>(null);
 
-  const [selectedIds, setSelectedIds] = useState<ID[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const toggleSelected = (id: ID) =>
+  const toggleSelected = (id: string) =>
     setSelectedIds(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]));
   
   const clearSelection = () => setSelectedIds([]);
@@ -263,7 +261,7 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
     toast.success("Alterações salvas");
   };
 
-  const moveIdsToGroup = useCallback((ids: ID[], groupId: ID) => {
+  const moveIdsToGroup = useCallback((ids: string[], groupId: string) => {
     if (!ids.length) return;
     setAssignments(prev => {
       let next = cloneAssignments(prev);
@@ -275,19 +273,19 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
     clearSelection();
   }, []);
 
-  const removeFromGroup = (id: ID, groupId: ID) =>
+  const removeFromGroup = (id: string, groupId: string) =>
     setAssignments(prev => ({ ...prev, [groupId]: prev[groupId].filter(x => x !== id) }));
 
   // Drag & Drop
-  const onDragStart = (e: React.DragEvent, id: ID) => {
+  const onDragStart = (e: React.DragEvent, id: string) => {
     e.dataTransfer.setData("text/plain", id);
     e.dataTransfer.effectAllowed = "move";
   };
-  const onDragOverGroup = (e: React.DragEvent, gid: ID) => {
+  const onDragOverGroup = (e: React.DragEvent, gid: string) => {
     e.preventDefault();
     setDragOverGroup(gid);
   };
-  const onDropToGroup = (e: React.DragEvent, gid: ID) => {
+  const onDropToGroup = (e: React.DragEvent, gid: string) => {
     e.preventDefault();
     const id = e.dataTransfer.getData("text/plain");
     if (!id) return;
@@ -308,9 +306,9 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
     setTimeout(() => setPulseGroup(null), 700);
   };
 
-  const [targetGroup, setTargetGroup] = useState<ID | undefined>(undefined);
+  const [targetGroup, setTargetGroup] = useState<string | undefined>(undefined);
 
-  const toggleGroupOpen = (gid: ID) =>
+  const toggleGroupOpen = (gid: string) =>
     setOpenGroups(list => (list.includes(gid) ? list.filter(x => x !== gid) : [...list, gid]));
 
   return (
