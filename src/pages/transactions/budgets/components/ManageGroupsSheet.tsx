@@ -6,17 +6,17 @@ import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Check, Tag, ChevronDown, ListTodo, X } from "lucide-react";
+import { Check, Tag, ChevronDown, ListTodo, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type ID = string;
 type Category = { id: ID; name: string; color: string };
 type Group = { id: ID; name: string; color: string };
 type Assignments = Record<ID, ID[]>;
 
-/* =============================================================================
- * MOCKS
- * ========================================================================== */
 const CATEGORIES: Category[] = [
   { id: "1", name: "Viagem", color: "#3b82f6" },
   { id: "2", name: "Vestuário", color: "#ef4444" },
@@ -55,8 +55,7 @@ const GROUPS: Group[] = [
 ];
 
 
-const cloneAssignments = (a: Assignments): Assignments =>
-  JSON.parse(JSON.stringify(a));
+const cloneAssignments = (a: Assignments): Assignments => JSON.parse(JSON.stringify(a));
 
 const removeFromAll = (a: Assignments, id: ID): Assignments => {
   const next: Assignments = {};
@@ -133,11 +132,10 @@ function GroupCard({
   onDragLeave: () => void;
 }) {
   const ring = dragState === "over" ? "ring-2 ring-blue-200" : "";
-  const pulse = dragState === "pulse" ? "bg-green-50" : "";
 
   return (
     <div
-      className={`rounded-xl border bg-background ${ring} ${pulse}`}
+      className={`rounded-xl border bg-background ${ring}`}
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragLeave={onDragLeave}
@@ -215,6 +213,7 @@ type ManageGroupsSheetProps = {
 export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProps) {
 
   const [isOpen, setIsOpen] = useState(false);
+  const [groups, setGroups] = useState<Group[]>(GROUPS);
   const [openGroups, setOpenGroups] = useState<ID[]>(GROUPS.map(g => g.id));
   const [dragOverGroup, setDragOverGroup] = useState<ID | null>(null);
   const [pulseGroup, setPulseGroup] = useState<ID | null>(null);
@@ -229,6 +228,25 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
   const [assignments, setAssignments] = useState<Assignments>(
     Object.fromEntries(GROUPS.map(g => [g.id, []]))
   );
+
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupColor, setNewGroupColor] = useState("#3b82f6");
+
+  const createGroup = () => {
+    const name = newGroupName.trim();
+    if (!name) {
+      toast.error("Informe um nome para o grupo");
+      return;
+    }
+    const id = `g${Date.now()}`;
+    const g: Group = { id, name, color: newGroupColor };
+    setGroups(prev => [...prev, g]);
+    setAssignments(prev => ({ ...prev, [id]: [] }));
+    setOpenGroups(prev => [...prev, id]);
+    setNewGroupName("");
+    setNewGroupColor("#3b82f6");
+    toast.success(`Grupo "${name}" criado`);
+  };
 
   const [initialAssignments, setInitialAssignments] = useState<Assignments | null>(null);
 
@@ -267,7 +285,7 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
       ids.forEach(id => { next = addToGroup(removeFromAll(next, id), groupId, id); });
       return next;
     });
-    const gname = GROUPS.find(g => g.id === groupId)?.name ?? "grupo";
+  const gname = groups.find(g => g.id === groupId)?.name ?? "grupo";
     toast.success(`${ids.length} categoria${ids.length > 1 ? "s" : ""} movida${ids.length > 1 ? "s" : ""} para ${gname}`);
     clearSelection();
   }, []);
@@ -320,12 +338,51 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
       </SheetTrigger>
 
       <SheetContent
+        hideClose={true}
         side="right"
         className="w-full sm:w-[720px] md:w-[820px] sm:max-w-[820px] p-0 h-full sm:rounded-l-lg rounded-t-lg"
       >
         <div className="flex flex-col h-full">
           <SheetHeader className="px-6 py-4 border-b">
-            <SheetTitle className="text-lg font-semibold">Organizar Grupos & Categorias</SheetTitle>
+            <div className="flex items-center justify-between w-full">
+              <SheetTitle className="text-lg font-semibold">Organizar Grupos & Categorias</SheetTitle>
+
+              <div className="flex items-center gap-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" /> Novo grupo
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Criar novo grupo</DialogTitle>
+                      <DialogDescription>Informe um nome e escolha uma cor para o grupo.</DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-2 py-4">
+                      <Label htmlFor="group-name">Nome</Label>
+                      <Input id="group-name" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} />
+
+                      <Label htmlFor="group-color">Cor</Label>
+                      <div className="flex items-center gap-2">
+                        <input id="group-color" type="color" value={newGroupColor} onChange={(e) => setNewGroupColor(e.target.value)} className="h-8 w-10 p-0 rounded-md border" />
+                        <Input value={newGroupColor} onChange={(e) => setNewGroupColor(e.target.value)} />
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="ghost">Cancelar</Button>
+                      </DialogClose>
+                      <DialogClose asChild>
+                        <Button onClick={createGroup}>Criar</Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
           </SheetHeader>
 
           <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 flex-1 min-h-0">
@@ -336,8 +393,7 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
               <div
                 className={[
                   "p-4 pt-3 flex-1 flex flex-col min-h-0",
-                  dragOverGroup === "unassigned" ? "ring-2 ring-blue-200" : "",
-                  pulseGroup === "unassigned" ? "bg-green-50" : "",
+                  dragOverGroup === "unassigned" ? "ring-2 ring-blue-200" : ""
                 ].join(" ")}
                 onDragOver={(e) => { e.preventDefault(); setDragOverGroup("unassigned"); }}
                 onDrop={onDropToUnassigned}
@@ -358,7 +414,7 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
               </div>
 
               <MoveBar
-                groups={GROUPS}
+                groups={groups}
                 selectedCount={selectedIds.length}
                 selectedGroup={targetGroup}
                 onChangeGroup={setTargetGroup}
@@ -372,7 +428,7 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
 
               <div className="p-4 pt-3 flex-1 flex flex-col min-h-0">
                 <div className="space-y-2 overflow-y-auto pr-2 flex-1">
-                  {GROUPS.map(g => (
+                  {groups.map(g => (
                     <GroupCard
                       key={g.id}
                       group={g}
@@ -405,7 +461,6 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
                               onClick={() => removeFromGroup(cat.id, g.id)}
                               className="h-7 w-7 p-0"
                             >
-                              <X className="h-4 w-4" />
                             </Button>
                           </div>
                         );
