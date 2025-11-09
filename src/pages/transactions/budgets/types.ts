@@ -60,3 +60,7 @@ export type BudgetPayload = {
   sectionsEditable: SectionEditable[];
   sectionsComputed: SectionComputed;
 };
+
+export type Category = { id: string; name: string; color: string };
+export type Group = { id: string; name: string; color: string };
+export type Assignments = Record<string, string[]>;

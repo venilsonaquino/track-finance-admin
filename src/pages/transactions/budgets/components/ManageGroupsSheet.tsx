@@ -12,10 +12,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCategories } from "@/pages/category/hooks/use-categories";
-
-type Category = { id: string; name: string; color: string };
-type Group = { id: string; name: string; color: string };
-type Assignments = Record<string, string[]>;
+import { Assignments, Category, Group } from "../types";
 
 const GROUPS: Group[] = [
   { id: "g1", name: "Sem Grupo", color: "#9ca3af" },
