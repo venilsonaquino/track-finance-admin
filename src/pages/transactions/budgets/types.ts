@@ -56,6 +56,10 @@ export type BudgetPayload = {
   sectionsComputed: SectionComputed;
 };
 
+
 export type Category = { id: string; name: string; color: string };
-export type Group = { id: string; name: string; color: string };
+export type Group = { id: string; title: string; color: string; kind: string; footerLabel: string; categories: Category[] };
+type AssignmentItem = {categoryId: string; budgetGroupId?: string | null;}
+export type SyncCategoryAssignments = { assignments: AssignmentItem[] }
+
 export type CategoryIdsByGroup = Record<string, string[]>;

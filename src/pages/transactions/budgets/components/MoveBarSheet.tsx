@@ -27,7 +27,7 @@ export default function MoveBarSheet({
               <SelectItem key={g.id} value={g.id}>
                 <span className="flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: g.color }} />
-                  {g.name}
+                  {g.title}
                 </span>
               </SelectItem>
             ))}

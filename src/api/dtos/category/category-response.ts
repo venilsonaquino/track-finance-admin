@@ -5,6 +5,7 @@ export interface CategoryResponse {
   icon: string;
   color: string;
   userId: string;
+  budgetGroupId: string | null;
   updated_at: string;
   created_at: string;
   deleted_at: string | null;

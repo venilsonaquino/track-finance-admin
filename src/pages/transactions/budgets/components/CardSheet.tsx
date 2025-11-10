@@ -3,9 +3,9 @@ import { Category, Group } from "../types";
 import { Badge } from "@/components/ui/badge";
 
 export function CategoryCardSheet({
-  cat, selected, onToggle, draggable, onDragStart,
+  category, selected, onToggle, draggable, onDragStart,
 }: {
-  cat: Category;
+  category: Category;
   selected: boolean;
   onToggle: () => void;
   draggable?: boolean;
@@ -13,7 +13,7 @@ export function CategoryCardSheet({
 }) {
   return (
     <button
-      key={cat.id}
+      key={category.id}
       draggable={draggable}
       onDragStart={onDragStart}
       onClick={onToggle}
@@ -24,8 +24,8 @@ export function CategoryCardSheet({
       ].join(" ")}
     >
       <div className="flex items-center gap-3">
-        <span className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
-        <span className="text-sm font-medium">{cat.name}</span>
+        <span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} />
+        <span className="text-sm font-medium">{category.name}</span>
       </div>
       {selected && <Check className="h-4 w-4 text-blue-600" />}
     </button>
@@ -68,7 +68,7 @@ export function GroupCardSheet({
         style={{ borderLeft: `4px solid ${group.color}` }}
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{group.name}</span>
+          <span className="text-sm font-medium">{group.title}</span>
           <Badge variant="secondary">{count}</Badge>
         </div>
         <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -78,7 +78,7 @@ export function GroupCardSheet({
         <div className="border-t px-3 py-2 text-sm text-muted-foreground rounded-b-xl">
           {count === 0 ? (
             <div className="px-3 py-6 text-center border-dashed">
-              Solte categorias aqui ou use “Mover”.
+              <span className="text-sm text-muted-foreground">Nenhuma categoria atribuída</span>
             </div>
           ) : (
             <div className="space-y-2">{children}</div>

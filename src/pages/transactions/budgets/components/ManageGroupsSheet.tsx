@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -10,24 +10,12 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCategories } from "@/pages/category/hooks/use-categories";
-import { Category, CategoryIdsByGroup, Group } from "../types";
 import { CategoryCardSheet, GroupCardSheet } from "./CardSheet";
 import MoveBarSheet from "./MoveBarSheet";
 import ColumnHeader from "./ColumnHeaderSheet";
-
-const GROUPS: Group[] = [
-  { id: "g1", name: "Sem Grupo", color: "#9ca3af" },
-  { id: "g2", name: "Gastos Essenciais", color: "#ef4444" },
-  { id: "g3", name: "Lazer", color: "#3b82f6" },
-  { id: "g4", name: "Investimentos", color: "#f59e0b" },
-  { id: "g5", name: "Outros", color: "#6b7280" },
-  { id: "g6", name: "Diversão", color: "#22c55e" },
-  { id: "g7", name: "Saúde", color: "#14b8a6" },
-  { id: "g8", name: "Educação", color: "#f97316" },
-  { id: "g9", name: "Transporte", color: "#0ea5e9" },
-  { id: "g10", name: "Alimentação", color: "#f59e0b" },
-  { id: "g11", name: "Moradia", color: "#ef4444" },
-];
+import { useBudgetGroups } from "../../hooks/use-budget-group";
+import { BudgetGroupService } from "@/api/services/budgetGroupService";
+import { CategoryIdsByGroup } from "../types";
 
 const cloneCategoriesByGroup = (a: CategoryIdsByGroup): CategoryIdsByGroup => JSON.parse(JSON.stringify(a));
 
@@ -49,8 +37,6 @@ type ManageGroupsSheetProps = {
 
 export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [groups, setGroups] = useState<Group[]>(GROUPS);
-  const [openGroups, setOpenGroups] = useState<string[]>(GROUPS.map(g => g.id));
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
   const [pulseGroup, setPulseGroup] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -59,44 +45,66 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
   const [categoriesByGroup, setCategoriesByGroup] = useState<CategoryIdsByGroup>({});
   const [initialCategoriesByGroup, setInitialCategoriesByGroup] = useState<CategoryIdsByGroup | null>(null);
   const [targetGroup, setTargetGroup] = useState<string | undefined>(undefined);
+  const [openGroups, setOpenGroups] = useState<string[]>([]);
 
-  const { categories: fetchedCategories, loading: categoriesLoading } = useCategories();
+  const { categories: fetchedCategories, loading: categoriesLoading, fetchCategories } = useCategories();
+  const { budgetGroups: fetchedGroups, fetchBudgetGroups } = useBudgetGroups();
+  const [isSaving, setIsSaving] = useState(false);
 
-  const categories = useMemo<Category[]>(
-    () => (fetchedCategories ?? []).map(category => ({ id: category.id, name: category.name, color: (category as any).color ?? "#6b7280" })),
-    [fetchedCategories]
+  const budgetGroups = useMemo(
+    () => fetchedGroups,
+    [fetchedGroups]
   );
 
-  const assignedSet = useMemo(
-    () => new Set(Object.values(categoriesByGroup).flat()),
-    [categoriesByGroup]
-  );
+  // Categorias sem grupo - filtra baseado no estado local categoriesByGroup
+  const categories = useMemo(() => {
+    // Pega todos os IDs de categorias que estão em algum grupo
+    const assignedIds = new Set(
+      Object.values(categoriesByGroup).flat()
+    );
+    
+    // Retorna apenas categorias que não estão em nenhum grupo
+    return fetchedCategories.filter(cat => !assignedIds.has(cat.id));
+  }, [fetchedCategories, categoriesByGroup]);
 
-  const unassigned = useMemo(
-    () => categories.filter(c => !assignedSet.has(c.id)),
-    [assignedSet, categories]
-  );
+  // Inicializa os grupos abertos e categoriesByGroup quando os dados carregam
+  useEffect(() => {
+    if (budgetGroups.length > 0 && isOpen) {
+      setOpenGroups(budgetGroups.filter(g => g.categories.length > 0).map(g => g.id));
+      
+      // Inicializa categoriesByGroup com os dados da API
+      const initialCategories: CategoryIdsByGroup = {};
+      budgetGroups.forEach(group => {
+        initialCategories[group.id] = group.categories.map(cat => cat.id);
+      });
+      setCategoriesByGroup(initialCategories);
+      setInitialCategoriesByGroup(cloneCategoriesByGroup(initialCategories));
+    }
+  }, [budgetGroups, isOpen]);
 
   const toggleSelected = (id: string) =>
     setSelectedIds(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]));
   
   const clearSelection = () => setSelectedIds([]);
 
-  const createGroup = () => {
-    const name = newGroupName.trim();
-    if (!name) {
-      toast.error("Informe um nome para o grupo");
-      return;
-    }
-    const id = `g${Date.now()}`;
-    const g: Group = { id, name, color: newGroupColor };
-    setGroups(prev => [...prev, g]);
-    setCategoriesByGroup(prev => ({ ...prev, [id]: [] }));
-    setOpenGroups(prev => [...prev, id]);
-    setNewGroupName("");
-    setNewGroupColor("#3b82f6");
-    toast.success(`Grupo "${name}" criado`);
-  };
+  const toggleGroupOpen = (id: string) =>
+    setOpenGroups(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+  // const createGroup = () => {
+  //   const name = newGroupName.trim();
+  //   if (!name) {
+  //     toast.error("Informe um nome para o grupo");
+  //     return;
+  //   }
+  //   const id = `g${Date.now()}`;
+  //   const g: Group = { id, name, color: newGroupColor };
+  //   setGroups(prev => [...prev, g]);
+  //   setCategoriesByGroup(prev => ({ ...prev, [id]: [] }));
+  //   setOpenGroups(prev => [...prev, id]);
+  //   setNewGroupName("");
+  //   setNewGroupColor("#3b82f6");
+  //   toast.success(`Grupo "${name}" criado`);
+  // };
 
   const openSheet = (open: boolean) => {
     if (open) setInitialCategoriesByGroup(cloneCategoriesByGroup(categoriesByGroup));
@@ -110,11 +118,46 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
     setIsOpen(false);
   };
 
-  const saveChanges = () => {
-    setInitialCategoriesByGroup(cloneCategoriesByGroup(categoriesByGroup));
-    clearSelection();
-    setIsOpen(false);
-    toast.success("Alterações salvas");
+  const saveChanges = async () => {
+    try {
+      setIsSaving(true);
+      
+      // Converte categoriesByGroup para o formato esperado pela API
+      const assignments = [];
+      
+      // Adiciona categorias que estão em grupos
+      for (const [budgetGroupId, categoryIds] of Object.entries(categoriesByGroup)) {
+        for (const categoryId of categoryIds) {
+          assignments.push({ categoryId, budgetGroupId });
+        }
+      }
+      
+      // Adiciona categorias sem grupo
+      for (const category of categories) {
+        assignments.push({ categoryId: category.id, budgetGroupId: null });
+      }
+      
+      // Envia as atribuições de categorias para a API
+      await BudgetGroupService.updateCategoryAssignments({
+        assignments
+      });
+      
+      // Atualiza os dados localmente sem recarregar a página
+      await Promise.all([
+        fetchBudgetGroups(),
+        fetchCategories()
+      ]);
+      
+      setInitialCategoriesByGroup(cloneCategoriesByGroup(categoriesByGroup));
+      clearSelection();
+      toast.success("Alterações salvas com sucesso!");
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Erro ao salvar alterações:", error);
+      toast.error("Erro ao salvar alterações");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const moveIdsToGroup = useCallback((ids: string[], groupId: string) => {
@@ -168,10 +211,6 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
     setTimeout(() => setPulseGroup(null), 700);
   };
 
-
-  const toggleGroupOpen = (gid: string) =>
-    setOpenGroups(list => (list.includes(gid) ? list.filter(x => x !== gid) : [...list, gid]));
-
   return (
     <Sheet open={isOpen} onOpenChange={openSheet} >
       <SheetTrigger asChild>
@@ -220,7 +259,8 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
                         <Button variant="ghost">Cancelar</Button>
                       </DialogClose>
                       <DialogClose asChild>
-                        <Button onClick={createGroup}>Criar</Button>
+                        {/* <Button onClick={createGroup}>Criar</Button> */}
+                        <Button onClick={() => {}}>Criar</Button>
                       </DialogClose>
                     </DialogFooter>
                   </DialogContent>
@@ -249,14 +289,14 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
                       <div key={i} className="h-10 rounded-lg bg-muted/40 animate-pulse" />
                     ))
                   ) : (
-                    unassigned.map(cat => (
+                    categories.map(category => (
                       <CategoryCardSheet
-                        key={cat.id}
-                        cat={cat}
-                        selected={selectedIds.includes(cat.id)}
-                        onToggle={() => toggleSelected(cat.id)}
+                        key={category.id}
+                        category={category}
+                        selected={selectedIds.includes(category.id)}
+                        onToggle={() => toggleSelected(category.id)}
                         draggable
-                        onDragStart={(e) => onDragStart(e, cat.id)}
+                        onDragStart={(e) => onDragStart(e, category.id)}
                       />
                     ))
                   )}
@@ -264,7 +304,7 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
               </div>
 
               <MoveBarSheet
-                groups={groups}
+                groups={budgetGroups}
                 selectedCount={selectedIds.length}
                 selectedGroup={targetGroup}
                 onChangeGroup={setTargetGroup}
@@ -278,7 +318,7 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
 
               <div className="p-4 pt-3 flex-1 flex flex-col min-h-0">
                 <div className="space-y-2 overflow-y-auto pr-2 flex-1">
-                  {groups.map(g => (
+                  {budgetGroups.map(g => (
                     <GroupCardSheet
                       key={g.id}
                       group={g}
@@ -293,7 +333,7 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
                       onDragLeave={onDragLeaveGroup}
                     >
                       {(categoriesByGroup[g.id] ?? []).map(catId => {
-                        const cat = categories.find(c => c.id === catId);
+                        const cat = fetchedCategories.find(c => c.id === catId);
                         if (!cat) return null;
                         return (
                           <div
@@ -326,11 +366,11 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
 
           <SheetFooter className="px-6 py-4 border-t bg-muted/20">
             <div className="flex gap-3 w-full">
-              <Button variant="ghost" onClick={cancelChanges} className="flex-1 h-10">
+              <Button variant="ghost" onClick={cancelChanges} className="flex-1 h-10" disabled={isSaving}>
                 Cancelar
               </Button>
-              <Button onClick={saveChanges} className="flex-1 h-10">
-                Salvar
+              <Button onClick={saveChanges} className="flex-1 h-10" disabled={isSaving}>
+                {isSaving ? "Salvando..." : "Salvar"}
               </Button>
             </div>
           </SheetFooter>
