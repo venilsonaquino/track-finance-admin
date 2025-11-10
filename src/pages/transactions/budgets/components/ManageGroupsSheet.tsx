@@ -4,11 +4,8 @@ import {
 } from "@/components/ui/sheet";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tag, ListTodo, Plus, X } from "lucide-react";
+import { Tag, ListTodo, X } from "lucide-react";
 import { toast } from "sonner";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useCategories } from "@/pages/category/hooks/use-categories";
 import { CategoryCardSheet, GroupCardSheet } from "./CardSheet";
 import MoveBarSheet from "./MoveBarSheet";
@@ -16,6 +13,7 @@ import ColumnHeader from "./ColumnHeaderSheet";
 import { useBudgetGroups } from "../../hooks/use-budget-group";
 import { BudgetGroupService } from "@/api/services/budgetGroupService";
 import { CategoryIdsByGroup } from "../types";
+import CreateGroupDialog from "./CreateGroupDialog";
 
 const cloneCategoriesByGroup = (a: CategoryIdsByGroup): CategoryIdsByGroup => JSON.parse(JSON.stringify(a));
 
@@ -40,8 +38,6 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
   const [pulseGroup, setPulseGroup] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [newGroupName, setNewGroupName] = useState("");
-  const [newGroupColor, setNewGroupColor] = useState("#3b82f6");
   const [categoriesByGroup, setCategoriesByGroup] = useState<CategoryIdsByGroup>({});
   const [initialCategoriesByGroup, setInitialCategoriesByGroup] = useState<CategoryIdsByGroup | null>(null);
   const [targetGroup, setTargetGroup] = useState<string | undefined>(undefined);
@@ -89,22 +85,6 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
 
   const toggleGroupOpen = (id: string) =>
     setOpenGroups(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-
-  // const createGroup = () => {
-  //   const name = newGroupName.trim();
-  //   if (!name) {
-  //     toast.error("Informe um nome para o grupo");
-  //     return;
-  //   }
-  //   const id = `g${Date.now()}`;
-  //   const g: Group = { id, name, color: newGroupColor };
-  //   setGroups(prev => [...prev, g]);
-  //   setCategoriesByGroup(prev => ({ ...prev, [id]: [] }));
-  //   setOpenGroups(prev => [...prev, id]);
-  //   setNewGroupName("");
-  //   setNewGroupColor("#3b82f6");
-  //   toast.success(`Grupo "${name}" criado`);
-  // };
 
   const openSheet = (open: boolean) => {
     if (open) setInitialCategoriesByGroup(cloneCategoriesByGroup(categoriesByGroup));
@@ -231,40 +211,7 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
               <SheetTitle className="text-lg font-semibold">Organizar Grupos & Categorias</SheetTitle>
 
               <div className="flex items-center gap-2">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" /> Novo grupo
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Criar novo grupo</DialogTitle>
-                      <DialogDescription>Informe um nome e escolha uma cor para o grupo.</DialogDescription>
-                    </DialogHeader>
-
-                    <div className="grid gap-2 py-4">
-                      <Label htmlFor="group-name">Nome</Label>
-                      <Input id="group-name" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} />
-
-                      <Label htmlFor="group-color">Cor</Label>
-                      <div className="flex items-center gap-2">
-                        <input id="group-color" type="color" value={newGroupColor} onChange={(e) => setNewGroupColor(e.target.value)} className="h-8 w-10 p-0 rounded-md border" />
-                        <Input value={newGroupColor} onChange={(e) => setNewGroupColor(e.target.value)} />
-                      </div>
-                    </div>
-
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="ghost">Cancelar</Button>
-                      </DialogClose>
-                      <DialogClose asChild>
-                        {/* <Button onClick={createGroup}>Criar</Button> */}
-                        <Button onClick={() => {}}>Criar</Button>
-                      </DialogClose>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <CreateGroupDialog onGroupCreated={fetchBudgetGroups} />
               </div>
             </div>
           </SheetHeader>
