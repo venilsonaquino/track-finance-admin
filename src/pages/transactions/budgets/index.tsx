@@ -27,13 +27,14 @@ const toValuesArray = (monthOrder: MonthKey[], values: Record<MonthKey, number>)
 
 export default function BudgetPage() {
 
-  const { budgetOverview: fetchBudgetOverview } = useBudgetGroups();
+  const { 
+    budgetOverview, 
+    budgetGroups,
+    loading,
+    error,
+    fetchBudgetGroups
+  } = useBudgetGroups();
   const [editableSections, setEditableSections] = useState<EditableSectionState[]>([]);
-
-  const budgetOverview = useMemo(
-    () => fetchBudgetOverview,
-    [fetchBudgetOverview]
-  );
 
   const monthOrder: MonthKey[] = budgetOverview.months;
   const monthLabels = useMemo(() => monthOrder.map((key: MonthKey) => MONTH_LABELS_MAP[key]), [monthOrder]);
@@ -122,12 +123,44 @@ export default function BudgetPage() {
     );
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Carregando orçamentos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="text-red-600 mb-2">Erro ao carregar orçamentos</div>
+          <p className="text-gray-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (  
 		<>
       <div className="flex justify-between items-center">
         <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
         <div className="flex justify-end gap-2 mb-4">
-          <ManageGroupsSheet labelButton="Organizar Grupos"/>
+          <ManageGroupsSheet
+            labelButton="Organizar Grupos"
+            budgetGroups={budgetGroups}
+            onRefreshBudgetGroups={fetchBudgetGroups}
+          />
         </div>
       </div>
       <div className="flex justify-between items-center">

@@ -10,7 +10,6 @@ import { useCategories } from "@/pages/category/hooks/use-categories";
 import { CategoryCardSheet, GroupCardSheet } from "./CardSheet";
 import MoveBarSheet from "./MoveBarSheet";
 import ColumnHeader from "./ColumnHeaderSheet";
-import { useBudgetGroups } from "../../hooks/use-budget-group";
 import { BudgetGroupService } from "@/api/services/budgetGroupService";
 import { CategoryIdsByGroup } from "../types";
 import CreateGroupDialog from "./CreateGroupDialog";
@@ -29,11 +28,15 @@ function addCategoryToGroup(map: CategoryIdsByGroup, groupId: string, id: string
   return next;
 }
 
+import { BudgetGroupResponse } from "@/api/services/budgetGroupService";
+
 type ManageGroupsSheetProps = { 
-  labelButton?: string; 
+  labelButton?: string;
+  budgetGroups: BudgetGroupResponse[];
+  onRefreshBudgetGroups: () => void;
 }
 
-export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProps) {
+export default function ManageGroupsSheet({ labelButton, budgetGroups, onRefreshBudgetGroups }: ManageGroupsSheetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
   const [pulseGroup, setPulseGroup] = useState<string | null>(null);
@@ -44,13 +47,7 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
   const [openGroups, setOpenGroups] = useState<string[]>([]);
 
   const { categories: fetchedCategories, loading: categoriesLoading, fetchCategories } = useCategories();
-  const { budgetGroups: fetchedGroups, fetchBudgetGroups } = useBudgetGroups();
   const [isSaving, setIsSaving] = useState(false);
-
-  const budgetGroups = useMemo(
-    () => fetchedGroups,
-    [fetchedGroups]
-  );
 
   const budgetGroupsWithoutBalanceGroup = useMemo(
     () => budgetGroups.slice(1),
@@ -129,7 +126,7 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
       
       // Atualiza os dados localmente sem recarregar a página
       await Promise.all([
-        fetchBudgetGroups(),
+        onRefreshBudgetGroups(),
         fetchCategories()
       ]);
       
@@ -218,7 +215,7 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
               <SheetTitle className="text-lg font-semibold">Organizar Grupos & Categorias</SheetTitle>
 
               <div className="flex items-center gap-2">
-                <CreateGroupDialog onGroupCreated={fetchBudgetGroups} />
+                <CreateGroupDialog onGroupCreated={onRefreshBudgetGroups} />
               </div>
             </div>
           </SheetHeader>
