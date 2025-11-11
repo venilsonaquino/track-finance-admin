@@ -75,7 +75,7 @@ export default function ManageGroupsSheet({
 
   // Inicializa os grupos abertos e categoriesByGroup quando os dados carregam
   useEffect(() => {
-    if (budgetGroups.length > 0 && isOpen) {
+    if (budgetGroups.length > 0 && fetchedCategories.length >= 0 && isOpen) {
       setOpenGroups(budgetGroups.filter(g => g.categories.length > 0).map(g => g.id));
       
       // Inicializa categoriesByGroup com os dados da API
@@ -86,7 +86,7 @@ export default function ManageGroupsSheet({
       setCategoriesByGroup(initialCategories);
       setInitialCategoriesByGroup(cloneCategoriesByGroup(initialCategories));
     }
-  }, [budgetGroups, isOpen]);
+  }, [budgetGroups, fetchedCategories, isOpen]);
 
   const toggleSelected = (id: string) =>
     setSelectedIds(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]));
@@ -97,14 +97,21 @@ export default function ManageGroupsSheet({
     setOpenGroups(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const openSheet = (open: boolean) => {
-    if (open) setInitialCategoriesByGroup(cloneCategoriesByGroup(categoriesByGroup));
-    else if (initialCategoriesByGroup) setCategoriesByGroup(cloneCategoriesByGroup(initialCategoriesByGroup));
+    if (open) {
+      // Garante que os dados estejam atualizados antes de abrir
+      onRefreshBudgetGroups();
+      fetchCategories();
+      setInitialCategoriesByGroup(cloneCategoriesByGroup(categoriesByGroup));
+    } else if (initialCategoriesByGroup) {
+      setCategoriesByGroup(cloneCategoriesByGroup(initialCategoriesByGroup));
+    }
     setIsOpen(open);
   };
 
   const cancelChanges = () => {
     if (initialCategoriesByGroup) setCategoriesByGroup(cloneCategoriesByGroup(initialCategoriesByGroup));
     clearSelection();
+    setTargetGroup(undefined);
     setIsOpen(false);
   };
 
@@ -140,6 +147,7 @@ export default function ManageGroupsSheet({
       
       setInitialCategoriesByGroup(cloneCategoriesByGroup(categoriesByGroup));
       clearSelection();
+      setTargetGroup(undefined);
       toast.success("Alterações salvas com sucesso!");
       setIsOpen(false);
     } catch (error) {
