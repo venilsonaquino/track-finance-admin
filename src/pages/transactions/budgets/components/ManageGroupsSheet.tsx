@@ -52,6 +52,11 @@ export default function ManageGroupsSheet({ labelButton }: ManageGroupsSheetProp
     [fetchedGroups]
   );
 
+  const budgetGroupsWithoutBalanceGroup = useMemo(
+    () => budgetGroups.slice(1),
+    [budgetGroups]
+  );
+
   // Categorias sem grupo - filtra baseado no estado local categoriesByGroup
   const categories = useMemo(() => {
     // Pega todos os IDs de categorias que estão em algum grupo
@@ -191,6 +196,8 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
     setTimeout(() => setPulseGroup(null), 700);
   };
 
+
+
   return (
     <Sheet open={isOpen} onOpenChange={openSheet} >
       <SheetTrigger asChild>
@@ -251,7 +258,7 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
               </div>
 
               <MoveBarSheet
-                groups={budgetGroups}
+                groups={budgetGroupsWithoutBalanceGroup}
                 selectedCount={selectedIds.length}
                 selectedGroup={targetGroup}
                 onChangeGroup={setTargetGroup}
@@ -265,7 +272,7 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
 
               <div className="p-4 pt-3 flex-1 flex flex-col min-h-0">
                 <div className="space-y-2 overflow-y-auto pr-2 flex-1">
-                  {budgetGroups.map(g => (
+                  {budgetGroupsWithoutBalanceGroup.map(g => (
                     <GroupCardSheet
                       key={g.id}
                       group={g}
