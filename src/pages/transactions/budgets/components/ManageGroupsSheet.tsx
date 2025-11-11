@@ -10,11 +10,20 @@ import { useCategories } from "@/pages/category/hooks/use-categories";
 import { CategoryCardSheet, GroupCardSheet } from "./CardSheet";
 import MoveBarSheet from "./MoveBarSheet";
 import ColumnHeader from "./ColumnHeaderSheet";
-import { BudgetGroupService } from "@/api/services/budgetGroupService";
+import { BudgetGroupService, BudgetGroupResponse, BudgetGroupRequest } from "@/api/services/budgetGroupService";
 import { CategoryIdsByGroup } from "../types";
 import CreateGroupDialog from "./CreateGroupDialog";
 
-const cloneCategoriesByGroup = (a: CategoryIdsByGroup): CategoryIdsByGroup => JSON.parse(JSON.stringify(a));
+const cloneCategoriesByGroup = (source: CategoryIdsByGroup = {}): CategoryIdsByGroup =>
+  Object.fromEntries(
+    Object.entries(source).map(([groupId, ids]) => [groupId, [...ids]])
+  );
+
+const buildCategoriesByGroup = (groups: BudgetGroupResponse[]): CategoryIdsByGroup =>
+  groups.reduce((acc, group) => {
+    acc[group.id] = group.categories?.map(cat => cat.id) ?? [];
+    return acc;
+  }, {} as CategoryIdsByGroup);
 
 function removeCategoryFromAll(map: CategoryIdsByGroup, id: string): CategoryIdsByGroup {
   return Object.fromEntries(
@@ -27,8 +36,6 @@ function addCategoryToGroup(map: CategoryIdsByGroup, groupId: string, id: string
   if (!next[groupId].includes(id)) next[groupId].push(id);
   return next;
 }
-
-import { BudgetGroupResponse, BudgetGroupRequest } from "@/api/services/budgetGroupService";
 
 type ManageGroupsSheetProps = { 
   labelButton?: string;
@@ -62,56 +69,71 @@ export default function ManageGroupsSheet({
     [budgetGroups]
   );
 
+  const assignedCategoryIds = useMemo(
+    () => new Set(Object.values(categoriesByGroup).flat()),
+    [categoriesByGroup]
+  );
+
   // Categorias sem grupo - filtra baseado no estado local categoriesByGroup
-  const categories = useMemo(() => {
-    // Pega todos os IDs de categorias que estão em algum grupo
-    const assignedIds = new Set(
-      Object.values(categoriesByGroup).flat()
-    );
-    
-    // Retorna apenas categorias que não estão em nenhum grupo
-    return fetchedCategories.filter(cat => !assignedIds.has(cat.id));
-  }, [fetchedCategories, categoriesByGroup]);
+  const categories = useMemo(
+    () => fetchedCategories.filter(cat => !assignedCategoryIds.has(cat.id)),
+    [fetchedCategories, assignedCategoryIds]
+  );
+
+  const categoriesMap = useMemo(
+    () => new Map(fetchedCategories.map(cat => [cat.id, cat])),
+    [fetchedCategories]
+  );
 
   // Inicializa os grupos abertos e categoriesByGroup quando os dados carregam
   useEffect(() => {
-    if (budgetGroups.length > 0 && fetchedCategories.length >= 0 && isOpen) {
-      setOpenGroups(budgetGroups.filter(g => g.categories.length > 0).map(g => g.id));
-      
-      // Inicializa categoriesByGroup com os dados da API
-      const initialCategories: CategoryIdsByGroup = {};
-      budgetGroups.forEach(group => {
-        initialCategories[group.id] = group.categories.map(cat => cat.id);
-      });
-      setCategoriesByGroup(initialCategories);
-      setInitialCategoriesByGroup(cloneCategoriesByGroup(initialCategories));
-    }
-  }, [budgetGroups, fetchedCategories, isOpen]);
+    if (!isOpen || !budgetGroups.length) return;
 
-  const toggleSelected = (id: string) =>
+    setOpenGroups(
+      budgetGroups.filter(g => (g.categories?.length ?? 0) > 0).map(g => g.id)
+    );
+    const initialCategories = buildCategoriesByGroup(budgetGroups);
+    setCategoriesByGroup(initialCategories);
+    setInitialCategoriesByGroup(cloneCategoriesByGroup(initialCategories));
+  }, [budgetGroups, isOpen]);
+
+  const toggleSelected = useCallback((id: string) => {
     setSelectedIds(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]));
+  }, []);
   
-  const clearSelection = () => setSelectedIds([]);
+  const clearSelection = useCallback(() => setSelectedIds([]), []);
 
-  const toggleGroupOpen = (id: string) =>
+  const toggleGroupOpen = useCallback((id: string) => {
     setOpenGroups(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }, []);
+
+  const resetAssignments = useCallback(() => {
+    if (!initialCategoriesByGroup) return;
+    setCategoriesByGroup(cloneCategoriesByGroup(initialCategoriesByGroup));
+  }, [initialCategoriesByGroup]);
+
+  const resetTransientState = useCallback(() => {
+    clearSelection();
+    setTargetGroup(undefined);
+    setDragOverGroup(null);
+    setPulseGroup(null);
+  }, [clearSelection]);
 
   const openSheet = (open: boolean) => {
     if (open) {
       // Garante que os dados estejam atualizados antes de abrir
       onRefreshBudgetGroups();
       fetchCategories();
-      setInitialCategoriesByGroup(cloneCategoriesByGroup(categoriesByGroup));
-    } else if (initialCategoriesByGroup) {
-      setCategoriesByGroup(cloneCategoriesByGroup(initialCategoriesByGroup));
+    } else {
+      resetAssignments();
+      resetTransientState();
     }
     setIsOpen(open);
   };
 
   const cancelChanges = () => {
-    if (initialCategoriesByGroup) setCategoriesByGroup(cloneCategoriesByGroup(initialCategoriesByGroup));
-    clearSelection();
-    setTargetGroup(undefined);
+    resetAssignments();
+    resetTransientState();
     setIsOpen(false);
   };
 
@@ -139,7 +161,6 @@ export default function ManageGroupsSheet({
         assignments
       });
       
-      // Atualiza os dados localmente sem recarregar a página
       await Promise.all([
         onRefreshBudgetGroups(),
         fetchCategories()
@@ -166,7 +187,7 @@ export default function ManageGroupsSheet({
       return next;
     });
     clearSelection();
-  }, []);
+  }, [clearSelection]);
 
   const removeFromGroup = (id: string, groupId: string) =>
     setCategoriesByGroup(prev => ({ ...prev, [groupId]: prev[groupId].filter(x => x !== id) }));
@@ -182,29 +203,38 @@ export default function ManageGroupsSheet({
     setDragOverGroup(gid);
   };
 
-const onDropToGroup = (e: React.DragEvent, gid: string) => {
-  e.preventDefault();
-  const draggedId = e.dataTransfer.getData("text/plain");
-  if (!draggedId) return;
+  const onDropToGroup = (e: React.DragEvent, gid: string) => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData("text/plain");
+    if (!draggedId) return;
 
-  const payload = selectedIds.includes(draggedId)
-    ? selectedIds
-    : [draggedId];
+    const payload = selectedIds.includes(draggedId)
+      ? selectedIds
+      : [draggedId];
 
-  moveIdsToGroup(payload, gid);
-  setDragOverGroup(null);
-  setPulseGroup(gid);
-  setTimeout(() => setPulseGroup(null), 700);
-};
+    moveIdsToGroup(payload, gid);
+    setDragOverGroup(null);
+    setPulseGroup(gid);
+    setTimeout(() => setPulseGroup(null), 700);
+  };
 
   const onDragLeaveGroup = () => setDragOverGroup(null);
 
   const onDropToUnassigned = (e: React.DragEvent) => {
     e.preventDefault();
-    const id = e.dataTransfer.getData("text/plain");
-    if (!id) return;
-    setCategoriesByGroup(prev => removeCategoryFromAll(prev, id));
-    toast.success("Categoria removida do grupo");
+    const draggedId = e.dataTransfer.getData("text/plain");
+    if (!draggedId) return;
+
+    const idsToRemove = selectedIds.includes(draggedId) ? selectedIds : [draggedId];
+
+    setCategoriesByGroup(prev =>
+      idsToRemove.reduce((next, id) => removeCategoryFromAll(next, id), prev)
+    );
+    toast.success(
+      idsToRemove.length > 1 ? "Categorias removidas dos grupos" : "Categoria removida do grupo"
+    );
+    clearSelection();
+    setDragOverGroup(null);
     setPulseGroup("unassigned");
     setTimeout(() => setPulseGroup(null), 700);
   };
@@ -313,7 +343,7 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
                       onDragLeave={onDragLeaveGroup}
                     >
                       {(categoriesByGroup[g.id] ?? []).map(catId => {
-                        const cat = fetchedCategories.find(c => c.id === catId);
+                        const cat = categoriesMap.get(catId);
                         if (!cat) return null;
                         return (
                           <div
