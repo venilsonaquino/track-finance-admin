@@ -76,7 +76,7 @@ export default function EditableBlock({
                   key={i}
                   className="text-center font-semibold text-zinc-800 dark:text-zinc-200"
                 >
-                  {formatCurrency(value)}
+                  {formatCurrency(value, locale, currency)}
                 </TableCell>
               ))}
             </TableRow>
