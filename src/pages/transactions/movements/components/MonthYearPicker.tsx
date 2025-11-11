@@ -1,4 +1,4 @@
-import { useMemo, useState, useId } from "react";
+import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const months = [
@@ -9,14 +9,7 @@ const months = [
 interface MonthYearPickerProps {
   date: Date;
   onChange: (date: Date) => void;
-  /**
-   * `month-year` (default) renders full navigation, `year` renders only the toolbar.
-   */
   mode?: "month-year" | "year";
-  /**
-   * How many years before/after the current value the select should list.
-   */
-  yearWindow?: number;
   className?: string;
 }
 
@@ -24,20 +17,12 @@ export function MonthYearPicker({
   date,
   onChange,
   mode = "month-year",
-  yearWindow = 5,
   className,
 }: MonthYearPickerProps) {
   const [showSelect, setShowSelect] = useState(false);
   const year = date.getFullYear();
   const showMonthControls = mode === "month-year";
-  const selectId = useId();
   const containerClass = ["w-full flex flex-col gap-4", className].filter(Boolean).join(" ");
-  const normalizedWindow = Math.max(1, yearWindow);
-
-  const yearOptions = useMemo(
-    () => Array.from({ length: normalizedWindow * 2 + 1 }, (_, idx) => year - normalizedWindow + idx),
-    [year, normalizedWindow]
-  );
 
   const handleMonthChange = (increment: number) => {
     const newDate = new Date(date);
