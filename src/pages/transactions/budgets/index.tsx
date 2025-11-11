@@ -30,9 +30,10 @@ export default function BudgetPage() {
   const { 
     budgetOverview, 
     budgetGroups,
-    loading,
+    loadingBudgetOverview: loading,
     error,
-    fetchBudgetGroups
+    fetchBudgetGroups,
+    fetchBudgetOverview
   } = useBudgetGroups();
   const [editableSections, setEditableSections] = useState<EditableSectionState[]>([]);
 
@@ -123,11 +124,54 @@ export default function BudgetPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Carregando orçamentos...</p>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
+          <div className="flex justify-end gap-2 mb-4">
+            <div className="h-10 w-40 bg-gray-200 animate-pulse rounded"></div>
+          </div>
         </div>
+        <Card className="shadow-sm">
+          <CardContent className="space-y-6">
+            {/* Skeleton para SALDO */}
+            <div className="space-y-4">
+              <div className="h-6 w-20 bg-gray-200 animate-pulse rounded"></div>
+              <div className="border rounded-md">
+                <div className="h-12 bg-gray-100 animate-pulse"></div>
+                <div className="p-4 space-y-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex space-x-4">
+                      <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+                      {Array.from({ length: 12 }).map((_, j) => (
+                        <div key={j} className="h-4 w-16 bg-gray-200 animate-pulse rounded"></div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Skeleton para seções editáveis */}
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="space-y-4">
+                <div className="h-6 w-32 bg-gray-200 animate-pulse rounded"></div>
+                <div className="border rounded-md">
+                  <div className="h-12 bg-gray-100 animate-pulse"></div>
+                  <div className="p-4 space-y-2">
+                    {Array.from({ length: 2 }).map((_, j) => (
+                      <div key={j} className="flex space-x-4">
+                        <div className="h-4 w-20 bg-gray-200 animate-pulse rounded"></div>
+                        {Array.from({ length: 12 }).map((_, k) => (
+                          <div key={k} className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -139,7 +183,7 @@ export default function BudgetPage() {
           <div className="text-red-600 mb-2">Erro ao carregar orçamentos</div>
           <p className="text-gray-600">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => fetchBudgetOverview()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Tentar novamente

@@ -54,12 +54,18 @@ const createEmptyBudgetOverview = (): BudgetPayloadResponse => ({
 export const useBudgetGroups = () => {
   const [budgetGroups, setBudgetGroups] = useState<BudgetGroupResponse[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingBudgetGroups, setLoadingBudgetGroups] = useState(false);
+  const [loadingBudgetOverview, setLoadingBudgetOverview] = useState(false);
+  const [loadingCreateGroup, setLoadingCreateGroup] = useState(false);
+  const [loadingUpdateGroup, setLoadingUpdateGroup] = useState(false);
+  const [loadingDeleteGroup, setLoadingDeleteGroup] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [budgetOverview, setBudgetOverview] = useState<BudgetPayloadResponse>(createEmptyBudgetOverview());
   
   const fetchBudgetGroups = async () => {
     try {
-      setLoading(true);
+      setLoadingBudgetGroups(true);
+      setError(null);
       const response = await BudgetGroupService.getBudgetGroups();
       const { data }: { data: BudgetGroupResponse[] } = response;
       setBudgetGroups(Array.isArray(data) ? data : []);
@@ -67,7 +73,7 @@ export const useBudgetGroups = () => {
       setError(error as string);
       setBudgetGroups([]);
     } finally {
-      setLoading(false);
+      setLoadingBudgetGroups(false);
     }
   }
   useEffect(() => {
@@ -88,46 +94,50 @@ export const useBudgetGroups = () => {
 
   const createBudgetGroup = async (data: BudgetGroupRequest) => {
     try {
-      setLoading(true);
+      setLoadingCreateGroup(true);
+      setError(null);
       await BudgetGroupService.createBudgetGroup(data);
       fetchBudgetGroups();
     } catch (error) {
       setError(error as string);
       throw error;
     } finally {
-      setLoading(false);
+      setLoadingCreateGroup(false);
     }
   }
 
   const updateBudgetGroup = async (id: string, data: BudgetGroupRequest) => {
     try {
-      setLoading(true);
+      setLoadingUpdateGroup(true);
+      setError(null);
       await BudgetGroupService.updateBudgetGroup(id, data);
       fetchBudgetGroups();
     } catch (error) {
       setError(error as string);
       throw error;
     } finally {
-      setLoading(false);
+      setLoadingUpdateGroup(false);
     }
   }
 
   const deleteBudgetGroup = async (id: string) => {
     try {
-      setLoading(true);
+      setLoadingDeleteGroup(true);
+      setError(null);
       await BudgetGroupService.deleteBudgetGroup(id);
       fetchBudgetGroups();
     } catch (error) {
       setError(error as string);
       throw error;
     } finally {
-      setLoading(false);
+      setLoadingDeleteGroup(false);
     }
   }
 
   const fetchBudgetOverview = async (year?: number) => {
     try {
-      setLoading(true);
+      setLoadingBudgetOverview(true);
+      setError(null);
       const currentYear = year ?? new Date().getFullYear();
       const response = await BudgetGroupService.getBudgetOverview(currentYear);
       const { data }: { data: BudgetPayloadResponse } = response;
@@ -140,7 +150,7 @@ export const useBudgetGroups = () => {
       // Mantém estrutura vazia válida em caso de erro
       setBudgetOverview(createEmptyBudgetOverview());
     } finally {
-      setLoading(false);
+      setLoadingBudgetOverview(false);
     }
   }
 
@@ -151,6 +161,11 @@ export const useBudgetGroups = () => {
   return {
     budgetGroups,
     loading,
+    loadingBudgetGroups,
+    loadingBudgetOverview,
+    loadingCreateGroup,
+    loadingUpdateGroup,
+    loadingDeleteGroup,
     error,
     fetchBudgetGroups,
     categoryAssignments,
