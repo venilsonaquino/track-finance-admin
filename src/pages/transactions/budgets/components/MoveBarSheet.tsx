@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function MoveBarSheet({
-  groups, selectedCount, selectedGroup, onChangeGroup, onMove,
+  groups, selectedCount, selectedGroup, onChangeGroup, onMove, isSaving = false,
 }: {
   groups: Group[];
   selectedCount: number;
   selectedGroup?: string;
   onChangeGroup: (id: string) => void;
   onMove: () => void;
+  isSaving?: boolean;
 }) {
   return (
     <CardFooter className="border-t bg-background/95 py-3 px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -33,8 +34,15 @@ export default function MoveBarSheet({
             ))}
           </SelectContent>
         </Select>
-        <Button size="sm" className="w-full sm:w-auto" disabled={!selectedCount || !selectedGroup} onClick={onMove}>
-          Mover
+        <Button size="sm" className="w-full sm:w-auto" disabled={!selectedCount || !selectedGroup || isSaving} onClick={onMove}>
+          {isSaving ? (
+            <>
+              <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1" />
+              Movendo...
+            </>
+          ) : (
+            "Mover"
+          )}
         </Button>
       </div>
     </CardFooter>

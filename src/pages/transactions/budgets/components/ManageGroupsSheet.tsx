@@ -228,7 +228,15 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
         <div className="flex flex-col h-full">
           <SheetHeader className="px-6 py-4 border-b">
             <div className="flex items-center justify-between w-full">
-              <SheetTitle className="text-lg font-semibold">Organizar Grupos & Categorias</SheetTitle>
+              <SheetTitle className="text-lg font-semibold flex items-center gap-2">
+                Organizar Grupos & Categorias
+                {isSaving && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <div className="animate-spin rounded-full h-3 w-3 border-2 border-muted-foreground border-t-transparent" />
+                    Salvando...
+                  </div>
+                )}
+              </SheetTitle>
 
               <div className="flex items-center gap-2">
                 <CreateGroupDialog 
@@ -280,6 +288,7 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
                 selectedGroup={targetGroup}
                 onChangeGroup={setTargetGroup}
                 onMove={() => targetGroup && moveIdsToGroup(selectedIds, targetGroup)}
+                isSaving={isSaving}
               />
             </Card>
 
@@ -340,8 +349,15 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
               <Button variant="ghost" onClick={cancelChanges} className="flex-1 h-10" disabled={isSaving}>
                 Cancelar
               </Button>
-              <Button onClick={saveChanges} className="flex-1 h-10" disabled={isSaving}>
-                {isSaving ? "Salvando..." : "Salvar"}
+              <Button onClick={saveChanges} className="flex-1 h-10" disabled={isSaving} aria-busy={isSaving}>
+                {isSaving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar"
+                )}
               </Button>
             </div>
           </SheetFooter>
