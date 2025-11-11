@@ -16,36 +16,37 @@ export type MonthKey =
   | "Jan" | "Fev" | "Mar" | "Abr" | "Mai" | "Jun"
   | "Jul" | "Ago" | "Set" | "Out" | "Nov" | "Dez";
 
-export type ValuesByMonth = Record<MonthKey, number>; // ótimo para gráficos
+export type ValuesByMonth = Record<MonthKey, number>; 
 
 export type RowItem = {
-  id: string;           // ULID
+  id: string;
   label: string;
-  values: ValuesByMonth; // 12 meses, número absoluto (sempre soma)
+  values: ValuesByMonth;
 };
 
 export type SectionEditable = {
-  id: string;           // ULID
+  id: string;
   title: string;
   kind: "editable";
-  color?: string;      // opcional: cor de fundo suave
+  color?: string;
   rows: RowItem[];
   footerLabel: string;
 };
 
 export type SectionComputed = {
-  id: string;           // ULID
+  id: string;
   title: string;
   kind: "computed";
   color: string;       
   rows: Array<{
-    id: string;         // ULID
+    id: string;
     label: string;
     refSectionTitle: SectionEditable["title"];
   }>;
+  footerLabel: string;
 };
 
-export type BudgetPayload = {
+export type BudgetPayloadResponse = {
   version: number;
   year: number;
   currency: string;

@@ -45,7 +45,7 @@ export default function EditableBlock({
           <TableBody>
             {rows.map((row) => (
               <TableRow key={row.id} className="hover:bg-transparent">
-                <TableCell className="font-medium">{row.label}</TableCell>
+                <TableCell className="font-medium">{row.label.toLowerCase()}</TableCell>
                 {months.map((_, mi) => (
                   <TableCell key={mi} className="text-right align-middle">
                     <CellSumOnlyPopover

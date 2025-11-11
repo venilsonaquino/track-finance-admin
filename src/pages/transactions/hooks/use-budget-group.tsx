@@ -1,10 +1,61 @@
 import { useEffect, useState } from "react";
 import { BudgetGroupRequest, BudgetGroupResponse, BudgetGroupService } from "@/api/services/budgetGroupService";
+import { BudgetPayloadResponse } from "../budgets/types";
+
+const createEmptyBudgetOverview = (): BudgetPayloadResponse => ({
+  version: 1,
+  year: new Date().getFullYear(),
+  currency: "BRL",
+  locale: "pt-BR",
+  months: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+  sectionsEditable: [
+    {
+      id: "editable-default",
+      title: "Sem Grupo de Orçamento",
+      kind: "editable",
+      color: "#6b7280",
+      rows: [
+        {
+          id: "row-1",
+          label: "Linha 1",
+          values: {
+            Jan: 0,
+            Fev: 0,
+            Mar: 0,
+            Abr: 0,
+            Mai: 0,
+            Jun: 0,
+            Jul: 0,
+            Ago: 0,
+            Set: 0,
+            Out: 0,
+            Nov: 0,
+            Dez: 0,
+          },
+        },
+      ],
+      footerLabel: "Total"
+    }
+  ],
+  sectionsComputed: {
+    id: "computed-default",
+    title: "Resumo",
+    kind: "computed",
+    color: "#3b82f6",
+    rows: [{
+      id: "computed-row-1",
+      label: "Linha Computada 1",
+      refSectionTitle: "Sem Grupo de Orçamento",
+    }],
+    footerLabel: "Total"
+  }
+});
 
 export const useBudgetGroups = () => {
   const [budgetGroups, setBudgetGroups] = useState<BudgetGroupResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [budgetOverview, setBudgetOverview] = useState<BudgetPayloadResponse>(createEmptyBudgetOverview());
   
   const fetchBudgetGroups = async () => {
     try {
@@ -74,6 +125,28 @@ export const useBudgetGroups = () => {
     }
   }
 
+  const fetchBudgetOverview = async (year?: number) => {
+    try {
+      setLoading(true);
+      const currentYear = year ?? new Date().getFullYear();
+      const response = await BudgetGroupService.getBudgetOverview(currentYear);
+      const { data }: { data: BudgetPayloadResponse } = response;
+      
+      // Garante que sempre tenha uma estrutura válida
+      setBudgetOverview(data || createEmptyBudgetOverview());
+    } catch (error) {
+      setError(error as string);
+      console.error("Erro ao buscar budget overview:", error);
+      // Mantém estrutura vazia válida em caso de erro
+      setBudgetOverview(createEmptyBudgetOverview());
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchBudgetOverview();
+  }, []);
 
   return {
     budgetGroups,
@@ -83,6 +156,8 @@ export const useBudgetGroups = () => {
     categoryAssignments,
     createBudgetGroup,
     updateBudgetGroup,
-    deleteBudgetGroup
+    deleteBudgetGroup,
+    fetchBudgetOverview,
+    budgetOverview
   }
 }

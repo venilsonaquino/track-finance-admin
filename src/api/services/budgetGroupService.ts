@@ -38,4 +38,5 @@ export const BudgetGroupService = {
   deleteBudgetGroup: (id: string) => HttpClient.delete(`/budget-groups/${id}`),
   categoryAssignments: (id: string) => HttpClient.put(`/budget-groups/${id}/category-assignments`),
   updateCategoryAssignments: (payload: CategoryIdsByGroupRequest) => HttpClient.put("/budget-groups/category-assignments", payload),
+  getBudgetOverview: (year: number) => HttpClient.get(`/budget-groups/overview?year=${year}`),
 };

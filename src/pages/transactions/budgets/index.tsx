@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
-import { BUDGET_MOCK } from "./budget.mock";
 import ReadOnlyBlock from "./components/ReadOnlyBlock";
 import EditableBlock from "./components/EditableBlock";
 import { EditableSectionState, MonthKey, SectionEditable } from "./types";
 import ManageGroupsSheet from "./components/ManageGroupsSheet";
+import { useBudgetGroups } from "../hooks/use-budget-group";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
@@ -26,25 +26,37 @@ const toValuesArray = (monthOrder: MonthKey[], values: Record<MonthKey, number>)
   monthOrder.map((month) => values[month] ?? 0);
 
 export default function BudgetPage() {
-  const monthOrder = BUDGET_MOCK.months;
-  const monthLabels = useMemo(() => monthOrder.map((key) => MONTH_LABELS_MAP[key]), [monthOrder]);
 
-  const computedSection = BUDGET_MOCK.sectionsComputed;
+  const { budgetOverview: fetchBudgetOverview } = useBudgetGroups();
+  const [editableSections, setEditableSections] = useState<EditableSectionState[]>([]);
 
-  const [editableSections, setEditableSections] = useState<EditableSectionState[]>(() =>
-    BUDGET_MOCK.sectionsEditable
-      .map((section) => ({
-        id: section.id,
-        title: section.title,
-        color: section.color,
-        footerLabel: section.footerLabel,
-        rows: section.rows.map((row) => ({
-          id: row.id,
-          label: row.label,
-          values: toValuesArray(monthOrder, row.values),
-        })),
-      }))
+  const budgetOverview = useMemo(
+    () => fetchBudgetOverview,
+    [fetchBudgetOverview]
   );
+
+  const monthOrder: MonthKey[] = budgetOverview.months;
+  const monthLabels = useMemo(() => monthOrder.map((key: MonthKey) => MONTH_LABELS_MAP[key]), [monthOrder]);
+
+  const computedSection = budgetOverview.sectionsComputed;
+
+  useEffect(() => {
+    if (budgetOverview.sectionsEditable.length > 0) {
+      setEditableSections(
+        budgetOverview.sectionsEditable.map((section: SectionEditable) => ({
+          id: section.id,
+          title: section.title,
+          color: section.color,
+          footerLabel: section.footerLabel,
+          rows: section.rows.map((row: { id: string; label: string; values: Record<MonthKey, number> }) => ({
+            id: row.id,
+            label: row.label,
+            values: toValuesArray(monthOrder, row.values),
+          })),
+        }))
+      );
+    }
+  }, [budgetOverview.sectionsEditable, monthOrder]);
 
   const totalsBySectionTitle = useMemo(() => {
     const length = monthOrder.length;
@@ -57,7 +69,7 @@ export default function BudgetPage() {
     }, {} as Partial<Record<SectionEditable["title"], number[]>>);
   }, [editableSections, monthOrder]);
 
-  const computedRows = (computedSection?.rows ?? []).map((row) => ({
+  const computedRows = (computedSection?.rows ?? []).map((row: { id: string; label: string; refSectionTitle: string }) => ({
     id: row.id,
     label: row.label,
     values: totalsBySectionTitle[row.refSectionTitle] ?? monthOrder.map(() => 0),
@@ -66,9 +78,11 @@ export default function BudgetPage() {
   const saldoValues = useMemo(
     () =>
       monthOrder.map((_, monthIdx) =>
-        computedRows.reduce((acc, row, rowIndex) =>
-          rowIndex === 0 ? row.values[monthIdx] : acc - (row.values[monthIdx] || 0),
-        0)
+        computedRows.reduce(
+          (acc: number, row: { id: string; label: string; values: number[] }, rowIndex: number) =>
+            rowIndex === 0 ? row.values[monthIdx] : acc - (row.values[monthIdx] || 0),
+          0
+        )
       ),
     [computedRows, monthOrder]
   );
@@ -98,7 +112,7 @@ export default function BudgetPage() {
     );
   };
 
-  return (
+  return (  
 		<>
       <div className="flex justify-between items-center">
         <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
@@ -116,7 +130,7 @@ export default function BudgetPage() {
               color={computedSection?.color}
               months={monthLabels}
               rows={computedRows}
-              footer={computedSection?.footer ? { label: computedSection.footer.label, values: saldoValues } : undefined}
+              footer={computedSection.footerLabel ? { label: computedSection.footerLabel, values: saldoValues } : undefined}
             />
             {editableSections.map((section) => (
               <EditableBlock

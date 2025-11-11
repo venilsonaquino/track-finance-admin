@@ -31,7 +31,7 @@ export default function ReadOnlyBlock({ title, months, rows, footer, color }: Re
           <TableBody>
             {rows.map((r) => (
               <TableRow key={r.id} className="hover:bg-transparent">
-                <TableCell className="font-medium">{r.label}</TableCell>
+                <TableCell className="font-medium">{r.label.toLowerCase()}</TableCell>
                 {r.values.map((value, i) => (
                   <TableCell key={i} className="text-center align-middle whitespace-nowrap">{formatCurrency(value)}</TableCell>
                 ))}
