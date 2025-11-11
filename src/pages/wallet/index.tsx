@@ -103,7 +103,7 @@ const Wallet = () => {
 	return (
 		<div className="container mx-auto p-4">
 			<div className="flex justify-between items-center">
-				<PageBreadcrumbNav title="Carteiras" />
+				<PageBreadcrumbNav items={[{ label: "Carteiras" }]} />
         <Button onClick={() => {
 					setIsDialogOpen(true);
 				}}>Nova Carteira</Button>

@@ -70,7 +70,7 @@ export const FileUpload = ({ file, setFile, setImportedTransactions }: FileUploa
 	
 	return (
 		<>
-			<PageBreadcrumbNav title="Importar Arquivo" />
+			<PageBreadcrumbNav items={[{ label: "Importar Arquivo" }]} />
 			
 			<div className="mt-8 max-w-2xl mx-auto">
 				<Tabs defaultValue="ofx" className="w-full">
