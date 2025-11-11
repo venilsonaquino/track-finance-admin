@@ -5,7 +5,7 @@ import ReadOnlyBlock from "./components/ReadOnlyBlock";
 import EditableBlock from "./components/EditableBlock";
 import { EditableSectionState, MonthKey, SectionEditable } from "./types";
 import ManageGroupsSheet from "./components/ManageGroupsSheet";
-import { useBudgetGroups } from "../hooks/use-budget-group";
+import { useBudgetOverview, useBudgetGroupsCrud } from "../hooks/use-budget-group";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
@@ -29,14 +29,20 @@ export default function BudgetPage() {
 
   const { 
     budgetOverview, 
-    budgetGroups,
     loadingBudgetOverview: loading,
-    error,
-    fetchBudgetGroups,
-    fetchBudgetOverview,
+    error: overviewError,
+    fetchBudgetOverview
+  } = useBudgetOverview();
+
+  const {
+    budgetGroups,
+    loadingCreateGroup,
+    error: crudError,
     createBudgetGroup,
-    loadingCreateGroup
-  } = useBudgetGroups();
+    fetchBudgetGroups
+  } = useBudgetGroupsCrud();
+
+  const error = overviewError || crudError;
   const [editableSections, setEditableSections] = useState<EditableSectionState[]>([]);
 
   const monthOrder: MonthKey[] = budgetOverview.months;

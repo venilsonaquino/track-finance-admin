@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { useBudgetGroups } from "../../hooks/use-budget-group";
+import { useBudgetGroupsCrud } from "../../hooks/use-budget-group";
 import { BudgetGroupRequest } from "@/api/services/budgetGroupService";
 
 type CreateGroupDialogProps = {
@@ -19,7 +19,7 @@ export default function CreateGroupDialog({ onGroupCreated, createBudgetGroup: p
   const [groupName, setGroupName] = useState("");
   const [groupColor, setGroupColor] = useState("#ffffff");
   
-  const { createBudgetGroup: hookCreateBudgetGroup, loading: hookLoading } = useBudgetGroups();
+  const { createBudgetGroup: hookCreateBudgetGroup, loadingCreateGroup: hookLoading } = useBudgetGroupsCrud();
   const createBudgetGroup = propCreateBudgetGroup || hookCreateBudgetGroup;
   const loading = propLoading !== undefined ? propLoading : hookLoading;
 

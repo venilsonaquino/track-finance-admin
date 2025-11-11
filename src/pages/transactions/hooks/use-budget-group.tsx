@@ -51,17 +51,51 @@ const createEmptyBudgetOverview = (): BudgetPayloadResponse => ({
   }
 });
 
-export const useBudgetGroups = () => {
-  const [budgetGroups, setBudgetGroups] = useState<BudgetGroupResponse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingBudgetGroups, setLoadingBudgetGroups] = useState(false);
+export const useBudgetOverview = () => {
+  const [budgetOverview, setBudgetOverview] = useState<BudgetPayloadResponse>(createEmptyBudgetOverview());
   const [loadingBudgetOverview, setLoadingBudgetOverview] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchBudgetOverview = async (year?: number) => {
+    try {
+      setLoadingBudgetOverview(true);
+      setError(null);
+      const currentYear = year ?? new Date().getFullYear();
+      const response = await BudgetGroupService.getBudgetOverview(currentYear);
+      const { data }: { data: BudgetPayloadResponse } = response;
+
+      // Garante que sempre tenha uma estrutura válida
+      setBudgetOverview(data || createEmptyBudgetOverview());
+    } catch (error) {
+      setError(error as string);
+      console.error("Erro ao buscar budget overview:", error);
+      // Mantém estrutura vazia válida em caso de erro
+      setBudgetOverview(createEmptyBudgetOverview());
+    } finally {
+      setLoadingBudgetOverview(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBudgetOverview();
+  }, []);
+
+  return {
+    budgetOverview,
+    loadingBudgetOverview,
+    error,
+    fetchBudgetOverview
+  };
+};
+
+export const useBudgetGroupsCrud = () => {
+  const [budgetGroups, setBudgetGroups] = useState<BudgetGroupResponse[]>([]);
+  const [loadingBudgetGroups, setLoadingBudgetGroups] = useState(false);
   const [loadingCreateGroup, setLoadingCreateGroup] = useState(false);
   const [loadingUpdateGroup, setLoadingUpdateGroup] = useState(false);
   const [loadingDeleteGroup, setLoadingDeleteGroup] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [budgetOverview, setBudgetOverview] = useState<BudgetPayloadResponse>(createEmptyBudgetOverview());
-  
+
   const fetchBudgetGroups = async () => {
     try {
       setLoadingBudgetGroups(true);
@@ -75,22 +109,7 @@ export const useBudgetGroups = () => {
     } finally {
       setLoadingBudgetGroups(false);
     }
-  }
-  useEffect(() => {
-    fetchBudgetGroups();
-  }, []); 
-
-  const categoryAssignments = async (id: string) => {
-    try {
-      setLoading(true);
-      await BudgetGroupService.categoryAssignments(id);
-    } catch (error) {
-      setError(error as string);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }
+  };
 
   const createBudgetGroup = async (data: BudgetGroupRequest) => {
     try {
@@ -104,7 +123,7 @@ export const useBudgetGroups = () => {
     } finally {
       setLoadingCreateGroup(false);
     }
-  }
+  };
 
   const updateBudgetGroup = async (id: string, data: BudgetGroupRequest) => {
     try {
@@ -118,7 +137,7 @@ export const useBudgetGroups = () => {
     } finally {
       setLoadingUpdateGroup(false);
     }
-  }
+  };
 
   const deleteBudgetGroup = async (id: string) => {
     try {
@@ -132,47 +151,33 @@ export const useBudgetGroups = () => {
     } finally {
       setLoadingDeleteGroup(false);
     }
-  }
+  };
 
-  const fetchBudgetOverview = async (year?: number) => {
+  const categoryAssignments = async (id: string) => {
     try {
-      setLoadingBudgetOverview(true);
       setError(null);
-      const currentYear = year ?? new Date().getFullYear();
-      const response = await BudgetGroupService.getBudgetOverview(currentYear);
-      const { data }: { data: BudgetPayloadResponse } = response;
-      
-      // Garante que sempre tenha uma estrutura válida
-      setBudgetOverview(data || createEmptyBudgetOverview());
+      await BudgetGroupService.categoryAssignments(id);
     } catch (error) {
       setError(error as string);
-      console.error("Erro ao buscar budget overview:", error);
-      // Mantém estrutura vazia válida em caso de erro
-      setBudgetOverview(createEmptyBudgetOverview());
-    } finally {
-      setLoadingBudgetOverview(false);
+      throw error;
     }
-  }
+  };
 
   useEffect(() => {
-    fetchBudgetOverview();
+    fetchBudgetGroups();
   }, []);
 
   return {
     budgetGroups,
-    loading,
     loadingBudgetGroups,
-    loadingBudgetOverview,
     loadingCreateGroup,
     loadingUpdateGroup,
     loadingDeleteGroup,
     error,
     fetchBudgetGroups,
-    categoryAssignments,
     createBudgetGroup,
     updateBudgetGroup,
     deleteBudgetGroup,
-    fetchBudgetOverview,
-    budgetOverview
-  }
-}
+    categoryAssignments
+  };
+};
