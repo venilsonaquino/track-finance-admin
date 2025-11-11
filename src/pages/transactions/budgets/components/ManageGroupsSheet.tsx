@@ -28,15 +28,23 @@ function addCategoryToGroup(map: CategoryIdsByGroup, groupId: string, id: string
   return next;
 }
 
-import { BudgetGroupResponse } from "@/api/services/budgetGroupService";
+import { BudgetGroupResponse, BudgetGroupRequest } from "@/api/services/budgetGroupService";
 
 type ManageGroupsSheetProps = { 
   labelButton?: string;
   budgetGroups: BudgetGroupResponse[];
   onRefreshBudgetGroups: () => void;
+  createBudgetGroup?: (data: BudgetGroupRequest) => Promise<void>;
+  loadingCreateGroup?: boolean;
 }
 
-export default function ManageGroupsSheet({ labelButton, budgetGroups, onRefreshBudgetGroups }: ManageGroupsSheetProps) {
+export default function ManageGroupsSheet({ 
+  labelButton, 
+  budgetGroups, 
+  onRefreshBudgetGroups,
+  createBudgetGroup,
+  loadingCreateGroup
+}: ManageGroupsSheetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
   const [pulseGroup, setPulseGroup] = useState<string | null>(null);
@@ -215,7 +223,11 @@ const onDropToGroup = (e: React.DragEvent, gid: string) => {
               <SheetTitle className="text-lg font-semibold">Organizar Grupos & Categorias</SheetTitle>
 
               <div className="flex items-center gap-2">
-                <CreateGroupDialog onGroupCreated={onRefreshBudgetGroups} />
+                <CreateGroupDialog 
+                  onGroupCreated={onRefreshBudgetGroups}
+                  createBudgetGroup={createBudgetGroup}
+                  loading={loadingCreateGroup}
+                />
               </div>
             </div>
           </SheetHeader>

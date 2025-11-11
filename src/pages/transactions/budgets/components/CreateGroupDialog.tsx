@@ -6,17 +6,22 @@ import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useBudgetGroups } from "../../hooks/use-budget-group";
+import { BudgetGroupRequest } from "@/api/services/budgetGroupService";
 
 type CreateGroupDialogProps = {
   onGroupCreated?: () => void;
+  createBudgetGroup?: (data: BudgetGroupRequest) => Promise<void>;
+  loading?: boolean;
 };
 
-export default function CreateGroupDialog({ onGroupCreated }: CreateGroupDialogProps) {
+export default function CreateGroupDialog({ onGroupCreated, createBudgetGroup: propCreateBudgetGroup, loading: propLoading }: CreateGroupDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupColor, setGroupColor] = useState("#ffffff");
   
-  const { createBudgetGroup, loading } = useBudgetGroups();
+  const { createBudgetGroup: hookCreateBudgetGroup, loading: hookLoading } = useBudgetGroups();
+  const createBudgetGroup = propCreateBudgetGroup || hookCreateBudgetGroup;
+  const loading = propLoading !== undefined ? propLoading : hookLoading;
 
   const handleCreateGroup = async () => {
     const name = groupName.trim();

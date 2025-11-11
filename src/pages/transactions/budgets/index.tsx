@@ -33,7 +33,9 @@ export default function BudgetPage() {
     loadingBudgetOverview: loading,
     error,
     fetchBudgetGroups,
-    fetchBudgetOverview
+    fetchBudgetOverview,
+    createBudgetGroup,
+    loadingCreateGroup
   } = useBudgetGroups();
   const [editableSections, setEditableSections] = useState<EditableSectionState[]>([]);
 
@@ -202,6 +204,8 @@ export default function BudgetPage() {
             labelButton="Organizar Grupos"
             budgetGroups={budgetGroups}
             onRefreshBudgetGroups={fetchBudgetGroups}
+            createBudgetGroup={createBudgetGroup}
+            loadingCreateGroup={loadingCreateGroup}
           />
         </div>
       </div>
