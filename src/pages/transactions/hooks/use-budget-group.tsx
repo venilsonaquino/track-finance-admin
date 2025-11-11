@@ -56,6 +56,8 @@ export const useBudgetOverview = () => {
   const [loadingBudgetOverview, setLoadingBudgetOverview] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const clearError = () => setError(null);
+
   const fetchBudgetOverview = async (year?: number) => {
     try {
       setLoadingBudgetOverview(true);
@@ -66,6 +68,7 @@ export const useBudgetOverview = () => {
 
       // Garante que sempre tenha uma estrutura válida
       setBudgetOverview(data || createEmptyBudgetOverview());
+      setError(null); // Limpa erro após sucesso
     } catch (error) {
       setError(error as string);
       console.error("Erro ao buscar budget overview:", error);
@@ -80,10 +83,21 @@ export const useBudgetOverview = () => {
     fetchBudgetOverview();
   }, []);
 
+  // Limpa erro automaticamente após 5 segundos
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   return {
     budgetOverview,
     loadingBudgetOverview,
     error,
+    clearError,
     fetchBudgetOverview
   };
 };
@@ -96,6 +110,8 @@ export const useBudgetGroupsCrud = () => {
   const [loadingDeleteGroup, setLoadingDeleteGroup] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const clearError = () => setError(null);
+
   const fetchBudgetGroups = async () => {
     try {
       setLoadingBudgetGroups(true);
@@ -103,6 +119,7 @@ export const useBudgetGroupsCrud = () => {
       const response = await BudgetGroupService.getBudgetGroups();
       const { data }: { data: BudgetGroupResponse[] } = response;
       setBudgetGroups(Array.isArray(data) ? data : []);
+      setError(null); // Limpa erro após sucesso
     } catch (error) {
       setError(error as string);
       setBudgetGroups([]);
@@ -117,6 +134,7 @@ export const useBudgetGroupsCrud = () => {
       setError(null);
       await BudgetGroupService.createBudgetGroup(data);
       fetchBudgetGroups();
+      setError(null); // Limpa erro após sucesso
     } catch (error) {
       setError(error as string);
       throw error;
@@ -131,6 +149,7 @@ export const useBudgetGroupsCrud = () => {
       setError(null);
       await BudgetGroupService.updateBudgetGroup(id, data);
       fetchBudgetGroups();
+      setError(null); // Limpa erro após sucesso
     } catch (error) {
       setError(error as string);
       throw error;
@@ -145,6 +164,7 @@ export const useBudgetGroupsCrud = () => {
       setError(null);
       await BudgetGroupService.deleteBudgetGroup(id);
       fetchBudgetGroups();
+      setError(null); // Limpa erro após sucesso
     } catch (error) {
       setError(error as string);
       throw error;
@@ -167,6 +187,16 @@ export const useBudgetGroupsCrud = () => {
     fetchBudgetGroups();
   }, []);
 
+  // Limpa erro automaticamente após 5 segundos
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   return {
     budgetGroups,
     loadingBudgetGroups,
@@ -174,6 +204,7 @@ export const useBudgetGroupsCrud = () => {
     loadingUpdateGroup,
     loadingDeleteGroup,
     error,
+    clearError,
     fetchBudgetGroups,
     createBudgetGroup,
     updateBudgetGroup,
