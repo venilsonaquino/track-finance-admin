@@ -45,14 +45,14 @@ export default function BudgetPage() {
   const error = overviewError || crudError;
   const [editableSections, setEditableSections] = useState<EditableSectionState[]>([]);
 
-  const monthOrder: MonthKey[] = budgetOverview.months;
+  const monthOrder: MonthKey[] = budgetOverview?.months || [];
   const monthLabels = useMemo(() => monthOrder.map((key: MonthKey) => MONTH_LABELS_MAP[key]), [monthOrder]);
 
-  const computedSection = budgetOverview.sectionsComputed;
+  const computedSection = budgetOverview!.sectionsComputed;
 
   useEffect(() => {
     setEditableSections(
-      budgetOverview.sectionsEditable.map((section: SectionEditable) => ({
+      budgetOverview!.sectionsEditable.map((section: SectionEditable) => ({
         id: section.id,
         title: section.title,
         color: section.color,
@@ -64,9 +64,8 @@ export default function BudgetPage() {
         })),
       }))
     );
-  }, [budgetOverview.sectionsEditable, monthOrder]);
+  }, [budgetOverview!.sectionsEditable, monthOrder]);
 
-  // Array reutilizável de zeros para evitar alocações repetidas
   const emptyValuesArray = useMemo(() => 
     Array.from({ length: monthOrder.length }, () => 0), 
     [monthOrder.length]
@@ -224,8 +223,8 @@ export default function BudgetPage() {
               months={monthLabels}
               rows={computedRows}
               footer={computedSection.footerLabel ? { label: computedSection.footerLabel, values: saldoValues } : undefined}
-              locale={budgetOverview.locale}
-              currency={budgetOverview.currency}
+              locale={budgetOverview!.locale}
+              currency={budgetOverview!.currency}
             />
             {editableSections.map((section) => (
               <EditableBlock
@@ -237,8 +236,8 @@ export default function BudgetPage() {
                 footerLabel={section.footerLabel}
                 footerValues={totalsBySectionTitle[section.title] ?? emptyValuesArray}
                 onUpdateCell={(rowId, monthIndex, factory) => updateCell(section.id, rowId, monthIndex, factory)}
-                locale={budgetOverview.locale}
-                currency={budgetOverview.currency}
+                locale={budgetOverview!.locale}
+                currency={budgetOverview!.currency}
               />
             ))}
           </CardContent>
