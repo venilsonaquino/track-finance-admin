@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { History } from "lucide-react";
 import { BUDGET_MOCK } from "../budget.mock";
-import { formatCurrency } from "@/utils/currency-utils";
+import { formatCurrency, maskCurrencyInput } from "@/utils/currency-utils";
 
 type CellSumOnlyPopoverProps = {
   value: number;
@@ -33,6 +33,7 @@ export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = fal
       setFlash(`+ ${formatCurrency(delta, BUDGET_MOCK.locale, BUDGET_MOCK.currency)}`);
       setTimeout(() => setFlash(null), 900);
       setTemp("");
+      setOpen(false);
     }
   };
 
@@ -63,7 +64,7 @@ export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = fal
               className={`text-right ${compact ? "h-8" : "h-9"}`}
               placeholder="0,00"
               value={temp}
-              onChange={(e) => setTemp(e.target.value)}
+              onChange={(e) => setTemp(maskCurrencyInput(e.target.value))}
               onKeyDown={(e) => {
                 if (e.key === "Enter") commit();
                 if (e.key === "Escape") setOpen(false);
