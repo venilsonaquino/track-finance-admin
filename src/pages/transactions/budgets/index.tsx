@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import { BUDGET_MOCK } from "./budget.mock";
@@ -28,8 +28,9 @@ const toValuesArray = (monthOrder: MonthKey[], values: Record<MonthKey, number>)
 export default function BudgetPage() {
   const monthOrder = BUDGET_MOCK.months;
   const monthLabels = useMemo(() => monthOrder.map((key) => MONTH_LABELS_MAP[key]), [monthOrder]);
-
   const computedSection = BUDGET_MOCK.sectionsComputed;
+  const monthCount = monthOrder.length;
+  const zeroMonthValues = useMemo(() => Array.from({ length: monthCount }, () => 0), [monthCount]);
 
   const [editableSections, setEditableSections] = useState<EditableSectionState[]>(() =>
     BUDGET_MOCK.sectionsEditable
@@ -47,7 +48,7 @@ export default function BudgetPage() {
   );
 
   const totalsBySectionTitle = useMemo(() => {
-    const length = monthOrder.length;
+    const length = monthCount;
     return editableSections.reduce((acc, section) => {
       const totals = Array.from({ length }, (_, idx) =>
         section.rows.reduce((sum, row) => sum + (row.values[idx] || 0), 0)
@@ -55,60 +56,66 @@ export default function BudgetPage() {
       acc[section.title] = totals;
       return acc;
     }, {} as Partial<Record<SectionEditable["title"], number[]>>);
-  }, [editableSections, monthOrder]);
+  }, [editableSections, monthCount]);
 
-  const computedRows = (computedSection?.rows ?? []).map((row) => ({
-    id: row.id,
-    label: row.label,
-    values: totalsBySectionTitle[row.refSectionTitle] ?? monthOrder.map(() => 0),
-  }));
+  const computedRows = useMemo(
+    () =>
+      (computedSection?.rows ?? []).map((row) => ({
+        id: row.id,
+        label: row.label,
+        values: totalsBySectionTitle[row.refSectionTitle] ?? zeroMonthValues,
+      })),
+    [computedSection, totalsBySectionTitle, zeroMonthValues]
+  );
 
   const saldoValues = useMemo(
     () =>
       monthOrder.map((_, monthIdx) =>
-        computedRows.reduce((acc, row, rowIndex) =>
-          rowIndex === 0 ? row.values[monthIdx] : acc - (row.values[monthIdx] || 0),
-        0)
+        computedRows.reduce(
+          (acc, row, rowIndex) => (rowIndex === 0 ? row.values[monthIdx] : acc - (row.values[monthIdx] || 0)),
+          0
+        )
       ),
     [computedRows, monthOrder]
   );
 
-  const updateCell = (
-    sectionId: string,
-    rowId: string,
-    monthIndex: number,
-    nextValueFactory: (current: number) => number
-  ) => {
-    setEditableSections((prev) =>
-      prev.map((section) => {
-        if (section.id !== sectionId) return section;
-        return {
-          ...section,
-          rows: section.rows.map((row) => {
-            if (row.id !== rowId) return row;
-            const currentValue = row.values[monthIndex] || 0;
-            const nextValue = nextValueFactory(currentValue);
-            return {
-              ...row,
-              values: row.values.map((value, idx) => (idx === monthIndex ? nextValue : value)),
-            };
-          }),
-        };
-      })
-    );
-  };
+  const updateCell = useCallback(
+    (
+      sectionId: string,
+      rowId: string,
+      monthIndex: number,
+      nextValueFactory: (current: number) => number
+    ) => {
+      setEditableSections((prev) =>
+        prev.map((section) => {
+          if (section.id !== sectionId) return section;
+          return {
+            ...section,
+            rows: section.rows.map((row) => {
+              if (row.id !== rowId) return row;
+              const currentValue = row.values[monthIndex] || 0;
+              const nextValue = nextValueFactory(currentValue);
+              return {
+                ...row,
+                values: row.values.map((value, idx) => (idx === monthIndex ? nextValue : value)),
+              };
+            }),
+          };
+        })
+      );
+    },
+    []
+  );
 
   return (
-		<>
-      <div className="flex justify-between items-center">
+    <>
+      <div className="flex items-center justify-between">
         <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
-        <div className="flex justify-end gap-2 mb-4">
-          <div className="flex justify-end gap-2 mb-4">
-            <ManageGroupsSheet labelButton="Organizar Grupos"/>
-				  </div>
+        <div className="mb-4 flex justify-end gap-2">
+          <ManageGroupsSheet labelButton="Organizar Grupos" />
         </div>
       </div>
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <Card className="shadow-sm">
           <CardContent className="space-y-6">
             <ReadOnlyBlock
@@ -116,7 +123,11 @@ export default function BudgetPage() {
               color={computedSection?.color}
               months={monthLabels}
               rows={computedRows}
-              footer={computedSection?.footer ? { label: computedSection.footer.label, values: saldoValues } : undefined}
+              footer={
+                computedSection?.footer
+                  ? { label: computedSection.footer.label, values: saldoValues }
+                  : undefined
+              }
             />
             {editableSections.map((section) => (
               <EditableBlock
@@ -126,14 +137,16 @@ export default function BudgetPage() {
                 months={monthLabels}
                 rows={section.rows}
                 footerLabel={section.footerLabel}
-                footerValues={totalsBySectionTitle[section.title] ?? monthOrder.map(() => 0)}
-                onUpdateCell={(rowId, monthIndex, factory) => updateCell(section.id, rowId, monthIndex, factory)}
+                footerValues={totalsBySectionTitle[section.title] ?? zeroMonthValues}
+                onUpdateCell={(rowId, monthIndex, factory) =>
+                  updateCell(section.id, rowId, monthIndex, factory)
+                }
               />
             ))}
           </CardContent>
         </Card>
       </div>
-		</>
+    </>
   );
 }
 
