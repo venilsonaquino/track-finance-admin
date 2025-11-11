@@ -6,6 +6,7 @@ import EditableBlock from "./components/EditableBlock";
 import { EditableSectionState, MonthKey, SectionEditable } from "./types";
 import ManageGroupsSheet from "./components/ManageGroupsSheet";
 import { useBudgetOverview, useBudgetGroupsCrud } from "../hooks/use-budget-group";
+import { MonthYearPicker } from "../movements/components/MonthYearPicker";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
@@ -33,6 +34,7 @@ const BudgetSkeleton = () => (
         <div className="h-10 w-40 bg-gray-200 animate-pulse rounded" />
       </div>
     </div>
+    <div className="h-16 bg-gray-200/60 animate-pulse rounded-lg" />
     <Card className="shadow-sm">
       <CardContent className="space-y-6">
         <div className="space-y-4">
@@ -95,12 +97,15 @@ const BudgetErrorState = ({ message, onRetry }: BudgetErrorStateProps) => (
 );
 
 export default function BudgetPage() {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const currentYear = currentDate.getFullYear();
+
   const {
     budgetOverview,
     loadingBudgetOverview: loading,
     error: overviewError,
     fetchBudgetOverview,
-  } = useBudgetOverview();
+  } = useBudgetOverview(currentYear);
 
   const {
     budgetGroups,
@@ -210,8 +215,12 @@ export default function BudgetPage() {
     );
   }, []);
 
+  const handleMonthYearChange = useCallback((nextDate: Date) => {
+    setCurrentDate(nextDate);
+  }, []);
+
   if (blockingError && !loading) {
-    return <BudgetErrorState message={blockingError} onRetry={() => fetchBudgetOverview()} />;
+    return <BudgetErrorState message={blockingError} onRetry={() => fetchBudgetOverview(currentYear)} />;
   }
 
   if (loading || !budgetOverview) {
@@ -232,6 +241,7 @@ export default function BudgetPage() {
           />
         </div>
       </div>
+      <MonthYearPicker date={currentDate} onChange={handleMonthYearChange} mode="year" />
       <div className="flex justify-between items-center">
         <Card className="shadow-sm">
           <CardContent className="space-y-6">
@@ -270,4 +280,3 @@ export default function BudgetPage() {
     </>
   );
 }
-

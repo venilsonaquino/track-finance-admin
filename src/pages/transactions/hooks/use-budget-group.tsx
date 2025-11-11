@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BudgetGroupRequest, BudgetGroupResponse, BudgetGroupService } from "@/api/services/budgetGroupService";
 import { BudgetPayloadResponse } from "../budgets/types";
 
-export const useBudgetOverview = () => {
+export const useBudgetOverview = (year?: number) => {
   const [budgetOverview, setBudgetOverview] = useState<BudgetPayloadResponse>();
   const [loadingBudgetOverview, setLoadingBudgetOverview] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const clearError = () => setError(null);
 
-  const fetchBudgetOverview = async (year?: number) => {
+  const fetchBudgetOverview = useCallback(async (yearOverride?: number) => {
     try {
       setLoadingBudgetOverview(true);
       setError(null);
-      const currentYear = year ?? new Date().getFullYear();
+      const currentYear = yearOverride ?? year ?? new Date().getFullYear();
       const response = await BudgetGroupService.getBudgetOverview(currentYear);
       const { data }: { data: BudgetPayloadResponse } = response;
 
@@ -26,11 +26,11 @@ export const useBudgetOverview = () => {
     } finally {
       setLoadingBudgetOverview(false);
     }
-  };
+  }, [year]);
   
   useEffect(() => {
-    fetchBudgetOverview();
-  }, []);
+    fetchBudgetOverview(year);
+  }, [fetchBudgetOverview, year]);
 
   // Limpa erro automaticamente após 5 segundos
   useEffect(() => {
