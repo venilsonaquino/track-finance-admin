@@ -20,13 +20,14 @@ export const useBudgetOverview = () => {
       setBudgetOverview(data);
       setError(null);
     } catch (error) {
-      setError(error as string);
+      const errorMessage = (error as any)?.response?.data?.message || (error instanceof Error ? error.message : 'Erro desconhecido ao buscar budget overview');
+      setError(errorMessage);
       console.error("Erro ao buscar budget overview:", error);
     } finally {
       setLoadingBudgetOverview(false);
     }
   };
-
+  
   useEffect(() => {
     fetchBudgetOverview();
   }, []);
@@ -69,7 +70,8 @@ export const useBudgetGroupsCrud = () => {
       setBudgetGroups(Array.isArray(data) ? data : []);
       setError(null); // Limpa erro após sucesso
     } catch (error) {
-      setError(error as string);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao buscar grupos de orçamento';
+      setError(errorMessage);
       setBudgetGroups([]);
     } finally {
       setLoadingBudgetGroups(false);
@@ -84,7 +86,8 @@ export const useBudgetGroupsCrud = () => {
       fetchBudgetGroups();
       setError(null); // Limpa erro após sucesso
     } catch (error) {
-      setError(error as string);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao criar grupo de orçamento';
+      setError(errorMessage);
       throw error;
     } finally {
       setLoadingCreateGroup(false);
@@ -99,7 +102,8 @@ export const useBudgetGroupsCrud = () => {
       fetchBudgetGroups();
       setError(null); // Limpa erro após sucesso
     } catch (error) {
-      setError(error as string);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao atualizar grupo de orçamento';
+      setError(errorMessage);
       throw error;
     } finally {
       setLoadingUpdateGroup(false);
@@ -114,7 +118,8 @@ export const useBudgetGroupsCrud = () => {
       fetchBudgetGroups();
       setError(null); // Limpa erro após sucesso
     } catch (error) {
-      setError(error as string);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao deletar grupo de orçamento';
+      setError(errorMessage);
       throw error;
     } finally {
       setLoadingDeleteGroup(false);
@@ -126,7 +131,8 @@ export const useBudgetGroupsCrud = () => {
       setError(null);
       await BudgetGroupService.categoryAssignments(id);
     } catch (error) {
-      setError(error as string);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao atribuir categorias';
+      setError(errorMessage);
       throw error;
     }
   };
