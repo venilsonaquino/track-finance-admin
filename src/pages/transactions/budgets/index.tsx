@@ -170,6 +170,8 @@ export default function BudgetPage() {
               months={monthLabels}
               rows={computedRows}
               footer={computedSection.footerLabel ? { label: computedSection.footerLabel, values: saldoValues } : undefined}
+              locale={budgetOverview.locale}
+              currency={budgetOverview.currency}
             />
             {editableSections.map((section) => (
               <EditableBlock
@@ -181,6 +183,8 @@ export default function BudgetPage() {
                 footerLabel={section.footerLabel}
                 footerValues={totalsBySectionTitle[section.title] ?? emptyValuesArray}
                 onUpdateCell={(rowId, monthIndex, factory) => updateCell(section.id, rowId, monthIndex, factory)}
+                locale={budgetOverview.locale}
+                currency={budgetOverview.currency}
               />
             ))}
           </CardContent>
