@@ -42,21 +42,19 @@ export default function BudgetPage() {
   const computedSection = budgetOverview.sectionsComputed;
 
   useEffect(() => {
-    if (budgetOverview.sectionsEditable.length > 0) {
-      setEditableSections(
-        budgetOverview.sectionsEditable.map((section: SectionEditable) => ({
-          id: section.id,
-          title: section.title,
-          color: section.color,
-          footerLabel: section.footerLabel,
-          rows: section.rows.map((row: { id: string; label: string; values: Record<MonthKey, number> }) => ({
-            id: row.id,
-            label: row.label,
-            values: toValuesArray(monthOrder, row.values),
-          })),
-        }))
-      );
-    }
+    setEditableSections(
+      budgetOverview.sectionsEditable.map((section: SectionEditable) => ({
+        id: section.id,
+        title: section.title,
+        color: section.color,
+        footerLabel: section.footerLabel,
+        rows: section.rows.map((row: { id: string; label: string; values: Record<MonthKey, number> }) => ({
+          id: row.id,
+          label: row.label,
+          values: toValuesArray(monthOrder, row.values),
+        })),
+      }))
+    );
   }, [budgetOverview.sectionsEditable, monthOrder]);
 
   // Array reutilizável de zeros para evitar alocações repetidas
