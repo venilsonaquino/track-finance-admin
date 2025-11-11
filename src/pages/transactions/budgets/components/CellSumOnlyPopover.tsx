@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { History } from "lucide-react";
-import { BUDGET_MOCK } from "../budget.mock";
 import { formatCurrency, maskCurrencyInput } from "@/utils/currency-utils";
 
 type CellSumOnlyPopoverProps = {
@@ -30,7 +29,7 @@ export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = fal
     if (delta > 0) {
       onAdd(delta);
       setHistory((h) => [delta, ...h].slice(0, 5));
-      setFlash(`+ ${formatCurrency(delta, BUDGET_MOCK.locale, BUDGET_MOCK.currency)}`);
+      setFlash(`+ ${formatCurrency(delta)}`);
       setTimeout(() => setFlash(null), 900);
       setTemp("");
       setOpen(false);
@@ -51,7 +50,7 @@ export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = fal
           <Input
             readOnly
             className={`text-center ${compact ? "h-8" : "h-9"} w-full`}
-            value={formatCurrency(value, BUDGET_MOCK.locale, BUDGET_MOCK.currency)}
+            value={formatCurrency(value)}
             placeholder="0,00"
           />
         </PopoverTrigger>
@@ -83,7 +82,7 @@ export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = fal
               <ul className="mt-1 max-h-24 overflow-auto pr-1 space-y-1">
                 {history.map((value, i) => (
                   <li key={i} className="text-xs flex items-center justify-between bg-muted/40 rounded px-2 py-1">
-                    <span>{formatCurrency(value, BUDGET_MOCK.locale, BUDGET_MOCK.currency)}</span>
+                    <span>{formatCurrency(value)}</span>
                     {i === 0 && (
                       <button onClick={undoLast} className="text-[11px] underline">desfazer</button>
                     )}

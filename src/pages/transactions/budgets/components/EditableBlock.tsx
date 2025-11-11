@@ -1,6 +1,5 @@
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import CellSumOnlyPopover from "./CellSumOnlyPopover";
-import { BUDGET_MOCK } from "../budget.mock";
 import ColGroup from "./ColGroup";
 import SectionTitle from "./SectionTitle";
 import { Row } from "../types";
@@ -71,7 +70,7 @@ export default function EditableBlock({
                   key={i}
                   className="text-center font-semibold text-zinc-800 dark:text-zinc-200"
                 >
-                  {formatCurrency(value, BUDGET_MOCK.locale, BUDGET_MOCK.currency)}
+                  {formatCurrency(value)}
                 </TableCell>
               ))}
             </TableRow>
