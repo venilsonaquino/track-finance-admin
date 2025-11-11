@@ -10,6 +10,8 @@ type CellSumOnlyPopoverProps = {
   onAdd: (delta: number) => void;
   onUndo: (delta: number) => void;
   compact?: boolean;
+  locale?: string;
+  currency?: string;
 };
 
 export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = false }: CellSumOnlyPopoverProps) {

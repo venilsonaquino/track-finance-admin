@@ -14,6 +14,8 @@ type EditableBlockProps = {
   footerValues: number[];
   onUpdateCell: (rowId: string, monthIndex: number, nextValueFactory: (current: number) => number) => void;
   compact?: boolean;
+  locale?: string;
+  currency?: string;
 };
 
 export default function EditableBlock({
@@ -25,6 +27,8 @@ export default function EditableBlock({
   footerValues,
   onUpdateCell,
   compact = false,
+  locale,
+  currency,
 }: EditableBlockProps) {
 
   return (
@@ -56,6 +60,8 @@ export default function EditableBlock({
                         onUpdateCell(row.id, mi, (current) => Math.max(0, (current || 0) - delta))
                       }
                       compact={compact}
+                      locale={locale}
+                      currency={currency}
                     />
                   </TableCell>
                 ))}

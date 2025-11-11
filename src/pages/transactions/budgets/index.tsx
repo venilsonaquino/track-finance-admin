@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import ReadOnlyBlock from "./components/ReadOnlyBlock";
@@ -58,6 +58,12 @@ export default function BudgetPage() {
     }
   }, [budgetOverview.sectionsEditable, monthOrder]);
 
+  // Array reutilizável de zeros para evitar alocações repetidas
+  const emptyValuesArray = useMemo(() => 
+    Array.from({ length: monthOrder.length }, () => 0), 
+    [monthOrder.length]
+  );
+
   const totalsBySectionTitle = useMemo(() => {
     const length = monthOrder.length;
     return editableSections.reduce((acc, section) => {
@@ -67,13 +73,17 @@ export default function BudgetPage() {
       acc[section.title] = totals;
       return acc;
     }, {} as Partial<Record<SectionEditable["title"], number[]>>);
-  }, [editableSections, monthOrder]);
+  }, [editableSections, monthOrder.length]);
 
-  const computedRows = (computedSection?.rows ?? []).map((row: { id: string; label: string; refSectionTitle: string }) => ({
-    id: row.id,
-    label: row.label,
-    values: totalsBySectionTitle[row.refSectionTitle] ?? monthOrder.map(() => 0),
-  }));
+  // Memoização do computedRows para evitar recriação desnecessária
+  const computedRows = useMemo(() => 
+    (computedSection?.rows ?? []).map((row: { id: string; label: string; refSectionTitle: string }) => ({
+      id: row.id,
+      label: row.label,
+      values: totalsBySectionTitle[row.refSectionTitle] ?? emptyValuesArray,
+    })),
+    [computedSection?.rows, totalsBySectionTitle, emptyValuesArray]
+  );
 
   const saldoValues = useMemo(
     () =>
@@ -87,7 +97,7 @@ export default function BudgetPage() {
     [computedRows, monthOrder]
   );
 
-  const updateCell = (
+  const updateCell = useCallback((
     sectionId: string,
     rowId: string,
     monthIndex: number,
@@ -110,16 +120,14 @@ export default function BudgetPage() {
         };
       })
     );
-  };
+  }, []);
 
   return (  
 		<>
       <div className="flex justify-between items-center">
         <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
         <div className="flex justify-end gap-2 mb-4">
-          <div className="flex justify-end gap-2 mb-4">
-            <ManageGroupsSheet labelButton="Organizar Grupos"/>
-				  </div>
+          <ManageGroupsSheet labelButton="Organizar Grupos"/>
         </div>
       </div>
       <div className="flex justify-between items-center">
@@ -140,7 +148,7 @@ export default function BudgetPage() {
                 months={monthLabels}
                 rows={section.rows}
                 footerLabel={section.footerLabel}
-                footerValues={totalsBySectionTitle[section.title] ?? monthOrder.map(() => 0)}
+                footerValues={totalsBySectionTitle[section.title] ?? emptyValuesArray}
                 onUpdateCell={(rowId, monthIndex, factory) => updateCell(section.id, rowId, monthIndex, factory)}
               />
             ))}

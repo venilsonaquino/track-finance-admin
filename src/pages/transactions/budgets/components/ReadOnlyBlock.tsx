@@ -10,9 +10,11 @@ type ReadOnlyBlockProps = {
   rows: Row[];
   footer?: { label: string; values: number[] };
   color?: string;
+  locale?: string;
+  currency?: string;
 };
 
-export default function ReadOnlyBlock({ title, months, rows, footer, color }: ReadOnlyBlockProps) {
+export default function ReadOnlyBlock({ title, months, rows, footer, color, locale, currency }: ReadOnlyBlockProps) {
 
   return (
     <div>
@@ -33,7 +35,7 @@ export default function ReadOnlyBlock({ title, months, rows, footer, color }: Re
               <TableRow key={r.id} className="hover:bg-transparent">
                 <TableCell className="font-medium">{r.label.toLowerCase()}</TableCell>
                 {r.values.map((value, i) => (
-                  <TableCell key={i} className="text-center align-middle whitespace-nowrap">{formatCurrency(value)}</TableCell>
+                  <TableCell key={i} className="text-center align-middle whitespace-nowrap">{formatCurrency(value, locale, currency)}</TableCell>
                 ))}
               </TableRow>
             ))}
@@ -47,7 +49,7 @@ export default function ReadOnlyBlock({ title, months, rows, footer, color }: Re
                     key={i}
                     className="text-center font-semibold whitespace-nowrap text-zinc-800 dark:text-amber-200"
                   >
-                    {formatCurrency(value)}
+                    {formatCurrency(value, locale, currency)}
                   </TableCell>
                 ))}
               </TableRow>
