@@ -246,7 +246,9 @@ export default function BudgetPage() {
           />
         </div>
       </div>
-      <MonthYearPicker date={currentDate} onChange={handleMonthYearChange} mode="year" />
+      <div className="flex items-center gap-2">
+        <MonthYearPicker date={currentDate} onChange={handleMonthYearChange} mode="year" />
+      </div>
       <div className="flex justify-between items-center">
         <Card className="shadow-sm">
           <CardContent className="space-y-6">

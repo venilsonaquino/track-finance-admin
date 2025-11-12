@@ -54,7 +54,7 @@ export function MonthYearPicker({
     <div className={containerClass}>
       {mode === "year" && (
         <>
-          <div className="flex flex-center items-center justify-center sm:justify-end gap-2 sm:gap-3">
+          <div className="flex items-center justify-center gap-4 py-4 relative">
             <button
               className="rounded-full p-2 hover:bg-accent transition"
               onClick={() => handleYearChange(-1)}
@@ -62,7 +62,9 @@ export function MonthYearPicker({
             >
               <ChevronLeft className="h-4 w-4 text-primary" />
             </button>
-            {year}
+            <span className="text-base font-medium text-muted-foreground min-w-[48px] text-center">
+              {year}
+            </span>
             <button
               className="rounded-full p-2 hover:bg-accent transition"
               onClick={() => handleYearChange(1)}
