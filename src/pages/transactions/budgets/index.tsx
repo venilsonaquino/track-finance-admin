@@ -219,6 +219,10 @@ export default function BudgetPage() {
     setCurrentDate(nextDate);
   }, []);
 
+  const refreshCurrentBudgetOverview = useCallback(() => {
+    return fetchBudgetOverview(currentYear);
+  }, [fetchBudgetOverview, currentYear]);
+
   if (blockingError && !loading) {
     return <BudgetErrorState message={blockingError} onRetry={() => fetchBudgetOverview(currentYear)} />;
   }
@@ -238,6 +242,7 @@ export default function BudgetPage() {
             onRefreshBudgetGroups={fetchBudgetGroups}
             createBudgetGroup={createBudgetGroup}
             loadingCreateGroup={loadingCreateGroup}
+            onGroupsChanged={refreshCurrentBudgetOverview}
           />
         </div>
       </div>

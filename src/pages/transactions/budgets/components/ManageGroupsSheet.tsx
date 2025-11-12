@@ -40,9 +40,10 @@ function addCategoryToGroup(map: CategoryIdsByGroup, groupId: string, id: string
 type ManageGroupsSheetProps = { 
   labelButton?: string;
   budgetGroups: BudgetGroupResponse[];
-  onRefreshBudgetGroups: () => void;
+  onRefreshBudgetGroups: () => void | Promise<void>;
   createBudgetGroup?: (data: BudgetGroupRequest) => Promise<void>;
   loadingCreateGroup?: boolean;
+  onGroupsChanged?: () => void | Promise<void>;
 }
 
 export default function ManageGroupsSheet({ 
@@ -50,7 +51,8 @@ export default function ManageGroupsSheet({
   budgetGroups, 
   onRefreshBudgetGroups,
   createBudgetGroup,
-  loadingCreateGroup
+  loadingCreateGroup,
+  onGroupsChanged,
 }: ManageGroupsSheetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null);
@@ -119,10 +121,25 @@ export default function ManageGroupsSheet({
     setPulseGroup(null);
   }, [clearSelection]);
 
+  const refreshBudgetGroups = useCallback(async () => {
+    await Promise.resolve(onRefreshBudgetGroups());
+  }, [onRefreshBudgetGroups]);
+
+  const notifyGroupsChanged = useCallback(async () => {
+    if (onGroupsChanged) {
+      await onGroupsChanged();
+    }
+  }, [onGroupsChanged]);
+
+  const handleGroupCreated = useCallback(async () => {
+    await refreshBudgetGroups();
+    await notifyGroupsChanged();
+  }, [refreshBudgetGroups, notifyGroupsChanged]);
+
   const openSheet = (open: boolean) => {
     if (open) {
       // Garante que os dados estejam atualizados antes de abrir
-      onRefreshBudgetGroups();
+      refreshBudgetGroups();
       fetchCategories();
     } else {
       resetAssignments();
@@ -162,10 +179,11 @@ export default function ManageGroupsSheet({
       });
       
       await Promise.all([
-        onRefreshBudgetGroups(),
+        refreshBudgetGroups(),
         fetchCategories()
       ]);
-      
+      await notifyGroupsChanged();
+
       setInitialCategoriesByGroup(cloneCategoriesByGroup(categoriesByGroup));
       clearSelection();
       setTargetGroup(undefined);
@@ -270,7 +288,8 @@ export default function ManageGroupsSheet({
 
               <div className="flex items-center gap-2">
                 <CreateGroupDialog 
-                  onGroupCreated={onRefreshBudgetGroups}
+                
+                  onGroupCreated={handleGroupCreated}
                   createBudgetGroup={createBudgetGroup}
                   loading={loadingCreateGroup}
                 />
