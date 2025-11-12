@@ -332,9 +332,9 @@ export default function BudgetPage() {
 
   return (
     <>
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
-        <div className="flex justify-end gap-2 mb-4">
+        <div className="flex justify-end gap-2">
           <ManageGroupsSheet
             labelButton="Organizar Grupos"
             budgetGroups={budgetGroups}
@@ -345,12 +345,12 @@ export default function BudgetPage() {
           />
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <MonthYearPicker date={currentDate} onChange={handleMonthYearChange} mode="year" />
       </div>
-      <div className="flex justify-between items-center">
-        <Card className="shadow-sm">
-          <CardContent className="space-y-6">
+      <div className="mt-4 w-full">
+        <Card className="shadow-sm w-full overflow-hidden">
+          <CardContent className="space-y-6 px-3 sm:px-6">
             <ReadOnlyBlock
               title="SALDO"
               color={computedSection?.color}
