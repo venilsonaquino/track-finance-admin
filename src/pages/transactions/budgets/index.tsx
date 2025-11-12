@@ -115,6 +115,7 @@ export default function BudgetPage() {
     createBudgetGroup,
     fetchBudgetGroups,
     renameBudgetGroup,
+    deleteBudgetGroup,
   } = useBudgetGroupsCrud();
 
   const blockingError = overviewError || crudError;
@@ -122,6 +123,7 @@ export default function BudgetPage() {
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editingTitleValue, setEditingTitleValue] = useState("");
   const [savingTitle, setSavingTitle] = useState(false);
+  const [deletingSectionId, setDeletingSectionId] = useState<string | null>(null);
 
   const monthOrder = useMemo<MonthKey[]>(
     () => budgetOverview?.months ?? [],
@@ -241,6 +243,37 @@ export default function BudgetPage() {
     }
   }, [editableSections, editingSectionId, cancelEditingSection]);
 
+  const handleDeleteSection = useCallback(async (section: EditableSectionState) => {
+    if (section.isSystemDefault) {
+      toast.error("Não é possível excluir um grupo padrão.");
+      return;
+    }
+
+    if (deletingSectionId) {
+      toast.info("Aguarde a exclusão em andamento.");
+      return;
+    }
+
+    const shouldDelete = typeof window === "undefined"
+      ? true
+      : window.confirm(`Tem certeza que deseja excluir o grupo "${section.title}"? Essa ação não pode ser desfeita.`);
+
+    if (!shouldDelete) return;
+
+    try {
+      setDeletingSectionId(section.id);
+      await deleteBudgetGroup(section.id);
+      setEditableSections((prev) => prev.filter(({ id }) => id !== section.id));
+      toast.success("Grupo excluído com sucesso!");
+      refreshCurrentBudgetOverview();
+    } catch (error) {
+      console.error("Erro ao excluir grupo:", error);
+      toast.error("Não foi possível excluir o grupo.");
+    } finally {
+      setDeletingSectionId((current) => (current === section.id ? null : current));
+    }
+  }, [deleteBudgetGroup, refreshCurrentBudgetOverview, deletingSectionId]);
+
   const handleSectionAction = useCallback((section: EditableSectionState, action: "edit" | "delete" | "addCategory") => {
     if (action === "edit") {
       setEditingSectionId(section.id);
@@ -248,13 +281,17 @@ export default function BudgetPage() {
       return;
     }
 
+    if (action === "delete") {
+      handleDeleteSection(section);
+      return;
+    }
+
     const actionLabels = {
-      delete: "Excluir grupo",
       addCategory: "Adicionar categoria",
     } as const;
 
     toast.info(`${actionLabels[action]}: ${section.title}`);
-  }, []);
+  }, [handleDeleteSection]);
 
   const saveSectionTitle = useCallback(async () => {
     if (!editingSectionId) return;
