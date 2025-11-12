@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ListPlus, Pencil, Trash2 } from "lucide-react";
 
 type EditableBlockProps = {
   title: string;
@@ -68,14 +69,17 @@ export default function EditableBlock({
               {!isSystemDefault && (
                 <>
                   <DropdownMenuItem disabled={!onEdit} onSelect={() => onEdit?.()}>
+                    <Pencil className="h-4 w-4 mr-2" />
                     Editar
                   </DropdownMenuItem>
                   <DropdownMenuItem disabled={!onDelete} onSelect={() => onDelete?.()}>
+                    <Trash2 className="h-4 w-4 mr-2" />
                     Excluir
                   </DropdownMenuItem>
                 </>
               )}
               <DropdownMenuItem disabled={!onAddCategory} onSelect={() => onAddCategory?.()}>
+                <ListPlus className="h-4 mr-2" />
                 Adicionar categoria
               </DropdownMenuItem>
             </DropdownMenuContent>
