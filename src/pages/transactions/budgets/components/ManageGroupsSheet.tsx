@@ -4,7 +4,7 @@ import {
 } from "@/components/ui/sheet";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tag, ListTodo, X } from "lucide-react";
+import { ListTodo, X, FolderX, Box } from "lucide-react";
 import { toast } from "sonner";
 import { useCategories } from "@/pages/category/hooks/use-categories";
 import { CategoryCardSheet, GroupCardSheet } from "./CardSheet";
@@ -464,7 +464,7 @@ export default function ManageGroupsSheet({
           <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 flex-1 min-h-0">
             {/* CATEGORIAS SEM GRUPO */}
             <Card className="overflow-hidden flex flex-col h-full min-h-0">
-              <ColumnHeader icon={<Tag className="h-4 w-4 text-muted-foreground" />} title="Categorias sem grupo" />
+              <ColumnHeader icon={<FolderX className="h-4 w-4 text-muted-foreground" />} title="Categorias sem grupo" />
 
               <div
                 className={[
@@ -512,7 +512,7 @@ export default function ManageGroupsSheet({
 
             {/* GRUPOS */}
             <Card className="overflow-hidden flex flex-col h-full min-h-0">
-              <ColumnHeader icon={<Tag className="h-4 w-4 text-muted-foreground" />} title="Grupos" />
+              <ColumnHeader icon={<Box className="h-4 w-4 text-muted-foreground" />} title="Grupos" />
 
               <div className="p-4 pt-3 flex-1 flex flex-col min-h-0">
                 <div
