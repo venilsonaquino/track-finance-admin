@@ -228,11 +228,14 @@ export default function ManageGroupsSheet({
       for (const category of categories) {
         assignments.push({ categoryId: category.id, budgetGroupId: null });
       }
+
+      const groupPayload = groupOrder.map((id, index) => ({ id, position: index }));
       
-      // Envia as atribuições de categorias para a API
-      await BudgetGroupService.updateCategoryAssignments({
-        assignments
-      });
+
+      await Promise.all([
+        BudgetGroupService.updateCategoryAssignments({ assignments }),
+        BudgetGroupService.updateReorderGroups({ groups: groupPayload }),
+      ]);
       
       await Promise.all([
         refreshBudgetGroups(),

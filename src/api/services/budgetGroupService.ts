@@ -30,6 +30,13 @@ export interface CategoryIdsByGroupRequest {
   assignments: AssignmentItem[];
 }
 
+export interface ReorderBudgetGroupsRequest {
+  groups: { 
+    id: string;
+    position: number;
+  }[];
+}
+
 export const BudgetGroupService = {
   getBudgetGroups: () => HttpClient.get("/budget-groups"),
   getBudgetGroupById: (id: string) => HttpClient.get(`/budget-groups/${id}`),
@@ -39,4 +46,5 @@ export const BudgetGroupService = {
   categoryAssignments: (id: string) => HttpClient.put(`/budget-groups/${id}/category-assignments`),
   updateCategoryAssignments: (payload: CategoryIdsByGroupRequest) => HttpClient.put("/budget-groups/category-assignments", payload),
   getBudgetOverview: (year: number) => HttpClient.get(`/budget-groups/overview?year=${year}`),
+  updateReorderGroups: (payload: ReorderBudgetGroupsRequest) => HttpClient.patch("/budget-groups/reorder", payload),
 };
