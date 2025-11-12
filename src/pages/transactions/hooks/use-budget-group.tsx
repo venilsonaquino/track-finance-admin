@@ -56,6 +56,7 @@ export const useBudgetGroupsCrud = () => {
   const [loadingBudgetGroups, setLoadingBudgetGroups] = useState(false);
   const [loadingCreateGroup, setLoadingCreateGroup] = useState(false);
   const [loadingUpdateGroup, setLoadingUpdateGroup] = useState(false);
+  const [loadingRenameGroup, setLoadingRenameGroup] = useState(false);
   const [loadingDeleteGroup, setLoadingDeleteGroup] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,6 +127,22 @@ export const useBudgetGroupsCrud = () => {
     }
   };
 
+  const renameBudgetGroup = async (id: string, title: string) => {
+    try {
+      setLoadingRenameGroup(true);
+      setError(null);
+      await BudgetGroupService.updateGroupName(id, title);
+      fetchBudgetGroups();
+      setError(null);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido ao renomear grupo de orçamento";
+      setError(errorMessage);
+      throw error;
+    } finally {
+      setLoadingRenameGroup(false);
+    }
+  };
+
   const categoryAssignments = async (id: string) => {
     try {
       setError(null);
@@ -156,12 +173,14 @@ export const useBudgetGroupsCrud = () => {
     loadingBudgetGroups,
     loadingCreateGroup,
     loadingUpdateGroup,
+    loadingRenameGroup,
     loadingDeleteGroup,
     error,
     clearError,
     fetchBudgetGroups,
     createBudgetGroup,
     updateBudgetGroup,
+    renameBudgetGroup,
     deleteBudgetGroup,
     categoryAssignments
   };

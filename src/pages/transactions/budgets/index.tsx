@@ -114,10 +114,14 @@ export default function BudgetPage() {
     error: crudError,
     createBudgetGroup,
     fetchBudgetGroups,
+    renameBudgetGroup,
   } = useBudgetGroupsCrud();
 
   const blockingError = overviewError || crudError;
   const [editableSections, setEditableSections] = useState<EditableSectionState[]>([]);
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [editingTitleValue, setEditingTitleValue] = useState("");
+  const [savingTitle, setSavingTitle] = useState(false);
 
   const monthOrder = useMemo<MonthKey[]>(
     () => budgetOverview?.months ?? [],
@@ -225,15 +229,61 @@ export default function BudgetPage() {
     return fetchBudgetOverview(currentYear);
   }, [fetchBudgetOverview, currentYear]);
 
+  const cancelEditingSection = useCallback(() => {
+    setEditingSectionId(null);
+    setEditingTitleValue("");
+    setSavingTitle(false);
+  }, []);
+
+  useEffect(() => {
+    if (editingSectionId && !editableSections.some((section) => section.id === editingSectionId)) {
+      cancelEditingSection();
+    }
+  }, [editableSections, editingSectionId, cancelEditingSection]);
+
   const handleSectionAction = useCallback((section: EditableSectionState, action: "edit" | "delete" | "addCategory") => {
+    if (action === "edit") {
+      setEditingSectionId(section.id);
+      setEditingTitleValue(section.title);
+      return;
+    }
+
     const actionLabels = {
-      edit: "Editar grupo",
       delete: "Excluir grupo",
       addCategory: "Adicionar categoria",
     } as const;
 
     toast.info(`${actionLabels[action]}: ${section.title}`);
   }, []);
+
+  const saveSectionTitle = useCallback(async () => {
+    if (!editingSectionId) return;
+    const trimmedTitle = editingTitleValue.trim();
+    if (!trimmedTitle) {
+      toast.error("Informe um nome válido para o grupo.");
+      return;
+    }
+
+    try {
+      setSavingTitle(true);
+      await renameBudgetGroup(editingSectionId, trimmedTitle);
+      setEditableSections((prev) =>
+        prev.map((section) =>
+          section.id === editingSectionId
+            ? { ...section, title: trimmedTitle }
+            : section
+        )
+      );
+      toast.success("Grupo atualizado com sucesso!");
+      cancelEditingSection();
+      refreshCurrentBudgetOverview();
+    } catch (error) {
+      console.error("Erro ao renomear grupo:", error);
+      toast.error("Não foi possível renomear o grupo.");
+    } finally {
+      setSavingTitle(false);
+    }
+  }, [editingSectionId, editingTitleValue, renameBudgetGroup, cancelEditingSection, refreshCurrentBudgetOverview]);
 
   if (blockingError && !loading) {
     return <BudgetErrorState message={blockingError} onRetry={() => fetchBudgetOverview(currentYear)} />;
@@ -295,6 +345,12 @@ export default function BudgetPage() {
                 onDelete={() => handleSectionAction(section, "delete")}
                 onAddCategory={() => handleSectionAction(section, "addCategory")}
                 isSystemDefault={section.isSystemDefault}
+                editingTitle={editingSectionId === section.id}
+                titleInputValue={editingSectionId === section.id ? editingTitleValue : undefined}
+                onTitleInputChange={(value) => setEditingTitleValue(value)}
+                onTitleSave={saveSectionTitle}
+                onTitleCancel={cancelEditingSection}
+                savingTitle={savingTitle && editingSectionId === section.id}
               />
             ))}
           </CardContent>

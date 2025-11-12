@@ -47,4 +47,5 @@ export const BudgetGroupService = {
   updateCategoryAssignments: (payload: CategoryIdsByGroupRequest) => HttpClient.put("/budget-groups/category-assignments", payload),
   getBudgetOverview: (year: number) => HttpClient.get(`/budget-groups/overview?year=${year}`),
   updateReorderGroups: (payload: ReorderBudgetGroupsRequest) => HttpClient.patch("/budget-groups/reorder", payload),
+  updateGroupName: (id: string, title: string) => HttpClient.patch(`/budget-groups/${id}/rename`, { title }),
 };

@@ -5,6 +5,7 @@ import SectionTitle from "./SectionTitle";
 import { Row } from "../types";
 import { formatCurrency } from "@/utils/currency-utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,12 @@ type EditableBlockProps = {
   onEdit?: () => void;
   onDelete?: () => void;
   onAddCategory?: () => void;
+  editingTitle?: boolean;
+  titleInputValue?: string;
+  onTitleInputChange?: (value: string) => void;
+  onTitleSave?: () => void;
+  onTitleCancel?: () => void;
+  savingTitle?: boolean;
 };
 
 export default function EditableBlock({
@@ -45,14 +52,54 @@ export default function EditableBlock({
   onDelete,
   onAddCategory,
   isSystemDefault,
+  editingTitle = false,
+  titleInputValue,
+  onTitleInputChange,
+  onTitleSave,
+  onTitleCancel,
+  savingTitle = false,
 }: EditableBlockProps) {
 
   const hasActions = Boolean(onEdit || onDelete || onAddCategory);
+  const canSaveTitle = (titleInputValue ?? "").trim().length > 0;
 
   return (
     <div>
       <div className="flex items-center justify-between gap-2">
-        <SectionTitle label={title} color={color} />
+        {editingTitle ? (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1">
+            <div className="flex items-center gap-3">
+              <div className="border-l-8 h-6 rounded-sm" style={{ borderColor: color }} />
+              <Input
+                value={titleInputValue}
+                onChange={(event) => onTitleInputChange?.(event.target.value)}
+                placeholder="Nome do grupo"
+                className="h-8 sm:w-72"
+                autoFocus
+                disabled={savingTitle}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                onClick={onTitleSave}
+                disabled={!canSaveTitle || savingTitle}
+              >
+                {savingTitle ? "Salvando..." : "Salvar"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onTitleCancel}
+                disabled={savingTitle}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <SectionTitle label={title} color={color} />
+        )}
         {hasActions && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
