@@ -28,8 +28,10 @@ export type SectionEditable = {
   id: string;
   title: string;
   kind: "editable";
+  position: number;
   color?: string;
   rows: RowItem[];
+  isSystemDefault: boolean;
   footerLabel: string;
 };
 
@@ -37,7 +39,9 @@ export type SectionComputed = {
   id: string;
   title: string;
   kind: "computed";
-  color: string;       
+  position: number;
+  color: string;
+  isSystemDefault: boolean;       
   rows: Array<{
     id: string;
     label: string;

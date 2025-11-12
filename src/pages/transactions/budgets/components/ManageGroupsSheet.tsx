@@ -14,6 +14,8 @@ import { BudgetGroupService, BudgetGroupResponse, BudgetGroupRequest } from "@/a
 import { CategoryIdsByGroup } from "../types";
 import CreateGroupDialog from "./CreateGroupDialog";
 
+const GROUP_DRAG_TYPE = "application/budget-group";
+
 const cloneCategoriesByGroup = (source: CategoryIdsByGroup = {}): CategoryIdsByGroup =>
   Object.fromEntries(
     Object.entries(source).map(([groupId, ids]) => [groupId, [...ids]])
@@ -37,6 +39,8 @@ function addCategoryToGroup(map: CategoryIdsByGroup, groupId: string, id: string
   return next;
 }
 
+const isGroupDragEvent = (event: React.DragEvent) => event.dataTransfer.types.includes(GROUP_DRAG_TYPE);
+
 type ManageGroupsSheetProps = { 
   labelButton?: string;
   budgetGroups: BudgetGroupResponse[];
@@ -47,7 +51,7 @@ type ManageGroupsSheetProps = {
 }
 
 export default function ManageGroupsSheet({ 
-  labelButton, 
+  labelButton,
   budgetGroups, 
   onRefreshBudgetGroups,
   createBudgetGroup,
@@ -62,6 +66,9 @@ export default function ManageGroupsSheet({
   const [initialCategoriesByGroup, setInitialCategoriesByGroup] = useState<CategoryIdsByGroup | null>(null);
   const [targetGroup, setTargetGroup] = useState<string | undefined>(undefined);
   const [openGroups, setOpenGroups] = useState<string[]>([]);
+  const [groupOrder, setGroupOrder] = useState<string[]>([]);
+  const [draggingGroupId, setDraggingGroupId] = useState<string | null>(null);
+  const [groupReorderPreview, setGroupReorderPreview] = useState<{ targetId: string; position: "before" | "after" } | null>(null);
 
   const { categories: fetchedCategories, loading: categoriesLoading, fetchCategories } = useCategories();
   const [isSaving, setIsSaving] = useState(false);
@@ -70,6 +77,22 @@ export default function ManageGroupsSheet({
     () => budgetGroups.slice(1),
     [budgetGroups]
   );
+
+  const orderedBudgetGroups = useMemo(() => {
+    if (!budgetGroupsWithoutBalanceGroup.length) return [];
+
+    const map = new Map(budgetGroupsWithoutBalanceGroup.map(group => [group.id, group]));
+    const baseOrder = groupOrder.length
+      ? groupOrder
+      : budgetGroupsWithoutBalanceGroup.map(group => group.id);
+
+    const ordered = baseOrder
+      .map(id => map.get(id))
+      .filter((group): group is BudgetGroupResponse => Boolean(group));
+
+    const leftovers = budgetGroupsWithoutBalanceGroup.filter(group => !baseOrder.includes(group.id));
+    return [...ordered, ...leftovers];
+  }, [budgetGroupsWithoutBalanceGroup, groupOrder]);
 
   const assignedCategoryIds = useMemo(
     () => new Set(Object.values(categoriesByGroup).flat()),
@@ -99,6 +122,27 @@ export default function ManageGroupsSheet({
     setInitialCategoriesByGroup(cloneCategoriesByGroup(initialCategories));
   }, [budgetGroups, isOpen]);
 
+  useEffect(() => {
+    if (!budgetGroupsWithoutBalanceGroup.length) {
+      setGroupOrder([]);
+      return;
+    }
+
+    setGroupOrder(prev => {
+      if (!prev.length) return budgetGroupsWithoutBalanceGroup.map(group => group.id);
+
+      const nextIds = budgetGroupsWithoutBalanceGroup.map(group => group.id);
+      const missingFromPrev = nextIds.some(id => !prev.includes(id));
+      const removedIds = prev.some(id => !nextIds.includes(id));
+
+      if (missingFromPrev || removedIds) {
+        return nextIds;
+      }
+
+      return prev;
+    });
+  }, [budgetGroupsWithoutBalanceGroup]);
+
   const toggleSelected = useCallback((id: string) => {
     setSelectedIds(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]));
   }, []);
@@ -109,16 +153,28 @@ export default function ManageGroupsSheet({
     setOpenGroups(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   }, []);
 
+  const resetGroupsOrder = useCallback(() => {
+    if (!budgetGroupsWithoutBalanceGroup.length) {
+      setGroupOrder([]);
+      return;
+    }
+    setGroupOrder(budgetGroupsWithoutBalanceGroup.map(group => group.id));
+  }, [budgetGroupsWithoutBalanceGroup]);
+
   const resetAssignments = useCallback(() => {
-    if (!initialCategoriesByGroup) return;
-    setCategoriesByGroup(cloneCategoriesByGroup(initialCategoriesByGroup));
-  }, [initialCategoriesByGroup]);
+    if (initialCategoriesByGroup) {
+      setCategoriesByGroup(cloneCategoriesByGroup(initialCategoriesByGroup));
+    }
+    resetGroupsOrder();
+  }, [initialCategoriesByGroup, resetGroupsOrder]);
 
   const resetTransientState = useCallback(() => {
     clearSelection();
     setTargetGroup(undefined);
     setDragOverGroup(null);
     setPulseGroup(null);
+    setGroupReorderPreview(null);
+    setDraggingGroupId(null);
   }, [clearSelection]);
 
   const refreshBudgetGroups = useCallback(async () => {
@@ -210,6 +266,56 @@ export default function ManageGroupsSheet({
   const removeFromGroup = (id: string, groupId: string) =>
     setCategoriesByGroup(prev => ({ ...prev, [groupId]: prev[groupId].filter(x => x !== id) }));
 
+  const resetGroupDragState = useCallback(() => {
+    setGroupReorderPreview(null);
+    setDraggingGroupId(null);
+  }, []);
+
+  const reorderGroups = useCallback((sourceId: string, targetId: string | null, position: "before" | "after" = "after") => {
+    if (!sourceId) return;
+    if (targetId && sourceId === targetId) return;
+
+    setGroupOrder(prevOrder => {
+      const fallback = budgetGroupsWithoutBalanceGroup.map(group => group.id);
+      const workingOrder = (prevOrder.length ? prevOrder : fallback).filter(id => id !== sourceId);
+
+      if (!targetId) {
+        return [...workingOrder, sourceId];
+      }
+
+      const targetIndex = workingOrder.indexOf(targetId);
+      if (targetIndex === -1) {
+        return [...workingOrder, sourceId];
+      }
+
+      const insertIndex = position === "before" ? targetIndex : targetIndex + 1;
+      const next = [...workingOrder];
+      next.splice(insertIndex, 0, sourceId);
+      return next;
+    });
+  }, [budgetGroupsWithoutBalanceGroup]);
+
+  const handleGroupDragStart = useCallback((event: React.DragEvent, groupId: string) => {
+    event.dataTransfer.setData(GROUP_DRAG_TYPE, groupId);
+    event.dataTransfer.effectAllowed = "move";
+    setDraggingGroupId(groupId);
+  }, []);
+
+  const handleGroupDragEnd = useCallback(() => {
+    resetGroupDragState();
+  }, [resetGroupDragState]);
+
+  const handleGroupDrop = useCallback((sourceId: string, targetId: string | null, position: "before" | "after") => {
+    reorderGroups(sourceId, targetId, position);
+    resetGroupDragState();
+  }, [reorderGroups, resetGroupDragState]);
+
+  const updateGroupReorderPreview = useCallback((targetId: string, event: React.DragEvent) => {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const position = event.clientY - rect.top > rect.height / 2 ? "after" : "before";
+    setGroupReorderPreview({ targetId, position });
+  }, []);
+
   // Drag & Drop
   const onDragStart = (e: React.DragEvent, id: string) => {
     e.dataTransfer.setData("text/plain", id);
@@ -217,11 +323,32 @@ export default function ManageGroupsSheet({
   };
 
   const onDragOverGroup = (e: React.DragEvent, gid: string) => {
+    if (isGroupDragEvent(e)) {
+      e.preventDefault();
+       e.stopPropagation();
+      updateGroupReorderPreview(gid, e);
+      return;
+    }
     e.preventDefault();
     setDragOverGroup(gid);
   };
 
   const onDropToGroup = (e: React.DragEvent, gid: string) => {
+    const draggedGroupId = e.dataTransfer.getData(GROUP_DRAG_TYPE);
+    if (draggedGroupId) {
+      e.preventDefault();
+      e.stopPropagation();
+      const indicator = groupReorderPreview?.targetId === gid
+        ? groupReorderPreview
+        : null;
+
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const fallbackPosition = e.clientY - rect.top > rect.height / 2 ? "after" : "before";
+
+      handleGroupDrop(draggedGroupId, gid, indicator?.position ?? fallbackPosition);
+      return;
+    }
+
     e.preventDefault();
     const draggedId = e.dataTransfer.getData("text/plain");
     if (!draggedId) return;
@@ -232,13 +359,22 @@ export default function ManageGroupsSheet({
 
     moveIdsToGroup(payload, gid);
     setDragOverGroup(null);
+    setGroupReorderPreview(null);
     setPulseGroup(gid);
     setTimeout(() => setPulseGroup(null), 700);
   };
 
-  const onDragLeaveGroup = () => setDragOverGroup(null);
+  const onDragLeaveGroup = (e: React.DragEvent, gid?: string) => {
+    if (isGroupDragEvent(e)) {
+      e.stopPropagation();
+      setGroupReorderPreview(prev => (prev?.targetId === gid ? null : prev));
+      return;
+    }
+    setDragOverGroup(null);
+  };
 
   const onDropToUnassigned = (e: React.DragEvent) => {
+    if (isGroupDragEvent(e)) return;
     e.preventDefault();
     const draggedId = e.dataTransfer.getData("text/plain");
     if (!draggedId) return;
@@ -253,8 +389,33 @@ export default function ManageGroupsSheet({
     );
     clearSelection();
     setDragOverGroup(null);
+    setGroupReorderPreview(null);
     setPulseGroup("unassigned");
     setTimeout(() => setPulseGroup(null), 700);
+  };
+
+  const onGroupsListDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    if (!isGroupDragEvent(event)) return;
+    event.preventDefault();
+    setGroupReorderPreview({ targetId: "end", position: "after" });
+  };
+
+  const onGroupsListDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    const draggedGroupId = event.dataTransfer.getData(GROUP_DRAG_TYPE);
+    if (!draggedGroupId) return;
+
+    const target = event.target as HTMLElement | null;
+    if (target && target.closest("[data-group-card]")) return;
+
+    event.preventDefault();
+    handleGroupDrop(draggedGroupId, null, "after");
+  };
+
+  const onGroupsListDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    if (!isGroupDragEvent(event)) return;
+    const nextTarget = event.relatedTarget as Node | null;
+    if (nextTarget && event.currentTarget.contains(nextTarget)) return;
+    setGroupReorderPreview(prev => (prev?.targetId === "end" ? null : prev));
   };
 
 
@@ -307,7 +468,12 @@ export default function ManageGroupsSheet({
                   "p-4 pt-3 flex-1 flex flex-col min-h-0",
                   dragOverGroup === "unassigned" ? "ring-2 ring-blue-200" : ""
                 ].join(" ")}
-                onDragOver={(e) => { e.preventDefault(); setDragOverGroup("unassigned"); }}
+                onDragOver={(e) => {
+                  if (isGroupDragEvent(e)) return;
+                  e.preventDefault();
+                  setGroupReorderPreview(null);
+                  setDragOverGroup("unassigned");
+                }}
                 onDrop={onDropToUnassigned}
                 onDragLeave={() => setDragOverGroup(null)}
               >
@@ -332,7 +498,7 @@ export default function ManageGroupsSheet({
               </div>
 
               <MoveBarSheet
-                groups={budgetGroupsWithoutBalanceGroup}
+                groups={orderedBudgetGroups}
                 selectedCount={selectedIds.length}
                 selectedGroup={targetGroup}
                 onChangeGroup={setTargetGroup}
@@ -346,8 +512,13 @@ export default function ManageGroupsSheet({
               <ColumnHeader icon={<Tag className="h-4 w-4 text-muted-foreground" />} title="Grupos" />
 
               <div className="p-4 pt-3 flex-1 flex flex-col min-h-0">
-                <div className="space-y-2 overflow-y-auto pr-2 flex-1">
-                  {budgetGroupsWithoutBalanceGroup.map(g => (
+                <div
+                  className="space-y-2 overflow-y-auto pr-2 flex-1"
+                  onDragOver={onGroupsListDragOver}
+                  onDrop={onGroupsListDrop}
+                  onDragLeave={onGroupsListDragLeave}
+                >
+                  {orderedBudgetGroups.map(g => (
                     <GroupCardSheet
                       key={g.id}
                       group={g}
@@ -359,7 +530,14 @@ export default function ManageGroupsSheet({
                       }
                       onDragOver={(e) => onDragOverGroup(e, g.id)}
                       onDrop={(e) => onDropToGroup(e, g.id)}
-                      onDragLeave={onDragLeaveGroup}
+                      onDragLeave={(e) => onDragLeaveGroup(e, g.id)}
+                      draggable
+                      onDragStart={(event) => handleGroupDragStart(event, g.id)}
+                      onDragEnd={handleGroupDragEnd}
+                      reorderIndicator={
+                        groupReorderPreview?.targetId === g.id ? groupReorderPreview.position : null
+                      }
+                      isDragging={draggingGroupId === g.id}
                     >
                       {(categoriesByGroup[g.id] ?? []).map(catId => {
                         const cat = categoriesMap.get(catId);
@@ -388,6 +566,16 @@ export default function ManageGroupsSheet({
                       })}
                     </GroupCardSheet>
                   ))}
+                  {draggingGroupId && (
+                    <div
+                      className={[
+                        "mt-2 h-10 rounded-lg border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground/70 transition-colors",
+                        groupReorderPreview?.targetId === "end" ? "border-blue-300 bg-blue-50/70 text-blue-600" : "border-muted/40"
+                      ].join(" ")}
+                    >
+                      Solte aqui para enviar ao final
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>

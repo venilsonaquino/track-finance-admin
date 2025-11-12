@@ -42,6 +42,11 @@ export function GroupCardSheet({
   onDragOver,
   onDrop,
   onDragLeave,
+  draggable,
+  onDragStart,
+  onDragEnd,
+  reorderIndicator,
+  isDragging,
 }: {
   group: Group;
   count: number;
@@ -51,17 +56,29 @@ export function GroupCardSheet({
   dragState?: "over" | "pulse" | null;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
-  onDragLeave: () => void;
+  onDragLeave: (e: React.DragEvent) => void;
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  reorderIndicator?: "before" | "after" | null;
+  isDragging?: boolean;
 }) {
-  const ring = dragState === "over" ? "ring-2 ring-blue-200" : "";
+  const ring = dragState === "over" ? "ring-2 ring-blue-200" : dragState === "pulse" ? "animate-pulse ring-1 ring-blue-100" : "";
 
   return (
     <div
-      className={`rounded-xl border bg-background ${ring}`}
+      data-group-card="true"
+      className={`relative rounded-xl border bg-background transition ${ring} ${isDragging ? "opacity-60" : ""}`}
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragLeave={onDragLeave}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
     >
+      {reorderIndicator === "before" && (
+        <span className="pointer-events-none absolute left-3 right-3 top-0 -translate-y-1/2 h-1 rounded-full bg-blue-400" />
+      )}
       <button
         onClick={onToggle}
         className="w-full flex items-center justify-between px-3 py-2 rounded-t-xl"
@@ -84,6 +101,9 @@ export function GroupCardSheet({
             <div className="space-y-2">{children}</div>
           )}
         </div>
+      )}
+      {reorderIndicator === "after" && (
+        <span className="pointer-events-none absolute left-3 right-3 bottom-0 translate-y-1/2 h-1 rounded-full bg-blue-400" />
       )}
     </div>
   );
