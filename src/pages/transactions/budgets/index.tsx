@@ -7,6 +7,7 @@ import { EditableSectionState, MonthKey, SectionEditable } from "./types";
 import ManageGroupsSheet from "./components/ManageGroupsSheet";
 import { useBudgetOverview, useBudgetGroupsCrud } from "../hooks/use-budget-group";
 import { MonthYearPicker } from "../movements/components/MonthYearPicker";
+import { toast } from "sonner";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
@@ -137,6 +138,7 @@ export default function BudgetPage() {
       title: section.title,
       color: section.color,
       footerLabel: section.footerLabel,
+      isSystemDefault: section.isSystemDefault,
       rows: section.rows.map((row) => ({
         id: row.id,
         label: row.label,
@@ -223,6 +225,16 @@ export default function BudgetPage() {
     return fetchBudgetOverview(currentYear);
   }, [fetchBudgetOverview, currentYear]);
 
+  const handleSectionAction = useCallback((section: EditableSectionState, action: "edit" | "delete" | "addCategory") => {
+    const actionLabels = {
+      edit: "Editar grupo",
+      delete: "Excluir grupo",
+      addCategory: "Adicionar categoria",
+    } as const;
+
+    toast.info(`${actionLabels[action]}: ${section.title}`);
+  }, []);
+
   if (blockingError && !loading) {
     return <BudgetErrorState message={blockingError} onRetry={() => fetchBudgetOverview(currentYear)} />;
   }
@@ -279,6 +291,10 @@ export default function BudgetPage() {
                 }
                 locale={budgetOverview.locale}
                 currency={budgetOverview.currency}
+                onEdit={() => handleSectionAction(section, "edit")}
+                onDelete={() => handleSectionAction(section, "delete")}
+                onAddCategory={() => handleSectionAction(section, "addCategory")}
+                isSystemDefault={section.isSystemDefault}
               />
             ))}
           </CardContent>

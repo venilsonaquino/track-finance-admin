@@ -4,6 +4,13 @@ import ColGroup from "./ColGroup";
 import SectionTitle from "./SectionTitle";
 import { Row } from "../types";
 import { formatCurrency } from "@/utils/currency-utils";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type EditableBlockProps = {
   title: string;
@@ -16,6 +23,10 @@ type EditableBlockProps = {
   compact?: boolean;
   locale?: string;
   currency?: string;
+  isSystemDefault?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onAddCategory?: () => void;
 };
 
 export default function EditableBlock({
@@ -29,11 +40,48 @@ export default function EditableBlock({
   compact = false,
   locale,
   currency,
+  onEdit,
+  onDelete,
+  onAddCategory,
+  isSystemDefault,
 }: EditableBlockProps) {
+
+  const hasActions = Boolean(onEdit || onDelete || onAddCategory);
 
   return (
     <div>
-      <SectionTitle label={title} color={color} />
+      <div className="flex items-center justify-between gap-2">
+        <SectionTitle label={title} color={color} />
+        {hasActions && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-lg leading-none text-muted-foreground"
+                aria-label={`Ações para ${title}`}
+              >
+                ⋮
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {!isSystemDefault && (
+                <>
+                  <DropdownMenuItem disabled={!onEdit} onSelect={() => onEdit?.()}>
+                    Editar
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled={!onDelete} onSelect={() => onDelete?.()}>
+                    Excluir
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuItem disabled={!onAddCategory} onSelect={() => onAddCategory?.()}>
+                Adicionar categoria
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
       <div className="overflow-x-auto border rounded-md">
         <Table className="table-fixed w-full">
           <ColGroup months={months} />

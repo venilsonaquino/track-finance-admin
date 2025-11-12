@@ -10,6 +10,7 @@ export type EditableSectionState = {
   title: SectionEditable["title"];
   footerLabel: string;
   rows: Row[];
+  isSystemDefault?: boolean;
 };
 
 export type MonthKey =
