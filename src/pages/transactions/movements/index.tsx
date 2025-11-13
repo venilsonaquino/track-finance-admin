@@ -1,6 +1,6 @@
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import { formatCurrency } from "@/utils/currency-utils";
-import { useTransactions } from "./hooks/use-transactions";
+import { useTransactions } from "../hooks/use-transactions";
 import { useEffect, useState } from "react";
 import TransactionsRecordResponse from "@/api/dtos/transaction/transactionRecordResponse";
 import { Button } from "@/components/ui/button";
@@ -215,7 +215,7 @@ const TransactionsPage = () => {
 	return (
 		<>
 			<div className="flex justify-between items-center">
-				<PageBreadcrumbNav title="Transações" />
+				<PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Movimentações", href: "/transacoes/movimentacoes" }]} />
 				<div className="flex justify-end gap-2 mb-4">
 					<Button onClick={() => {
 					}}>

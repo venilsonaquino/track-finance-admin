@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Filter, X, Calendar, Tag, Check } from "lucide-react";
-import { useCategories } from "../hooks/use-categories";
+import { useCategories } from "../../hooks/use-categories";
 import { DateUtils } from "@/utils/date-utils";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";

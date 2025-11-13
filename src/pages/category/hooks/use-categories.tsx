@@ -56,7 +56,8 @@ export const useCategories = () => {
   return {
     categories,
     loading,  
-    error,  
+    error,
+    fetchCategories,
     createCategory,
     updateCategory,
     deleteCategory,
