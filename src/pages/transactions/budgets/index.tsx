@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import ReadOnlyBlock from "./components/ReadOnlyBlock";
 import EditableBlock from "./components/EditableBlock";
@@ -8,6 +9,8 @@ import ManageGroupsSheet from "./components/ManageGroupsSheet";
 import { useBudgetOverview, useBudgetGroupsCrud } from "../hooks/use-budget-group";
 import { MonthYearPicker } from "../movements/components/MonthYearPicker";
 import { toast } from "sonner";
+import { Pin, PinOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
@@ -124,6 +127,7 @@ export default function BudgetPage() {
   const [editingTitleValue, setEditingTitleValue] = useState("");
   const [savingTitle, setSavingTitle] = useState(false);
   const [deletingSectionId, setDeletingSectionId] = useState<string | null>(null);
+  const [pinSaldoCard, setPinSaldoCard] = useState(false);
 
   const monthOrder = useMemo<MonthKey[]>(
     () => budgetOverview?.months ?? [],
@@ -348,9 +352,33 @@ export default function BudgetPage() {
       <div className="flex flex-wrap items-center gap-2">
         <MonthYearPicker date={currentDate} onChange={handleMonthYearChange} mode="year" />
       </div>
-      <div className="mt-4 w-full">
-        <Card className="shadow-sm w-full overflow-hidden">
-          <CardContent className="space-y-6 px-3 sm:px-6">
+      <div className="mt-4 w-full space-y-4">
+        <Card
+          className={cn(
+            "shadow-sm w-full overflow-hidden transition-all duration-300",
+            pinSaldoCard
+              ? "sticky top-20 z-30 border-primary/40 shadow-lg bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur"
+              : ""
+          )}
+        >
+          <CardContent className="space-y-4 px-3 sm:px-6">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-medium text-muted-foreground">Visão geral do saldo</span>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                aria-label={pinSaldoCard ? "Desfixar cartão do saldo" : "Fixar cartão do saldo"}
+                aria-pressed={pinSaldoCard}
+                onClick={() => setPinSaldoCard((prev) => !prev)}
+                className={cn(
+                  "h-8 w-8 text-muted-foreground",
+                  pinSaldoCard && "text-primary"
+                )}
+              >
+                {pinSaldoCard ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+              </Button>
+            </div>
             <ReadOnlyBlock
               title="SALDO"
               color={computedSection?.color}
@@ -364,6 +392,10 @@ export default function BudgetPage() {
               locale={budgetOverview.locale}
               currency={budgetOverview.currency}
             />
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm w-full overflow-hidden">
+          <CardContent className="space-y-6 px-3 sm:px-6">
             {editableSections.map((section) => (
               <EditableBlock
                 key={section.id}
