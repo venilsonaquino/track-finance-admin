@@ -4,6 +4,7 @@ import {
 } from "@/components/ui/sheet";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ListTodo, X, FolderX, Box } from "lucide-react";
 import { toast } from "sonner";
 import { useCategories } from "@/pages/category/hooks/use-categories";
@@ -425,12 +426,19 @@ export default function ManageGroupsSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={openSheet} >
-      <SheetTrigger asChild>
-        <Button>
-          <ListTodo className="h-4 w-4 mr-2" />
-          {labelButton}
-        </Button>
-      </SheetTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <SheetTrigger asChild>
+            <Button>
+              <ListTodo className="h-4 w-4 mr-2" />
+              {labelButton}
+            </Button>
+          </SheetTrigger>
+        </TooltipTrigger>
+        <TooltipContent sideOffset={8}>
+          Abra o painel lateral para reorganizar grupos e arrastar categorias.
+        </TooltipContent>
+      </Tooltip>
 
       <SheetContent
         hideClose={true}
