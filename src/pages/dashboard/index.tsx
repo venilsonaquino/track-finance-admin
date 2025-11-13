@@ -2,7 +2,7 @@ import PageBreadcrumbNav from "@/components/BreadcrumbNav"
 
 const Dashboard = () => {
     return (
-        <PageBreadcrumbNav title="Dashboard" />
+        <PageBreadcrumbNav items={[{ label: "Dashboard" }]} />
     )
 }
 

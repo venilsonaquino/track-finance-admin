@@ -132,7 +132,7 @@ const Category = () => {
 	return (
 		<>
 			<div className="flex justify-between items-center">
-				<PageBreadcrumbNav title="Categorias" />
+				<PageBreadcrumbNav items={[{ label: "Categorias" }]} />
 				<Button onClick={() => {
 					setSelectedCategory(null);
 					setIsDialogOpen(true);

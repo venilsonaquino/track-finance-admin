@@ -38,7 +38,7 @@ export const ReviewHeader = ({
 
   return (
     <>
-      <PageBreadcrumbNav title="Revisar Transações" />
+      <PageBreadcrumbNav items={[{ label: "Revisar Transações" }]} />
       <div className="container mx-auto py-4">
         <div className="flex justify-between items-center gap-4">
           <p className="text-muted-foreground">
