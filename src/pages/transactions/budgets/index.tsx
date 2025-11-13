@@ -394,9 +394,9 @@ export default function BudgetPage() {
             />
           </CardContent>
         </Card>
+            {editableSections.map((section) => (
         <Card className="shadow-sm w-full overflow-hidden">
           <CardContent className="space-y-6 px-3 sm:px-6">
-            {editableSections.map((section) => (
               <EditableBlock
                 key={section.id}
                 title={section.title}
@@ -421,9 +421,9 @@ export default function BudgetPage() {
                 onTitleCancel={cancelEditingSection}
                 savingTitle={savingTitle && editingSectionId === section.id}
               />
-            ))}
           </CardContent>
         </Card>
+            ))}
       </div>
     </>
   );
