@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { History } from "lucide-react";
 import { formatCurrency, maskCurrencyInput } from "@/utils/currency-utils";
+import { cn } from "@/lib/utils";
 
 type CellSumOnlyPopoverProps = {
   value: number;
@@ -51,7 +52,12 @@ export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = fal
         <PopoverTrigger asChild>
           <Input
             readOnly
-            className={`text-center ${compact ? "h-8" : "h-9"} w-full`}
+            className={cn(
+              `text-center ${compact ? "h-8" : "h-9"} w-full cursor-pointer transition-all duration-200`,
+              open
+                ? "border-amber-300 ring-1 ring-amber-200/70 bg-amber-50/50 dark:border-amber-500/40 dark:ring-amber-500/40 dark:bg-amber-900/30"
+                : "hover:border-amber-200/70"
+            )}
             value={formatCurrency(value)}
             placeholder="0,00"
           />
