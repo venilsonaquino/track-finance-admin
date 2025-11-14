@@ -31,6 +31,9 @@ const MONTH_LABELS_MAP: Record<MonthKey, string> = {
 const toValuesArray = (monthOrder: MonthKey[], values: Record<MonthKey, number>) =>
   monthOrder.map((month) => values[month] ?? 0);
 
+type BaselineValuesBySection = Record<string, Record<string, number[]>>;
+type PendingCellsLookup = Record<string, Record<string, Record<number, true>>>;
+
 const BudgetSkeleton = () => (
   <div className="space-y-6">
     <div className="flex justify-between items-center">
@@ -162,6 +165,39 @@ export default function BudgetPage() {
     if (!budgetOverview) return;
     setEditableSections(serverEditableSections);
   }, [budgetOverview, serverEditableSections]);
+
+  const baselineValuesBySection = useMemo<BaselineValuesBySection>(() => {
+    return serverEditableSections.reduce((acc, section) => {
+      acc[section.id] = section.rows.reduce((rowAcc, row) => {
+        rowAcc[row.id] = [...row.values];
+        return rowAcc;
+      }, {} as Record<string, number[]>);
+      return acc;
+    }, {} as BaselineValuesBySection);
+  }, [serverEditableSections]);
+
+  const pendingCellsBySection = useMemo<PendingCellsLookup>(() => {
+    return editableSections.reduce((acc, section) => {
+      const baselineSection = baselineValuesBySection[section.id] ?? {};
+      const rowPending = section.rows.reduce((rowAcc, row) => {
+        row.values.forEach((value, idx) => {
+          const baselineValue = baselineSection[row.id]?.[idx] ?? 0;
+          if (value !== baselineValue) {
+            if (!rowAcc[row.id]) {
+              rowAcc[row.id] = {};
+            }
+            rowAcc[row.id][idx] = true;
+          }
+        });
+        return rowAcc;
+      }, {} as Record<string, Record<number, true>>);
+
+      if (Object.keys(rowPending).length > 0) {
+        acc[section.id] = rowPending;
+      }
+      return acc;
+    }, {} as PendingCellsLookup);
+  }, [editableSections, baselineValuesBySection]);
 
   const emptyValuesArray = useMemo(
     () => monthOrder.map(() => 0),
@@ -396,11 +432,10 @@ export default function BudgetPage() {
             />
           </CardContent>
         </Card>
-            {editableSections.map((section) => (
-        <Card className="shadow-sm w-full overflow-hidden">
-          <CardContent className="space-y-6 px-3 sm:px-6">
+        {editableSections.map((section) => (
+          <Card key={section.id} className="shadow-sm w-full overflow-hidden">
+            <CardContent className="space-y-6 px-3 sm:px-6">
               <EditableBlock
-                key={section.id}
                 title={section.title}
                 color={section.color}
                 months={monthLabels}
@@ -422,10 +457,14 @@ export default function BudgetPage() {
                 onTitleSave={saveSectionTitle}
                 onTitleCancel={cancelEditingSection}
                 savingTitle={savingTitle && editingSectionId === section.id}
+                hasPendingChanges={Boolean(pendingCellsBySection[section.id])}
+                isCellPending={(rowId, monthIndex) =>
+                  Boolean(pendingCellsBySection[section.id]?.[rowId]?.[monthIndex])
+                }
               />
-          </CardContent>
-        </Card>
-            ))}
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </>
   );

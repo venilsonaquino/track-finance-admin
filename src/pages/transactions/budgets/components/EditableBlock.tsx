@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, ListPlus, Pencil, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type EditableBlockProps = {
   title: string;
@@ -37,6 +38,8 @@ type EditableBlockProps = {
   onTitleCancel?: () => void;
   savingTitle?: boolean;
   initialCollapsed?: boolean;
+  hasPendingChanges?: boolean;
+  isCellPending?: (rowId: string, monthIndex: number) => boolean;
 };
 
 export default function EditableBlock({
@@ -61,6 +64,8 @@ export default function EditableBlock({
   onTitleCancel,
   savingTitle = false,
   initialCollapsed = false,
+  hasPendingChanges = false,
+  isCellPending,
 }: EditableBlockProps) {
 
   const hasActions = Boolean(onEdit || onDelete || onAddCategory);
@@ -115,7 +120,15 @@ export default function EditableBlock({
                 </div>
               </div>
             ) : (
-              <SectionTitle label={title} color={color} />
+              <div className="flex items-center gap-2">
+                <SectionTitle label={title} color={color} />
+                {hasPendingChanges && (
+                  <span className="relative flex h-3.5 w-3.5 items-center justify-center" aria-label="Alterações pendentes">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500 shadow-sm" />
+                  </span>
+                )}
+              </div>
             )}
           </div>
           {hasActions && (
@@ -170,22 +183,33 @@ export default function EditableBlock({
               {rows.map((row) => (
                 <TableRow key={row.id} className="hover:bg-transparent">
                   <TableCell className="font-medium">{row.label.toLowerCase()}</TableCell>
-                  {months.map((_, mi) => (
-                    <TableCell key={mi} className="text-right align-middle">
-                      <CellSumOnlyPopover
-                        value={row.values[mi] || 0}
-                        onAdd={(delta) =>
-                          onUpdateCell(row.id, mi, (current) => (current || 0) + delta)
-                        }
-                        onUndo={(delta) =>
-                          onUpdateCell(row.id, mi, (current) => Math.max(0, (current || 0) - delta))
-                        }
-                        compact={compact}
-                        locale={locale}
-                        currency={currency}
-                      />
-                    </TableCell>
-                  ))}
+                  {months.map((_, mi) => {
+                    const pending = isCellPending?.(row.id, mi) ?? false;
+                    return (
+                      <TableCell
+                        key={mi}
+                        className={cn(
+                          "text-right align-middle transition-colors",
+                          pending && "bg-amber-50/60 dark:bg-amber-500/10"
+                        )}
+                        data-pending={pending || undefined}
+                      >
+                        <CellSumOnlyPopover
+                          value={row.values[mi] || 0}
+                          onAdd={(delta) =>
+                            onUpdateCell(row.id, mi, (current) => (current || 0) + delta)
+                          }
+                          onUndo={(delta) =>
+                            onUpdateCell(row.id, mi, (current) => Math.max(0, (current || 0) - delta))
+                          }
+                          compact={compact}
+                          locale={locale}
+                          currency={currency}
+                          pending={pending}
+                        />
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))}
             </TableBody>
