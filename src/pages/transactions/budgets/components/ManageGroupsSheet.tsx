@@ -11,7 +11,7 @@ import { useCategories } from "@/pages/category/hooks/use-categories";
 import { CategoryCardSheet, GroupCardSheet } from "./CardSheet";
 import MoveBarSheet from "./MoveBarSheet";
 import ColumnHeader from "./ColumnHeaderSheet";
-import { BudgetGroupService, BudgetGroupResponse } from "@/api/services/budgetGroupService";
+import { BudgetGroupService, BudgetGroupResponse, BudgetGroupKind } from "@/api/services/budgetGroupService";
 import { CategoryIdsByGroup } from "../types";
 
 const GROUP_DRAG_TYPE = "application/budget-group";
@@ -69,26 +69,26 @@ export default function ManageGroupsSheet({
   const { categories: fetchedCategories, loading: categoriesLoading, fetchCategories } = useCategories();
   const [isSaving, setIsSaving] = useState(false);
 
-  const budgetGroupsWithoutBalanceGroup = useMemo(
-    () => budgetGroups.slice(1),
+  const editableBudgetGroups = useMemo(
+    () => budgetGroups.filter(g => g.kind == BudgetGroupKind.EDITABLE),
     [budgetGroups]
   );
 
   const orderedBudgetGroups = useMemo(() => {
-    if (!budgetGroupsWithoutBalanceGroup.length) return [];
+    if (!editableBudgetGroups.length) return [];
 
-    const map = new Map(budgetGroupsWithoutBalanceGroup.map(group => [group.id, group]));
+    const map = new Map(editableBudgetGroups.map(group => [group.id, group]));
     const baseOrder = groupOrder.length
       ? groupOrder
-      : budgetGroupsWithoutBalanceGroup.map(group => group.id);
+      : editableBudgetGroups.map(group => group.id);
 
     const ordered = baseOrder
       .map(id => map.get(id))
       .filter((group): group is BudgetGroupResponse => Boolean(group));
 
-    const leftovers = budgetGroupsWithoutBalanceGroup.filter(group => !baseOrder.includes(group.id));
+    const leftovers = editableBudgetGroups.filter(group => !baseOrder.includes(group.id));
     return [...ordered, ...leftovers];
-  }, [budgetGroupsWithoutBalanceGroup, groupOrder]);
+  }, [editableBudgetGroups, groupOrder]);
 
   const assignedCategoryIds = useMemo(
     () => new Set(Object.values(categoriesByGroup).flat()),
@@ -119,15 +119,15 @@ export default function ManageGroupsSheet({
   }, [budgetGroups, isOpen]);
 
   useEffect(() => {
-    if (!budgetGroupsWithoutBalanceGroup.length) {
+    if (!editableBudgetGroups.length) {
       setGroupOrder([]);
       return;
     }
 
     setGroupOrder(prev => {
-      if (!prev.length) return budgetGroupsWithoutBalanceGroup.map(group => group.id);
+      if (!prev.length) return editableBudgetGroups.map(group => group.id);
 
-      const nextIds = budgetGroupsWithoutBalanceGroup.map(group => group.id);
+      const nextIds = editableBudgetGroups.map(group => group.id);
       const missingFromPrev = nextIds.some(id => !prev.includes(id));
       const removedIds = prev.some(id => !nextIds.includes(id));
 
@@ -137,7 +137,7 @@ export default function ManageGroupsSheet({
 
       return prev;
     });
-  }, [budgetGroupsWithoutBalanceGroup]);
+  }, [editableBudgetGroups]);
 
   const toggleSelected = useCallback((id: string) => {
     setSelectedIds(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]));
@@ -150,12 +150,12 @@ export default function ManageGroupsSheet({
   }, []);
 
   const resetGroupsOrder = useCallback(() => {
-    if (!budgetGroupsWithoutBalanceGroup.length) {
+    if (!editableBudgetGroups.length) {
       setGroupOrder([]);
       return;
     }
-    setGroupOrder(budgetGroupsWithoutBalanceGroup.map(group => group.id));
-  }, [budgetGroupsWithoutBalanceGroup]);
+    setGroupOrder(editableBudgetGroups.map(group => group.id));
+  }, [editableBudgetGroups]);
 
   const resetAssignments = useCallback(() => {
     if (initialCategoriesByGroup) {
@@ -270,7 +270,7 @@ export default function ManageGroupsSheet({
     if (targetId && sourceId === targetId) return;
 
     setGroupOrder(prevOrder => {
-      const fallback = budgetGroupsWithoutBalanceGroup.map(group => group.id);
+      const fallback = editableBudgetGroups.map(group => group.id);
       const workingOrder = (prevOrder.length ? prevOrder : fallback).filter(id => id !== sourceId);
 
       if (!targetId) {
@@ -287,7 +287,7 @@ export default function ManageGroupsSheet({
       next.splice(insertIndex, 0, sourceId);
       return next;
     });
-  }, [budgetGroupsWithoutBalanceGroup]);
+  }, [editableBudgetGroups]);
 
   const handleGroupDragStart = useCallback((event: React.DragEvent, groupId: string) => {
     event.dataTransfer.setData(GROUP_DRAG_TYPE, groupId);
