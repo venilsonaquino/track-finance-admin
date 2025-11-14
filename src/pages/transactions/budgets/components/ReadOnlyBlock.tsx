@@ -60,7 +60,12 @@ export default function ReadOnlyBlock({
               <TableRow key={r.id} className="hover:bg-transparent">
                 <TableCell className="font-medium">{r.label.toLowerCase()}</TableCell>
                 {r.values.map((value, i) => (
-                  <TableCell key={i} className="text-center align-middle whitespace-nowrap">{formatCurrency(value, locale, currency)}</TableCell>
+                  <TableCell
+                    key={i}
+                    className="text-center align-middle whitespace-nowrap cursor-not-allowed select-none"
+                  >
+                    {formatCurrency(value, locale, currency)}
+                  </TableCell>
                 ))}
               </TableRow>
             ))}
@@ -72,7 +77,7 @@ export default function ReadOnlyBlock({
                 {footer.values.map((value, i) => (
                   <TableCell
                     key={i}
-                    className="text-center font-semibold whitespace-nowrap text-zinc-800 dark:text-amber-200"
+                    className="text-center font-semibold whitespace-nowrap text-zinc-800 dark:text-amber-200 cursor-not-allowed select-none"
                   >
                     {formatCurrency(value, locale, currency)}
                   </TableCell>
