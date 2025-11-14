@@ -70,85 +70,87 @@ export default function EditableBlock({
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          {editingTitle ? (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1">
-              <div className="flex items-center gap-3">
-                <div className="border-l-8 h-6 rounded-sm" style={{ borderColor: color }} />
-                <Input
-                  value={titleInputValue}
-                  onChange={(event) => onTitleInputChange?.(event.target.value)}
-                  placeholder="Nome do grupo"
-                  className="h-8 sm:w-72"
-                  autoFocus
-                  disabled={savingTitle}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={onTitleSave}
-                  disabled={!canSaveTitle || savingTitle}
-                >
-                  {savingTitle ? "Salvando..." : "Salvar"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={onTitleCancel}
-                  disabled={savingTitle}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <SectionTitle label={title} color={color} />
-          )}
-        </div>
-        <div className="flex items-center gap-1">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground"
+            className="h-8 w-8 shrink-0 rounded-full border border-border text-muted-foreground"
             aria-label={collapseLabel}
             aria-expanded={!collapsed}
             onClick={() => setCollapsed((prev) => !prev)}
           >
             <ChevronDown className={`h-4 w-4 transition-transform ${collapsed ? "-rotate-90" : "rotate-0"}`} />
           </Button>
+          <div className="flex-1 min-w-0">
+            {editingTitle ? (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-1 min-w-0 items-center gap-3">
+                  <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                  <Input
+                    value={titleInputValue}
+                    onChange={(event) => onTitleInputChange?.(event.target.value)}
+                    placeholder="Nome do grupo"
+                    className="h-9 sm:w-72"
+                    autoFocus
+                    disabled={savingTitle}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={onTitleSave}
+                    disabled={!canSaveTitle || savingTitle}
+                  >
+                    {savingTitle ? "Salvando..." : "Salvar"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={onTitleCancel}
+                    disabled={savingTitle}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <SectionTitle label={title} color={color} />
+            )}
+          </div>
           {hasActions && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-lg leading-none text-muted-foreground"
-                  aria-label={`Ações para ${title}`}
-                >
-                  ⋮
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {!isSystemDefault && (
-                  <>
-                    <DropdownMenuItem disabled={!onEdit} onSelect={() => onEdit?.()}>
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem disabled={!onDelete} onSelect={() => onDelete?.()}>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Excluir
-                    </DropdownMenuItem>
-                  </>
-                )}
-                <DropdownMenuItem disabled={!onAddCategory} onSelect={() => onAddCategory?.()}>
-                  <ListPlus className="h-4 mr-2" />
-                  Adicionar categoria
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="ml-auto flex items-center gap-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-lg leading-none text-muted-foreground"
+                    aria-label={`Ações para ${title}`}
+                  >
+                    ⋮
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {!isSystemDefault && (
+                    <>
+                      <DropdownMenuItem disabled={!onEdit} onSelect={() => onEdit?.()}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled={!onDelete} onSelect={() => onDelete?.()}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuItem disabled={!onAddCategory} onSelect={() => onAddCategory?.()}>
+                    <ListPlus className="h-4 mr-2" />
+                    Adicionar categoria
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           )}
         </div>
       </div>
