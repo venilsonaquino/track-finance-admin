@@ -11,6 +11,7 @@ import { MonthYearPicker } from "../movements/components/MonthYearPicker";
 import { toast } from "sonner";
 import { Pin, PinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import CreateGroupDialog from "./components/CreateGroupDialog";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
@@ -339,12 +340,14 @@ export default function BudgetPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
         <div className="flex justify-end gap-2">
+            <CreateGroupDialog 
+              createBudgetGroup={createBudgetGroup}
+              loading={loadingCreateGroup}
+            />
           <ManageGroupsSheet
             labelButton="Organizar Grupos"
             budgetGroups={budgetGroups}
             onRefreshBudgetGroups={fetchBudgetGroups}
-            createBudgetGroup={createBudgetGroup}
-            loadingCreateGroup={loadingCreateGroup}
             onGroupsChanged={refreshCurrentBudgetOverview}
           />
         </div>

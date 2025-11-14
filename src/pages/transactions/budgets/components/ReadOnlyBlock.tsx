@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, PiggyBank } from "lucide-react";
+import { PiggyBank } from "lucide-react";
 import ColGroup from "./ColGroup";
 import { Row } from "../types";
 import { formatCurrency } from "@/utils/currency-utils";

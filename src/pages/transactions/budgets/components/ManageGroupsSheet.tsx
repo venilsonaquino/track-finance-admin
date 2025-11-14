@@ -11,9 +11,8 @@ import { useCategories } from "@/pages/category/hooks/use-categories";
 import { CategoryCardSheet, GroupCardSheet } from "./CardSheet";
 import MoveBarSheet from "./MoveBarSheet";
 import ColumnHeader from "./ColumnHeaderSheet";
-import { BudgetGroupService, BudgetGroupResponse, BudgetGroupRequest } from "@/api/services/budgetGroupService";
+import { BudgetGroupService, BudgetGroupResponse } from "@/api/services/budgetGroupService";
 import { CategoryIdsByGroup } from "../types";
-import CreateGroupDialog from "./CreateGroupDialog";
 
 const GROUP_DRAG_TYPE = "application/budget-group";
 
@@ -46,8 +45,6 @@ type ManageGroupsSheetProps = {
   labelButton?: string;
   budgetGroups: BudgetGroupResponse[];
   onRefreshBudgetGroups: () => void | Promise<void>;
-  createBudgetGroup?: (data: BudgetGroupRequest) => Promise<void>;
-  loadingCreateGroup?: boolean;
   onGroupsChanged?: () => void | Promise<void>;
 }
 
@@ -55,8 +52,6 @@ export default function ManageGroupsSheet({
   labelButton,
   budgetGroups, 
   onRefreshBudgetGroups,
-  createBudgetGroup,
-  loadingCreateGroup,
   onGroupsChanged,
 }: ManageGroupsSheetProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -187,11 +182,6 @@ export default function ManageGroupsSheet({
       await onGroupsChanged();
     }
   }, [onGroupsChanged]);
-
-  const handleGroupCreated = useCallback(async () => {
-    await refreshBudgetGroups();
-    await notifyGroupsChanged();
-  }, [refreshBudgetGroups, notifyGroupsChanged]);
 
   const openSheet = (open: boolean) => {
     if (open) {
@@ -457,15 +447,6 @@ export default function ManageGroupsSheet({
                   </div>
                 )}
               </SheetTitle>
-
-              <div className="flex items-center gap-2">
-                <CreateGroupDialog 
-                
-                  onGroupCreated={handleGroupCreated}
-                  createBudgetGroup={createBudgetGroup}
-                  loading={loadingCreateGroup}
-                />
-              </div>
             </div>
           </SheetHeader>
 
