@@ -158,6 +158,8 @@ export default function BudgetPage() {
   } = useBudgetGroupsCrud();
 
   const blockingError = overviewError || crudError;
+  const isInitialLoading = loading && !budgetOverview;
+  const isRefreshing = loading && Boolean(budgetOverview);
   const [editableSections, setEditableSections] = useState<EditableSectionState[]>([]);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editingTitleValue, setEditingTitleValue] = useState("");
@@ -464,11 +466,11 @@ export default function BudgetPage() {
     }
   }, [editingSectionId, editingTitleValue, renameBudgetGroup, cancelEditingSection, refreshCurrentBudgetOverview]);
 
-  if (blockingError && !loading) {
+  if (blockingError && !budgetOverview) {
     return <BudgetErrorState message={blockingError} onRetry={() => fetchBudgetOverview(currentYear)} />;
   }
 
-  if (loading || !budgetOverview) {
+  if (isInitialLoading || !budgetOverview) {
     return <BudgetSkeleton />;
   }
 
@@ -477,9 +479,16 @@ export default function BudgetPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
         <div className="flex justify-end gap-2">
+          {isRefreshing && (
+            <div className="flex items-center text-xs text-muted-foreground pr-2">
+              <div className="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+              Atualizando dados...
+            </div>
+          )}
             <CreateGroupDialog 
               createBudgetGroup={createBudgetGroup}
               loading={loadingCreateGroup}
+              onSuccess={refreshCurrentBudgetOverview}
             />
           <ManageGroupsSheet
             labelButton="Organizar Grupos"
