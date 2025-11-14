@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Pin, PinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import CreateGroupDialog from "./components/CreateGroupDialog";
+import DeleteGroupDialog from "./components/DeleteGroupDialog";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
@@ -165,6 +166,8 @@ export default function BudgetPage() {
   const [editingTitleValue, setEditingTitleValue] = useState("");
   const [savingTitle, setSavingTitle] = useState(false);
   const [deletingSectionId, setDeletingSectionId] = useState<string | null>(null);
+  const [sectionPendingDeletion, setSectionPendingDeletion] = useState<EditableSectionState | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pinSaldoCard, setPinSaldoCard] = useState(false);
   const [pendingEntries, setPendingEntries] = useState<PendingDraftEntry[]>([]);
   const draftAppliedRef = useRef(false);
@@ -387,22 +390,16 @@ export default function BudgetPage() {
     }
   }, [editableSections, editingSectionId, cancelEditingSection]);
 
-  const handleDeleteSection = useCallback(async (section: EditableSectionState) => {
+  const handleDeleteSection = useCallback(async (section: EditableSectionState): Promise<boolean> => {
     if (section.isSystemDefault) {
       toast.error("Não é possível excluir um grupo padrão.");
-      return;
+      return false;
     }
 
     if (deletingSectionId) {
       toast.info("Aguarde a exclusão em andamento.");
-      return;
+      return false;
     }
-
-    const shouldDelete = typeof window === "undefined"
-      ? true
-      : window.confirm(`Tem certeza que deseja excluir o grupo "${section.title}"? Essa ação não pode ser desfeita.`);
-
-    if (!shouldDelete) return;
 
     try {
       setDeletingSectionId(section.id);
@@ -410,13 +407,33 @@ export default function BudgetPage() {
       setEditableSections((prev) => prev.filter(({ id }) => id !== section.id));
       toast.success("Grupo excluído com sucesso!");
       refreshCurrentBudgetOverview();
+      return true;
     } catch (error) {
       console.error("Erro ao excluir grupo:", error);
       toast.error("Não foi possível excluir o grupo.");
+      return false;
     } finally {
       setDeletingSectionId((current) => (current === section.id ? null : current));
     }
   }, [deleteBudgetGroup, refreshCurrentBudgetOverview, deletingSectionId]);
+
+  const closeDeleteDialog = useCallback(() => {
+    setDeleteDialogOpen(false);
+    setSectionPendingDeletion(null);
+  }, []);
+
+  const handleDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      closeDeleteDialog();
+    }
+  }, [closeDeleteDialog]);
+
+  const handleConfirmDelete = useCallback(async (section: EditableSectionState) => {
+    const deleted = await handleDeleteSection(section);
+    if (deleted) {
+      closeDeleteDialog();
+    }
+  }, [handleDeleteSection, closeDeleteDialog]);
 
   const handleSectionAction = useCallback((section: EditableSectionState, action: "edit" | "delete" | "addCategory") => {
     if (action === "edit") {
@@ -426,7 +443,16 @@ export default function BudgetPage() {
     }
 
     if (action === "delete") {
-      handleDeleteSection(section);
+      if (section.isSystemDefault) {
+        toast.error("Não é possível excluir um grupo padrão.");
+        return;
+      }
+      if (deletingSectionId) {
+        toast.info("Aguarde a exclusão em andamento.");
+        return;
+      }
+      setSectionPendingDeletion(section);
+      setDeleteDialogOpen(true);
       return;
     }
 
@@ -435,7 +461,7 @@ export default function BudgetPage() {
     } as const;
 
     toast.info(`${actionLabels[action]}: ${section.title}`);
-  }, [handleDeleteSection]);
+  }, [deletingSectionId]);
 
   const saveSectionTitle = useCallback(async () => {
     if (!editingSectionId) return;
@@ -586,6 +612,13 @@ export default function BudgetPage() {
           </Card>
         ))}
       </div>
+      <DeleteGroupDialog
+        open={deleteDialogOpen}
+        section={sectionPendingDeletion}
+        onOpenChange={handleDialogOpenChange}
+        onConfirm={handleConfirmDelete}
+        loading={Boolean(deletingSectionId)}
+      />
     </>
   );
 }

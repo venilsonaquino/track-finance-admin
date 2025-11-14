@@ -31,22 +31,51 @@ export default function DeleteGroupDialog({
 
     return createPortal(
       <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* Overlay */}
         <div
-          className="absolute inset-0 bg-black/50"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm
+               data-[state=open]:animate-in data-[state=closed]:animate-out
+               data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0"
           onClick={() => onOpenChange(false)}
+          data-state="open"
         />
-        <div className="relative z-10 w-[min(92vw,440px)] rounded-lg border bg-background p-6 shadow-2xl">
-          <div className="flex items-start gap-3">
-            <div className="flex-1 space-y-2">
-              <div>
-                <p className="text-lg leading-none font-semibold">Confirmar exclusão</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 text-center sm:text-left">
-              Tem certeza que deseja excluir este item? Essa ação não pode ser desfeita.
-            </div>
+
+        {/* Content */}
+        <div
+          className="fixed z-50 grid w-[min(92vw,440px)] gap-4 rounded-lg border bg-background p-6 shadow-lg
+               data-[state=open]:animate-in data-[state=closed]:animate-out
+               data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95
+               data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0"
+          role="dialog"
+          aria-modal="true"
+          data-state="open"
+        >
+          {/* Header: título + X */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold leading-none tracking-tight">
+              Confirmar Exclusão
+            </h2>
+
+            <button
+              type="button"
+              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground
+                   hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2
+                   focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+              aria-label="Fechar"
+            >
+              ✕
+            </button>
           </div>
-          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+
+          {/* Descrição (bloco separado, abaixo do título) */}
+          <p className="text-sm text-muted-foreground">
+            Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.
+          </p>
+
+          {/* Footer – botões alinhados à direita */}
+          <div className="mt-2 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"
@@ -55,17 +84,19 @@ export default function DeleteGroupDialog({
             >
               Cancelar
             </Button>
+
             <Button
               type="button"
               variant="destructive"
               onClick={handleConfirm}
               disabled={!section || loading}
             >
-              {loading ? "Removendo..." : "Ecluir"}
+              {loading ? "Removendo..." : "Excluir"}
             </Button>
           </div>
         </div>
-      </div>,
+      </div>
+      ,
       document.body
     );
   }, [open, hasWindow, onOpenChange, loading, section]);
