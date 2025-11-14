@@ -1,8 +1,11 @@
+import { ReactNode } from "react";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import SectionTitle from "./SectionTitle";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, PiggyBank } from "lucide-react";
 import ColGroup from "./ColGroup";
 import { Row } from "../types";
 import { formatCurrency } from "@/utils/currency-utils";
+import SectionTitle from "./SectionTitle";
 
 type ReadOnlyBlockProps = {
   title: string;
@@ -12,13 +15,35 @@ type ReadOnlyBlockProps = {
   color?: string;
   locale?: string;
   currency?: string;
+  titleAction?: ReactNode;
 };
 
-export default function ReadOnlyBlock({ title, months, rows, footer, color, locale, currency }: ReadOnlyBlockProps) {
-
+export default function ReadOnlyBlock({
+  title,
+  months,
+  rows,
+  footer,
+  color,
+  locale,
+  currency,
+  titleAction,
+}: ReadOnlyBlockProps) {
   return (
-    <div>
-      <SectionTitle label={title} color={color} />
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 shrink-0 rounded-full border border-border text-muted-foreground pointer-events-none"
+          aria-hidden="true"
+          tabIndex={-1}
+        >
+          <PiggyBank className="h-4 w-4" />
+        </Button>
+        <SectionTitle label={title} color={color} />
+        {titleAction ? <div className="ml-auto flex items-center">{titleAction}</div> : null}
+      </div>
       <div className="overflow-x-auto border rounded-md">
         <Table className="table-fixed w-full">
           <ColGroup months={months} />

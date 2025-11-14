@@ -362,23 +362,6 @@ export default function BudgetPage() {
           )}
         >
           <CardContent className="space-y-4 px-3 sm:px-6">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Visão geral do saldo</span>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                aria-label={pinSaldoCard ? "Desfixar cartão do saldo" : "Fixar cartão do saldo"}
-                aria-pressed={pinSaldoCard}
-                onClick={() => setPinSaldoCard((prev) => !prev)}
-                className={cn(
-                  "h-8 w-8 text-muted-foreground",
-                  pinSaldoCard && "text-primary"
-                )}
-              >
-                {pinSaldoCard ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-              </Button>
-            </div>
             <ReadOnlyBlock
               title="SALDO"
               color={computedSection?.color}
@@ -391,6 +374,22 @@ export default function BudgetPage() {
               }
               locale={budgetOverview.locale}
               currency={budgetOverview.currency}
+              titleAction={
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  aria-label={pinSaldoCard ? "Desfixar cartão do saldo" : "Fixar cartão do saldo"}
+                  aria-pressed={pinSaldoCard}
+                  onClick={() => setPinSaldoCard((prev) => !prev)}
+                  className={cn(
+                    "h-8 w-8 text-muted-foreground",
+                    pinSaldoCard && "text-primary"
+                  )}
+                >
+                  {pinSaldoCard ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+                </Button>
+              }
             />
           </CardContent>
         </Card>
