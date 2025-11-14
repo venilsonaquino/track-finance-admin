@@ -42,9 +42,9 @@ export default function DeleteGroupDialog({
                 <p className="text-lg leading-none font-semibold">Confirmar exclusão</p>
               </div>
             </div>
-                <div className="flex flex-col gap-2 text-center sm:text-left">
-                  Tem certeza que deseja excluir este item? Essa ação não pode ser desfeita.
-                </div>
+            <div className="flex flex-col gap-2 text-center sm:text-left">
+              Tem certeza que deseja excluir este item? Essa ação não pode ser desfeita.
+            </div>
           </div>
           <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
