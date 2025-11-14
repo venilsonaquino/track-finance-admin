@@ -102,7 +102,7 @@ export default function CellSumOnlyPopover({
                   <li key={i} className="text-xs flex items-center justify-between bg-muted/40 rounded px-2 py-1">
                     <span>{formatCurrency(value)}</span>
                     {i === 0 && (
-                      <button onClick={undoLast} className="text-[11px] underline">desfazer</button>
+                      <button onClick={undoLast} className="text-[11px] underline pointer">desfazer</button>
                     )}
                   </li>
                 ))}

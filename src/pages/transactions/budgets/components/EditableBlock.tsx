@@ -40,6 +40,14 @@ type EditableBlockProps = {
   initialCollapsed?: boolean;
   hasPendingChanges?: boolean;
   isCellPending?: (rowId: string, monthIndex: number) => boolean;
+  onRegisterPendingEntry?: (payload: {
+    rowId: string;
+    rowLabel: string;
+    monthIndex: number;
+    monthLabel: string;
+    delta: number;
+  }) => void;
+  onUndoPendingEntry?: (payload: { rowId: string; monthIndex: number }) => void;
 };
 
 export default function EditableBlock({
@@ -66,6 +74,8 @@ export default function EditableBlock({
   initialCollapsed = false,
   hasPendingChanges = false,
   isCellPending,
+  onRegisterPendingEntry,
+  onUndoPendingEntry,
 }: EditableBlockProps) {
 
   const hasActions = Boolean(onEdit || onDelete || onAddCategory);
@@ -196,12 +206,21 @@ export default function EditableBlock({
                       >
                         <CellSumOnlyPopover
                           value={row.values[mi] || 0}
-                          onAdd={(delta) =>
-                            onUpdateCell(row.id, mi, (current) => (current || 0) + delta)
-                          }
-                          onUndo={(delta) =>
-                            onUpdateCell(row.id, mi, (current) => Math.max(0, (current || 0) - delta))
-                          }
+                          onAdd={(delta) => {
+                            const monthLabel = months[mi] ?? `Mês ${mi + 1}`;
+                            onUpdateCell(row.id, mi, (current) => (current || 0) + delta);
+                            onRegisterPendingEntry?.({
+                              rowId: row.id,
+                              rowLabel: row.label,
+                              monthIndex: mi,
+                              monthLabel,
+                              delta,
+                            });
+                          }}
+                          onUndo={(delta) => {
+                            onUpdateCell(row.id, mi, (current) => Math.max(0, (current || 0) - delta));
+                            onUndoPendingEntry?.({ rowId: row.id, monthIndex: mi });
+                          }}
                           compact={compact}
                           locale={locale}
                           currency={currency}

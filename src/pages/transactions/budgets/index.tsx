@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import ReadOnlyBlock from "./components/ReadOnlyBlock";
 import EditableBlock from "./components/EditableBlock";
-import { EditableSectionState, MonthKey, SectionEditable } from "./types";
+import { EditableSectionState, MonthKey, PendingDraftEntry, SectionEditable } from "./types";
 import ManageGroupsSheet from "./components/ManageGroupsSheet";
 import { useBudgetOverview, useBudgetGroupsCrud } from "../hooks/use-budget-group";
+import { useBudgetDraftCache } from "../hooks/use-budget-draft-cache";
 import { MonthYearPicker } from "../movements/components/MonthYearPicker";
 import { toast } from "sonner";
 import { Pin, PinOff } from "lucide-react";
@@ -30,6 +31,30 @@ const MONTH_LABELS_MAP: Record<MonthKey, string> = {
 
 const toValuesArray = (monthOrder: MonthKey[], values: Record<MonthKey, number>) =>
   monthOrder.map((month) => values[month] ?? 0);
+
+const cloneDraftSections = (sections: EditableSectionState[]): EditableSectionState[] =>
+  sections.map((section) => ({
+    ...section,
+    rows: section.rows.map((row) => ({
+      ...row,
+      values: [...row.values],
+    })),
+  }));
+
+const generatePendingEntryId = () =>
+  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `pending-${Date.now()}-${Math.random()}`;
+
+type PendingEntryInput = {
+  sectionId: string;
+  sectionTitle: string;
+  rowId: string;
+  rowLabel: string;
+  monthIndex: number;
+  monthLabel: string;
+  delta: number;
+};
 
 type BaselineValuesBySection = Record<string, Record<string, number[]>>;
 type PendingCellsLookup = Record<string, Record<string, Record<number, true>>>;
@@ -116,6 +141,13 @@ export default function BudgetPage() {
   } = useBudgetOverview(currentYear);
 
   const {
+    draft,
+    saveDraft,
+    clearDraft,
+    canRestoreDraft,
+  } = useBudgetDraftCache(currentYear);
+
+  const {
     budgetGroups,
     loadingCreateGroup,
     error: crudError,
@@ -132,6 +164,35 @@ export default function BudgetPage() {
   const [savingTitle, setSavingTitle] = useState(false);
   const [deletingSectionId, setDeletingSectionId] = useState<string | null>(null);
   const [pinSaldoCard, setPinSaldoCard] = useState(false);
+  const [pendingEntries, setPendingEntries] = useState<PendingDraftEntry[]>([]);
+  const draftAppliedRef = useRef(false);
+
+  const registerPendingEntry = useCallback((input: PendingEntryInput) => {
+    setPendingEntries((prev) => {
+      const nextEntry: PendingDraftEntry = {
+        id: generatePendingEntryId(),
+        timestamp: Date.now(),
+        ...input,
+      };
+      return [nextEntry, ...prev].slice(0, 50);
+    });
+  }, []);
+
+  const removeLatestPendingEntryForCell = useCallback((sectionId: string, rowId: string, monthIndex: number) => {
+    setPendingEntries((prev) => {
+      const next = [...prev];
+      const index = next.findIndex(
+        (entry) =>
+          entry.sectionId === sectionId &&
+          entry.rowId === rowId &&
+          entry.monthIndex === monthIndex
+      );
+      if (index === -1) return prev;
+      next.splice(index, 1);
+      return next;
+    });
+  }, []);
+
 
   const monthOrder = useMemo<MonthKey[]>(
     () => budgetOverview?.months ?? [],
@@ -166,6 +227,20 @@ export default function BudgetPage() {
     setEditableSections(serverEditableSections);
   }, [budgetOverview, serverEditableSections]);
 
+  useEffect(() => {
+    draftAppliedRef.current = false;
+  }, [currentYear, budgetOverview?.version]);
+
+  useEffect(() => {
+    if (!budgetOverview || !draft) return;
+    if (!canRestoreDraft({ version: budgetOverview.version })) return;
+    if (draftAppliedRef.current) return;
+
+    setEditableSections(cloneDraftSections(draft.sections));
+    setPendingEntries(draft.pendingEntries ?? []);
+    draftAppliedRef.current = true;
+  }, [budgetOverview, canRestoreDraft, draft]);
+
   const baselineValuesBySection = useMemo<BaselineValuesBySection>(() => {
     return serverEditableSections.reduce((acc, section) => {
       acc[section.id] = section.rows.reduce((rowAcc, row) => {
@@ -199,10 +274,36 @@ export default function BudgetPage() {
     }, {} as PendingCellsLookup);
   }, [editableSections, baselineValuesBySection]);
 
+  const hasPendingChanges = useMemo(() => Object.keys(pendingCellsBySection).length > 0, [pendingCellsBySection]);
+
+  useEffect(() => {
+    setPendingEntries((prev) => {
+      const filtered = prev.filter(
+        (entry) => pendingCellsBySection[entry.sectionId]?.[entry.rowId]?.[entry.monthIndex]
+      );
+      return filtered.length === prev.length ? prev : filtered;
+    });
+  }, [pendingCellsBySection]);
+
   const emptyValuesArray = useMemo(
     () => monthOrder.map(() => 0),
     [monthOrder]
   );
+
+  useEffect(() => {
+    if (!budgetOverview) return;
+    if (hasPendingChanges) {
+      saveDraft(editableSections, {
+        version: budgetOverview.version,
+        pendingEntries,
+      });
+    } else {
+      clearDraft();
+      if (pendingEntries.length) {
+        setPendingEntries([]);
+      }
+    }
+  }, [budgetOverview, clearDraft, editableSections, hasPendingChanges, pendingEntries, saveDraft]);
 
   const totalsBySectionTitle = useMemo(() => {
     const length = monthOrder.length;
@@ -460,6 +561,16 @@ export default function BudgetPage() {
                 hasPendingChanges={Boolean(pendingCellsBySection[section.id])}
                 isCellPending={(rowId, monthIndex) =>
                   Boolean(pendingCellsBySection[section.id]?.[rowId]?.[monthIndex])
+                }
+                onRegisterPendingEntry={(payload) =>
+                  registerPendingEntry({
+                    ...payload,
+                    sectionId: section.id,
+                    sectionTitle: section.title,
+                  })
+                }
+                onUndoPendingEntry={(payload) =>
+                  removeLatestPendingEntryForCell(section.id, payload.rowId, payload.monthIndex)
                 }
               />
             </CardContent>
