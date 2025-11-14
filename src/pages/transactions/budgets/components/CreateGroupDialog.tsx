@@ -39,7 +39,7 @@ export default function CreateGroupDialog({ createBudgetGroup: propCreateBudgetG
 
       toast.success(`Grupo "${name}" criado com sucesso!`);
       setGroupName("");
-      setGroupColor("#3b82f6");
+      setGroupColor("#000000ff");
       setIsOpen(false);
     } catch (error) {
       console.error("Erro ao criar grupo:", error);
@@ -86,7 +86,7 @@ export default function CreateGroupDialog({ createBudgetGroup: propCreateBudgetG
               <Input 
                 value={groupColor} 
                 onChange={(e) => setGroupColor(e.target.value)}
-                placeholder="#3b82f6"
+                placeholder="#000000ff"
                 disabled={loading}
               />
             </div>
