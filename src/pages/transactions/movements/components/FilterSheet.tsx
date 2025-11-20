@@ -33,6 +33,7 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({ onApplyFilters }) => {
 	const [startDate, setStartDate] = useState(defaultDates.startDate);
 	const [endDate, setEndDate] = useState(defaultDates.endDate);
 	const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+	const [activeFiltersCount, setActiveFiltersCount] = useState<number>(0);
 
 	const handleApplyFilters = () => {
 		onApplyFilters({
@@ -41,12 +42,15 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({ onApplyFilters }) => {
 			categoryIds: selectedCategories,
 		});
 		setIsOpen(false);
+		setActiveFiltersCount(selectedCategories.length);
 	};
 
 	const handleClearFilters = () => {
 		setStartDate(defaultDates.startDate);
 		setEndDate(defaultDates.endDate);
 		setSelectedCategories([]);
+		setActiveFiltersCount(0);
+		setIsOpen(false);
 	};
 
 	const handleCategoryToggle = (categoryId: string) => {
@@ -58,7 +62,7 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({ onApplyFilters }) => {
 	};
 
 	const hasActiveFilters = startDate || endDate || selectedCategories.length > 0;
-	const activeFiltersCount = [startDate, endDate].filter(Boolean).length + selectedCategories.length;
+	// const activeFiltersCount = [startDate, endDate].filter(Boolean).length + selectedCategories.length;
 
 	return (
 		<Sheet open={isOpen} onOpenChange={setIsOpen}>
