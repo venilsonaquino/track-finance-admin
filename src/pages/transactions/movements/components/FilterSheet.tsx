@@ -62,7 +62,6 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({ onApplyFilters }) => {
 	};
 
 	const hasActiveFilters = startDate || endDate || selectedCategories.length > 0;
-	// const activeFiltersCount = [startDate, endDate].filter(Boolean).length + selectedCategories.length;
 
 	return (
 		<Sheet open={isOpen} onOpenChange={setIsOpen}>

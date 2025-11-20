@@ -1,10 +1,10 @@
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import { formatCurrency } from "@/utils/currency-utils";
 import { useTransactions } from "../hooks/use-transactions";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import TransactionsRecordResponse from "@/api/dtos/transaction/transactionRecordResponse";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Plus, Wallet } from "lucide-react";
+import { MoreVertical, Wallet } from "lucide-react";
 import { DataTable } from "@/components/data-table/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { TransactionResponse } from "@/api/dtos/transaction/transactionResponse";
@@ -22,6 +22,7 @@ import { DynamicIcon } from "lucide-react/dynamic";
 import { MonthYearPicker } from "./components/MonthYearPicker";
 import { DateUtils } from "@/utils/date-utils";
 import { FilterSheet } from "./components/FilterSheet";
+import { CreateTransactionDialog } from "./components/CreateTransactionDialog";
 
 const TransactionsPage = () => {
 	// const navigate = useNavigate();
@@ -34,35 +35,32 @@ const TransactionsPage = () => {
 		categoryIds: string[];
 	} | null>(null);
 
-	// Carrega transações sempre que currentDate mudar ou filtros mudarem
-	useEffect(() => {
-		const loadTransactionsForDate = async () => {
-			try {
-				let startDate: string;
-				let endDate: string;
-				let categoryIds: string[] = [];
+	const loadTransactions = useCallback(async () => {
+		try {
+			let startDate: string;
+			let endDate: string;
+			let categoryIds: string[] = [];
 
-				if (activeFilters) {
-					// Usar filtros personalizados
-					startDate = activeFilters.startDate;
-					endDate = activeFilters.endDate;
-					categoryIds = activeFilters.categoryIds;
-				} else {
-					// Usar mês atual
-					const monthDates = DateUtils.getMonthStartAndEnd(currentDate);
-					startDate = monthDates.startDate;
-					endDate = monthDates.endDate;
-				}
-
-				const response = await getTransactions(startDate, endDate, categoryIds);
-				setTransactionsData(response);
-			} catch (error) {
-				console.error("Erro ao carregar transações:", error);
+			if (activeFilters) {
+				startDate = activeFilters.startDate;
+				endDate = activeFilters.endDate;
+				categoryIds = activeFilters.categoryIds;
+			} else {
+				const monthDates = DateUtils.getMonthStartAndEnd(currentDate);
+				startDate = monthDates.startDate;
+				endDate = monthDates.endDate;
 			}
-		};
 
-		loadTransactionsForDate();
-	}, [currentDate, getTransactions, activeFilters]);
+			const response = await getTransactions(startDate, endDate, categoryIds);
+			setTransactionsData(response);
+		} catch (error) {
+			console.error("Erro ao carregar transações:", error);
+		}
+	}, [activeFilters, currentDate, getTransactions]);
+
+	useEffect(() => {
+		loadTransactions();
+	}, [loadTransactions]);
 
 	const handleApplyFilters = (filters: {
 		startDate: string;
@@ -74,7 +72,6 @@ const TransactionsPage = () => {
 
 	const handleMonthYearChange = (date: Date) => {
 		setCurrentDate(date);
-		// Limpar filtros personalizados quando mudar o mês
 		setActiveFilters(null);
 	};
 
@@ -217,11 +214,7 @@ const TransactionsPage = () => {
 			<div className="flex justify-between items-center">
 				<PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Movimentações", href: "/transacoes/movimentacoes" }]} />
 				<div className="flex justify-end gap-2 mb-4">
-					<Button onClick={() => {
-					}}>
-						<Plus className="h-4 w-4 mr-2" />
-						Nova Transação
-					</Button>
+					<CreateTransactionDialog onCreated={loadTransactions} defaultDate={currentDate} />
 					<FilterSheet onApplyFilters={handleApplyFilters} />
 				</div>
 			</div>
