@@ -164,6 +164,7 @@ export const CreateTransactionDialog = ({ onCreated, defaultDate }: CreateTransa
 								id="description"
 								placeholder="Ex.: Almoço, salário, transferência..."
 								value={formData.description}
+								maxLength={255}
 								onChange={(e) => handleChange("description", e.target.value)}
 							/>
 						</div>
