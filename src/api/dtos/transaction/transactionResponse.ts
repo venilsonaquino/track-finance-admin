@@ -2,6 +2,7 @@ import { CategoryResponse } from "../category/category-response";
 import { WalletResponse } from "../wallet/wallet-response";
 
 export interface TransactionResponse {
+  id?: string;
   transferType: string;
   depositedDate: string;
   description: string;
