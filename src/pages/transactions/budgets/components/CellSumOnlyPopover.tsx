@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { History } from "lucide-react";
 import { formatCurrency, maskCurrencyInput } from "@/utils/currency-utils";
-import { cn } from "@/lib/utils";
 
 type CellSumOnlyPopoverProps = {
   value: number;
@@ -13,16 +12,9 @@ type CellSumOnlyPopoverProps = {
   compact?: boolean;
   locale?: string;
   currency?: string;
-  pending?: boolean;
 };
 
-export default function CellSumOnlyPopover({
-  value,
-  onAdd,
-  onUndo,
-  compact = false,
-  pending = false,
-}: CellSumOnlyPopoverProps) {
+export default function CellSumOnlyPopover({ value, onAdd, onUndo, compact = false }: CellSumOnlyPopoverProps) {
   const [open, setOpen] = useState(false);
   const [temp, setTemp] = useState("");
   const [flash, setFlash] = useState<string | null>(null);
@@ -59,17 +51,9 @@ export default function CellSumOnlyPopover({
         <PopoverTrigger asChild>
           <Input
             readOnly
-            className={cn(
-              `text-center ${compact ? "h-8" : "h-9"} w-full cursor-pointer transition-all duration-200`,
-              pending &&
-                "border-amber-400 bg-amber-50/80 dark:border-amber-500/60 dark:bg-amber-900/20",
-              open
-                ? "border-amber-300 ring-1 ring-amber-200/70 bg-amber-50/50 dark:border-amber-500/40 dark:ring-amber-500/40 dark:bg-amber-900/30"
-                : "hover:border-amber-200/70"
-            )}
+            className={`text-center ${compact ? "h-8" : "h-9"} w-full`}
             value={formatCurrency(value)}
             placeholder="0,00"
-            aria-live={pending ? "polite" : undefined}
           />
         </PopoverTrigger>
         <PopoverContent className="w-64 p-3" align="end" sideOffset={6}>
@@ -102,7 +86,7 @@ export default function CellSumOnlyPopover({
                   <li key={i} className="text-xs flex items-center justify-between bg-muted/40 rounded px-2 py-1">
                     <span>{formatCurrency(value)}</span>
                     {i === 0 && (
-                      <button onClick={undoLast} className="text-[11px] underline cursor-pointer">desfazer</button>
+                      <button onClick={undoLast} className="text-[11px] underline">desfazer</button>
                     )}
                   </li>
                 ))}
