@@ -7,6 +7,7 @@ import { Row } from "../types";
 import { formatCurrency } from "@/utils/currency-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -133,10 +134,20 @@ export default function EditableBlock({
               <div className="flex items-center gap-2">
                 <SectionTitle label={title} color={color} />
                 {hasPendingChanges && (
-                  <span className="relative flex h-3.5 w-3.5 items-center justify-center" aria-label="Alterações pendentes">
-                    <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500 shadow-sm" />
-                  </span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="relative flex h-3.5 w-3.5 items-center justify-center"
+                        aria-label="Alterações pendentes"
+                      >
+                        <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500 shadow-sm" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="start">
+                      Existem alterações pendentes neste grupo
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             )}
