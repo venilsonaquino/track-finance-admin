@@ -1,12 +1,8 @@
-import { ReactNode } from "react";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { PiggyBank } from "lucide-react";
+import SectionTitle from "./SectionTitle";
 import ColGroup from "./ColGroup";
 import { Row } from "../types";
 import { formatCurrency } from "@/utils/currency-utils";
-import SectionTitle from "./SectionTitle";
-import { cn } from "@/lib/utils";
 
 type ReadOnlyBlockProps = {
   title: string;
@@ -16,43 +12,13 @@ type ReadOnlyBlockProps = {
   color?: string;
   locale?: string;
   currency?: string;
-  titleAction?: ReactNode;
 };
 
-export default function ReadOnlyBlock({
-  title,
-  months,
-  rows,
-  footer,
-  color,
-  locale,
-  currency,
-  titleAction,
-}: ReadOnlyBlockProps) {
-  const isSaldoBlock = title.trim().toLowerCase() === "saldo";
-
-  const valueColor = (value: number) => {
-    if (value > 0) return "text-emerald-600 dark:text-emerald-400";
-    if (value < 0) return "text-red-600 dark:text-red-400";
-    return "";
-  };
+export default function ReadOnlyBlock({ title, months, rows, footer, color, locale, currency }: ReadOnlyBlockProps) {
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 shrink-0 rounded-full border border-border text-muted-foreground pointer-events-none"
-          aria-hidden="true"
-          tabIndex={-1}
-        >
-          <PiggyBank className="h-4 w-4" />
-        </Button>
-        <SectionTitle label={title} color={color} />
-        {titleAction ? <div className="ml-auto flex items-center">{titleAction}</div> : null}
-      </div>
+    <div>
+      <SectionTitle label={title} color={color} />
       <div className="overflow-x-auto border rounded-md">
         <Table className="table-fixed w-full">
           <ColGroup months={months} />
@@ -66,17 +32,12 @@ export default function ReadOnlyBlock({
           </TableHeader>
           <TableBody>
             {rows.map((r) => (
-                  <TableRow key={r.id} className="hover:bg-transparent">
-                    <TableCell className="font-medium">{r.label.toLowerCase()}</TableCell>
-                    {r.values.map((value, i) => (
-                      <TableCell
-                        key={i}
-                        className="text-center align-middle whitespace-nowrap cursor-not-allowed select-none"
-                      >
-                        {formatCurrency(value, locale, currency)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
+              <TableRow key={r.id} className="hover:bg-transparent">
+                <TableCell className="font-medium">{r.label.toLowerCase()}</TableCell>
+                {r.values.map((value, i) => (
+                  <TableCell key={i} className="text-center align-middle whitespace-nowrap">{formatCurrency(value, locale, currency)}</TableCell>
+                ))}
+              </TableRow>
             ))}
           </TableBody>
           {footer && (
@@ -86,10 +47,7 @@ export default function ReadOnlyBlock({
                 {footer.values.map((value, i) => (
                   <TableCell
                     key={i}
-                    className={cn(
-                      "text-center font-semibold whitespace-nowrap cursor-not-allowed select-none text-zinc-800 dark:text-amber-200",
-                      isSaldoBlock && valueColor(value)
-                    )}
+                    className="text-center font-semibold whitespace-nowrap text-zinc-800 dark:text-amber-200"
                   >
                     {formatCurrency(value, locale, currency)}
                   </TableCell>

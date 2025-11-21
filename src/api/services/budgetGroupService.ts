@@ -8,20 +8,13 @@ export interface BudgetGroupRequest {
   footerLabel: string;
 }
 
-export enum BudgetGroupKind {
-  EDITABLE = 'editable',
-  COMPUTED = 'computed',
-}
-
 export interface BudgetGroupResponse {
   id: string;
   title: string;
-  kind: BudgetGroupKind;
+  kind: string;
   color: string;
   userId: string;
   footerLabel: string;
-  isSystemDefault: boolean;
-  position: number;
   categories: CategoryResponse[];
   updated_at: string;
   created_at: string;
