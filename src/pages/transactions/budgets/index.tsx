@@ -14,6 +14,7 @@ import { Pin, PinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import CreateGroupDialog from "./components/CreateGroupDialog";
 import DeleteGroupDialog from "./components/DeleteGroupDialog";
+import AddCategoryDialog from "./components/AddCategoryDialog";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
@@ -168,6 +169,8 @@ export default function BudgetPage() {
   const [deletingSectionId, setDeletingSectionId] = useState<string | null>(null);
   const [sectionPendingDeletion, setSectionPendingDeletion] = useState<EditableSectionState | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
+  const [addCategoryTarget, setAddCategoryTarget] = useState<EditableSectionState | null>(null);
   const [pinSaldoCard, setPinSaldoCard] = useState(false);
   const [pendingEntries, setPendingEntries] = useState<PendingDraftEntry[]>([]);
   const draftAppliedRef = useRef(false);
@@ -428,6 +431,13 @@ export default function BudgetPage() {
     }
   }, [closeDeleteDialog]);
 
+  const handleAddCategoryDialogOpenChange = useCallback((open: boolean) => {
+    setAddCategoryDialogOpen(open);
+    if (!open) {
+      setAddCategoryTarget(null);
+    }
+  }, []);
+
   const handleConfirmDelete = useCallback(async (section: EditableSectionState) => {
     const deleted = await handleDeleteSection(section);
     if (deleted) {
@@ -456,11 +466,8 @@ export default function BudgetPage() {
       return;
     }
 
-    const actionLabels = {
-      addCategory: "Adicionar categoria",
-    } as const;
-
-    toast.info(`${actionLabels[action]}: ${section.title}`);
+    setAddCategoryTarget(section);
+    setAddCategoryDialogOpen(true);
   }, [deletingSectionId]);
 
   const saveSectionTitle = useCallback(async () => {
@@ -617,6 +624,14 @@ export default function BudgetPage() {
           </Card>
         ))}
       </div>
+      <AddCategoryDialog
+        open={addCategoryDialogOpen}
+        targetSection={addCategoryTarget}
+        onOpenChange={handleAddCategoryDialogOpenChange}
+        onSuccess={async () => {
+          await Promise.all([fetchBudgetGroups(), refreshCurrentBudgetOverview()]);
+        }}
+      />
       <DeleteGroupDialog
         open={deleteDialogOpen}
         section={sectionPendingDeletion}
