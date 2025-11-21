@@ -27,15 +27,6 @@ const MONTH_LABELS_MAP: Record<MonthKey, string> = {
 const toValuesArray = (monthOrder: MonthKey[], values: Record<MonthKey, number>) =>
   monthOrder.map((month) => values[month] ?? 0);
 
-const cloneDraftSections = (sections: EditableSectionState[]): EditableSectionState[] =>
-  sections.map((section) => ({
-    ...section,
-    rows: section.rows.map((row) => ({
-      ...row,
-      values: [...row.values],
-    })),
-  }));
-
 const generatePendingEntryId = () =>
   typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
     ? crypto.randomUUID()
@@ -157,7 +148,6 @@ export default function BudgetPage() {
   const [addCategoryTarget, setAddCategoryTarget] = useState<EditableSectionState | null>(null);
   const [pinSaldoCard, setPinSaldoCard] = useState(false);
   const [pendingEntries, setPendingEntries] = useState<PendingDraftEntry[]>([]);
-  const draftAppliedRef = useRef(false);
 
   const registerPendingEntry = useCallback((input: PendingEntryInput) => {
     setPendingEntries((prev) => {
@@ -219,20 +209,6 @@ export default function BudgetPage() {
     setEditableSections(serverEditableSections);
   }, [budgetOverview, serverEditableSections]);
 
-  useEffect(() => {
-    draftAppliedRef.current = false;
-  }, [currentYear, budgetOverview?.version]);
-
-  useEffect(() => {
-    if (!budgetOverview || !draft) return;
-    if (!canRestoreDraft({ version: budgetOverview.version })) return;
-    if (draftAppliedRef.current) return;
-
-    setEditableSections(cloneDraftSections(draft.sections));
-    setPendingEntries(draft.pendingEntries ?? []);
-    draftAppliedRef.current = true;
-  }, [budgetOverview, canRestoreDraft, draft]);
-
   const baselineValuesBySection = useMemo<BaselineValuesBySection>(() => {
     return serverEditableSections.reduce((acc, section) => {
       acc[section.id] = section.rows.reduce((rowAcc, row) => {
@@ -283,19 +259,10 @@ export default function BudgetPage() {
   );
 
   useEffect(() => {
-    if (!budgetOverview) return;
-    if (hasPendingChanges) {
-      saveDraft(editableSections, {
-        version: budgetOverview.version,
-        pendingEntries,
-      });
-    } else {
-      clearDraft();
-      if (pendingEntries.length) {
-        setPendingEntries([]);
-      }
+    if (!hasPendingChanges && pendingEntries.length) {
+      setPendingEntries([]);
     }
-  }, [budgetOverview, clearDraft, editableSections, hasPendingChanges, pendingEntries, saveDraft]);
+  }, [hasPendingChanges, pendingEntries]);
 
   const totalsBySectionTitle = useMemo(() => {
     const length = monthOrder.length;
