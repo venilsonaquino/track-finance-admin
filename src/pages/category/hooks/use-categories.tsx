@@ -1,14 +1,14 @@
 import { CategoryRequest } from "@/api/dtos/category/category-request";
 import { CategoryResponse } from "@/api/dtos/category/category-response";
 import { CategoryService } from "@/api/services/categoyService";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export const useCategories = () => {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
       const response = await CategoryService.getCategories();
@@ -20,11 +20,11 @@ export const useCategories = () => {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   const createCategory = async (category: CategoryRequest) => {
     try {
@@ -63,4 +63,3 @@ export const useCategories = () => {
     deleteCategory,
   }
 }
-

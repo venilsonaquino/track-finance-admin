@@ -69,3 +69,15 @@ type AssignmentItem = {categoryId: string; budgetGroupId?: string | null;}
 export type SyncCategoryAssignments = { assignments: AssignmentItem[] }
 
 export type CategoryIdsByGroup = Record<string, string[]>;
+
+export type PendingDraftEntry = {
+  id: string;
+  sectionId: string;
+  sectionTitle: string;
+  rowId: string;
+  rowLabel: string;
+  monthIndex: number;
+  monthLabel: string;
+  delta: number;
+  timestamp: number;
+};
