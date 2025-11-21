@@ -6,6 +6,7 @@ import ColGroup from "./ColGroup";
 import { Row } from "../types";
 import { formatCurrency } from "@/utils/currency-utils";
 import SectionTitle from "./SectionTitle";
+import { cn } from "@/lib/utils";
 
 type ReadOnlyBlockProps = {
   title: string;
@@ -28,6 +29,14 @@ export default function ReadOnlyBlock({
   currency,
   titleAction,
 }: ReadOnlyBlockProps) {
+  const isSaldoBlock = title.trim().toLowerCase() === "saldo";
+
+  const valueColor = (value: number) => {
+    if (value > 0) return "text-emerald-600 dark:text-emerald-400";
+    if (value < 0) return "text-red-600 dark:text-red-400";
+    return "";
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -57,17 +66,17 @@ export default function ReadOnlyBlock({
           </TableHeader>
           <TableBody>
             {rows.map((r) => (
-              <TableRow key={r.id} className="hover:bg-transparent">
-                <TableCell className="font-medium">{r.label.toLowerCase()}</TableCell>
-                {r.values.map((value, i) => (
-                  <TableCell
-                    key={i}
-                    className="text-center align-middle whitespace-nowrap cursor-not-allowed select-none"
-                  >
-                    {formatCurrency(value, locale, currency)}
-                  </TableCell>
-                ))}
-              </TableRow>
+                  <TableRow key={r.id} className="hover:bg-transparent">
+                    <TableCell className="font-medium">{r.label.toLowerCase()}</TableCell>
+                    {r.values.map((value, i) => (
+                      <TableCell
+                        key={i}
+                        className="text-center align-middle whitespace-nowrap cursor-not-allowed select-none"
+                      >
+                        {formatCurrency(value, locale, currency)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
             ))}
           </TableBody>
           {footer && (
@@ -77,7 +86,10 @@ export default function ReadOnlyBlock({
                 {footer.values.map((value, i) => (
                   <TableCell
                     key={i}
-                    className="text-center font-semibold whitespace-nowrap text-zinc-800 dark:text-amber-200 cursor-not-allowed select-none"
+                    className={cn(
+                      "text-center font-semibold whitespace-nowrap cursor-not-allowed select-none text-zinc-800 dark:text-amber-200",
+                      isSaldoBlock && valueColor(value)
+                    )}
                   >
                     {formatCurrency(value, locale, currency)}
                   </TableCell>
