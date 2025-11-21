@@ -509,34 +509,42 @@ export default function BudgetPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-4 sm:grid sm:grid-cols-[auto_1fr_auto] sm:items-center">
-        <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
-        <div className="flex justify-center">
+      <div className="w-full flex flex-col gap-3 sm:grid sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-4">
+        <PageBreadcrumbNav
+          items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]}
+        />
+        <div className="flex justify-center w-full">
           <MonthYearPicker
             date={currentDate}
             onChange={handleMonthYearChange}
             mode="year"
-            className="w-auto [&>div]:py-0"
+            className="w-full max-w-xs sm:w-auto [&>div]:py-0"
           />
         </div>
-        <div className="flex justify-end items-center gap-2">
+        <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-2">
           {isRefreshing && (
-            <div className="flex items-center text-xs text-muted-foreground pr-2">
-              <div className="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-              Atualizando dados...
+            <div className="flex w-full items-center text-xs text-muted-foreground gap-2 sm:w-auto sm:justify-end">
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+              <span>Atualizando dados...</span>
             </div>
           )}
-          <CreateGroupDialog 
-            createBudgetGroup={createBudgetGroup}
-            loading={loadingCreateGroup}
-            onSuccess={refreshCurrentBudgetOverview}
-          />
-          <ManageGroupsSheet
-            labelButton="Organizar Grupos"
-            budgetGroups={budgetGroups}
-            onRefreshBudgetGroups={fetchBudgetGroups}
-            onGroupsChanged={refreshCurrentBudgetOverview}
-          />
+          <div className="flex w-full flex-row flex-wrap justify-center gap-2 sm:w-auto sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2">
+            <div className="w-auto">
+              <CreateGroupDialog 
+                createBudgetGroup={createBudgetGroup}
+                loading={loadingCreateGroup}
+                onSuccess={refreshCurrentBudgetOverview}
+              />
+            </div>
+            <div className="w-auto">
+              <ManageGroupsSheet
+                labelButton="Organizar Grupos"
+                budgetGroups={budgetGroups}
+                onRefreshBudgetGroups={fetchBudgetGroups}
+                onGroupsChanged={refreshCurrentBudgetOverview}
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div className="mt-4 w-full space-y-4">

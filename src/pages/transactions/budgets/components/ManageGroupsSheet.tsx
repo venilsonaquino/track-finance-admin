@@ -431,17 +431,16 @@ export default function ManageGroupsSheet({
       </Tooltip>
 
       <SheetContent
-        hideClose={true}
         side="right"
-        className="w-full sm:w-[720px] md:w-[820px] sm:max-w-[820px] p-0 h-full sm:rounded-l-lg rounded-t-lg"
+        className="w-full max-w-full sm:w-[720px] md:w-[820px] sm:max-w-[820px] p-0 h-full sm:rounded-l-lg rounded-t-xl overflow-hidden"
       >
-        <div className="flex flex-col h-full">
-          <SheetHeader className="px-6 py-4 border-b">
+        <div className="flex flex-col h-full bg-background">
+          <SheetHeader className="px-3 sm:px-6 py-2.5 sm:py-4 border-b">
             <div className="flex items-center justify-between w-full">
-              <SheetTitle className="text-lg font-semibold flex items-center gap-2">
+              <SheetTitle className="text-sm sm:text-lg font-semibold flex items-center gap-2">
                 Organizar Grupos & Categorias
                 {isSaving && (
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1 text-[11px] sm:text-sm text-muted-foreground">
                     <div className="animate-spin rounded-full h-3 w-3 border-2 border-muted-foreground border-t-transparent" />
                     Salvando...
                   </div>
@@ -450,14 +449,14 @@ export default function ManageGroupsSheet({
             </div>
           </SheetHeader>
 
-          <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 flex-1 min-h-0">
+          <div className="p-3 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 flex-1 min-h-0 overflow-y-auto">
             {/* CATEGORIAS SEM GRUPO */}
-            <Card className="overflow-hidden flex flex-col h-full min-h-0">
+            <Card className="overflow-hidden flex flex-col h-full min-h-0 border-border/70 bg-card/80 backdrop-blur">
               <ColumnHeader icon={<FolderX className="h-4 w-4 text-muted-foreground" />} title="Categorias sem grupo" />
 
               <div
                 className={[
-                  "p-4 pt-3 flex-1 flex flex-col min-h-0",
+                  "p-3 sm:p-4 pt-2 sm:pt-3 flex-1 flex flex-col min-h-0 rounded-lg",
                   dragOverGroup === "unassigned" ? "ring-2 ring-blue-200" : ""
                 ].join(" ")}
                 onDragOver={(e) => {
@@ -469,7 +468,7 @@ export default function ManageGroupsSheet({
                 onDrop={onDropToUnassigned}
                 onDragLeave={() => setDragOverGroup(null)}
               >
-                <div className="space-y-2 overflow-y-auto pr-2 flex-1">
+                <div className="space-y-2 overflow-y-auto pr-1 sm:pr-2 flex-1 max-h-[55vh] sm:max-h-none">
                   {categoriesLoading ? (
                     Array.from({ length: 8 }).map((_, i) => (
                       <div key={i} className="h-10 rounded-lg bg-muted/40 animate-pulse" />
@@ -489,23 +488,15 @@ export default function ManageGroupsSheet({
                 </div>
               </div>
 
-              <MoveBarSheet
-                groups={orderedBudgetGroups}
-                selectedCount={selectedIds.length}
-                selectedGroup={targetGroup}
-                onChangeGroup={setTargetGroup}
-                onMove={() => targetGroup && moveIdsToGroup(selectedIds, targetGroup)}
-                isSaving={isSaving}
-              />
             </Card>
 
             {/* GRUPOS */}
-            <Card className="overflow-hidden flex flex-col h-full min-h-0">
+            <Card className="overflow-hidden flex flex-col h-full min-h-0 border-border/70 bg-card/80 backdrop-blur">
               <ColumnHeader icon={<Box className="h-4 w-4 text-muted-foreground" />} title="Grupos" />
 
-              <div className="p-4 pt-3 flex-1 flex flex-col min-h-0">
+              <div className="p-3 sm:p-4 pt-2 sm:pt-3 flex-1 flex flex-col min-h-0">
                 <div
-                  className="space-y-2 overflow-y-auto pr-2 flex-1"
+                  className="space-y-2 overflow-y-auto pr-1 sm:pr-2 flex-1 max-h-[60vh] sm:max-h-none"
                   onDragOver={onGroupsListDragOver}
                   onDrop={onGroupsListDrop}
                   onDragLeave={onGroupsListDragLeave}
@@ -539,7 +530,7 @@ export default function ManageGroupsSheet({
                             key={cat.id}
                             draggable
                             onDragStart={(e) => onDragStart(e, cat.id)}
-                            className="w-full flex items-center justify-between rounded-lg border px-3 py-2 bg-white"
+                            className="w-full flex items-center justify-between rounded-lg border px-3 py-2 bg-muted/40 dark:bg-muted/10"
                           >
                             <div className="flex items-center gap-3">
                               <span className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
@@ -573,7 +564,19 @@ export default function ManageGroupsSheet({
             </Card>
           </div>
 
-          <SheetFooter className="px-6 py-4 border-t bg-muted/20">
+          {/* Barra de mover - somente mobile */}
+          <div className="sm:hidden px-4 pb-3">
+            <MoveBarSheet
+              groups={orderedBudgetGroups}
+              selectedCount={selectedIds.length}
+              selectedGroup={targetGroup}
+              onChangeGroup={setTargetGroup}
+              onMove={() => targetGroup && moveIdsToGroup(selectedIds, targetGroup)}
+              isSaving={isSaving}
+            />
+          </div>
+
+          <SheetFooter className="px-4 sm:px-6 py-4 border-t bg-muted/20">
             <div className="flex gap-3 w-full">
               <Button variant="ghost" onClick={cancelChanges} className="flex-1 h-10" disabled={isSaving}>
                 Cancelar

@@ -14,13 +14,13 @@ export default function MoveBarSheet({
   isSaving?: boolean;
 }) {
   return (
-    <CardFooter className="border-t bg-background/95 py-3 px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <CardFooter className="border rounded-lg shadow-sm bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur py-3 px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sticky bottom-2">
       <span className="text-xs text-muted-foreground">
         {selectedCount} selecionada{selectedCount !== 1 ? "s" : ""}
       </span>
       <div className="flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <Select value={selectedGroup} onValueChange={onChangeGroup}>
-          <SelectTrigger className="h-9 w-full sm:w-40">
+          <SelectTrigger className="h-10 w-full sm:w-44 text-sm">
             <SelectValue placeholder="Mover para..." />
           </SelectTrigger>
           <SelectContent>
@@ -34,7 +34,12 @@ export default function MoveBarSheet({
             ))}
           </SelectContent>
         </Select>
-        <Button size="sm" className="w-full sm:w-auto" disabled={!selectedCount || !selectedGroup || isSaving} onClick={onMove}>
+        <Button
+          size="sm"
+          className="w-full sm:w-auto"
+          disabled={!selectedCount || !selectedGroup || isSaving}
+          onClick={onMove}
+        >
           {isSaving ? (
             <>
               <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1" />
