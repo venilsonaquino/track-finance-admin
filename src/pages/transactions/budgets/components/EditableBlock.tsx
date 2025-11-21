@@ -14,8 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, ListPlus, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
-// import { Tooltip, TooltipContent } from "@/components/ui/tooltip";
-// import { TooltipTrigger } from "@radix-ui/react-tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 type EditableBlockProps = {
@@ -39,6 +38,16 @@ type EditableBlockProps = {
   onTitleSave?: () => void;
   onTitleCancel?: () => void;
   savingTitle?: boolean;
+  hasPendingChanges?: boolean;
+  isCellPending?: (rowId: string, monthIndex: number) => boolean;
+  onRegisterPendingEntry?: (payload: {
+    rowId: string;
+    rowLabel: string;
+    monthIndex: number;
+    monthLabel: string;
+    delta: number;
+  }) => void;
+  onUndoPendingEntry?: (payload: { rowId: string; monthIndex: number }) => void;
 };
 
 export default function EditableBlock({
@@ -62,6 +71,10 @@ export default function EditableBlock({
   onTitleSave,
   onTitleCancel,
   savingTitle = false,
+  hasPendingChanges = false,
+  isCellPending,
+  onRegisterPendingEntry,
+  onUndoPendingEntry,
 }: EditableBlockProps) {
 
   const hasActions = Boolean(onEdit || onDelete || onAddCategory);
@@ -118,7 +131,7 @@ export default function EditableBlock({
             ) : (
               <div className="flex items-center gap-2">
                 <SectionTitle label={title} color={color} />
-                {/* {hasPendingChanges && (
+                {hasPendingChanges && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span
@@ -133,7 +146,7 @@ export default function EditableBlock({
                       Existem alterações pendentes neste grupo
                     </TooltipContent>
                   </Tooltip>
-                )} */}
+                )}
               </div>
             )}
           </div>
@@ -188,39 +201,39 @@ export default function EditableBlock({
             <TableBody>
               {rows.map((row) => (
                 <TableRow key={row.id} className="hover:bg-transparent">
-                  <TableCell className="font-medium">{row.label.toLowerCase()}</TableCell>
-                  {months.map((_, mi) => {
-                    // const pending = isCellPending?.(row.id, mi) ?? false;
-                    return (
-                      <TableCell
-                        key={mi}
+              <TableCell className="font-medium">{row.label.toLowerCase()}</TableCell>
+              {months.map((_, mi) => {
+                const pending = isCellPending?.(row.id, mi) ?? false;
+                return (
+                  <TableCell
+                    key={mi}
                         className={cn(
                           "text-right align-middle transition-colors",
-                          // pending && "bg-amber-50/60 dark:bg-amber-500/10"
+                          pending && "bg-amber-50/60 dark:bg-amber-500/10"
                         )}
-                        // data-pending={pending || undefined}
+                        data-pending={pending || undefined}
                       >
                         <CellSumOnlyPopover
                           value={row.values[mi] || 0}
                           onAdd={(delta) => {
-                            // const monthLabel = months[mi] ?? `Mês ${mi + 1}`;
+                            const monthLabel = months[mi] ?? `Mês ${mi + 1}`;
                             onUpdateCell(row.id, mi, (current) => (current || 0) + delta);
-                            // onRegisterPendingEntry?.({
-                            //   rowId: row.id,
-                            //   rowLabel: row.label,
-                            //   monthIndex: mi,
-                            //   monthLabel,
-                            //   delta,
-                            // });
+                            onRegisterPendingEntry?.({
+                              rowId: row.id,
+                              rowLabel: row.label,
+                              monthIndex: mi,
+                              monthLabel,
+                              delta,
+                            });
                           }}
                           onUndo={(delta) => {
                             onUpdateCell(row.id, mi, (current) => Math.max(0, (current || 0) - delta));
-                            // onUndoPendingEntry?.({ rowId: row.id, monthIndex: mi });
+                            onUndoPendingEntry?.({ rowId: row.id, monthIndex: mi });
                           }}
                           compact={compact}
                           locale={locale}
                           currency={currency}
-                          // pending={pending}
+                          pending={pending}
                         />
                       </TableCell>
                     );
