@@ -8,6 +8,8 @@ import ManageGroupsSheet from "./components/ManageGroupsSheet";
 import { useBudgetOverview, useBudgetGroupsCrud } from "../hooks/use-budget-group";
 import { MonthYearPicker } from "../movements/components/MonthYearPicker";
 import { toast } from "sonner";
+import AddCategoryDialog from "./components/AddCategoryDialog";
+import DeleteGroupDialog from "./components/DeleteGroupDialog";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
@@ -393,6 +395,21 @@ export default function BudgetPage() {
           </CardContent>
         </Card>
       </div>
+      {/* <AddCategoryDialog
+        open={addCategoryDialogOpen}
+        targetSection={addCategoryTarget}
+        onOpenChange={handleAddCategoryDialogOpenChange}
+        onSuccess={async () => {
+          await Promise.all([fetchBudgetGroups(), refreshCurrentBudgetOverview()]);
+        }}
+      />
+      <DeleteGroupDialog
+        open={deleteDialogOpen}
+        section={sectionPendingDeletion}
+        onOpenChange={handleDialogOpenChange}
+        onConfirm={handleConfirmDelete}
+        loading={Boolean(deletingSectionId)}
+      /> */}
     </>
   );
 }
