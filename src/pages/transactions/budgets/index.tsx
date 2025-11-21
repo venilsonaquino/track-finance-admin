@@ -502,20 +502,28 @@ export default function BudgetPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:grid sm:grid-cols-[auto_1fr_auto] sm:items-center">
         <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-center">
+          <MonthYearPicker
+            date={currentDate}
+            onChange={handleMonthYearChange}
+            mode="year"
+            className="w-auto [&>div]:py-0"
+          />
+        </div>
+        <div className="flex justify-end items-center gap-2">
           {isRefreshing && (
             <div className="flex items-center text-xs text-muted-foreground pr-2">
               <div className="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
               Atualizando dados...
             </div>
           )}
-            <CreateGroupDialog 
-              createBudgetGroup={createBudgetGroup}
-              loading={loadingCreateGroup}
-              onSuccess={refreshCurrentBudgetOverview}
-            />
+          <CreateGroupDialog 
+            createBudgetGroup={createBudgetGroup}
+            loading={loadingCreateGroup}
+            onSuccess={refreshCurrentBudgetOverview}
+          />
           <ManageGroupsSheet
             labelButton="Organizar Grupos"
             budgetGroups={budgetGroups}
@@ -523,9 +531,6 @@ export default function BudgetPage() {
             onGroupsChanged={refreshCurrentBudgetOverview}
           />
         </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <MonthYearPicker date={currentDate} onChange={handleMonthYearChange} mode="year" />
       </div>
       <div className="mt-4 w-full space-y-4">
         <Card
