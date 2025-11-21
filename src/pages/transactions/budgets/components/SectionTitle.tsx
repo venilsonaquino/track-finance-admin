@@ -4,15 +4,11 @@ type SectionTitleProps = {
 };
 
 export default function SectionTitle({ label, color }: SectionTitleProps) {
+
   return (
-    <div className="flex items-center gap-2">
-      <span
-        className="h-2.5 w-2.5 rounded-full"
-        style={{ backgroundColor: color || "var(--primary)" }}
-      />
-      <span className="tracking-wide text-sm font-semibold text-muted-foreground leading-none">
-        {label.toUpperCase()}
-      </span>
+    <div className="flex items-center gap-3 mb-2">
+      <div className={`border-l-8 h-6 rounded-sm`} style={{ borderColor: color }} />
+      <div className="tracking-wide text-sm font-semibold text-muted-foreground">{label.toUpperCase()}</div>
     </div>
   );
 }

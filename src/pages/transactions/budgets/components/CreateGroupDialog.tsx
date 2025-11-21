@@ -9,19 +9,15 @@ import { useBudgetGroupsCrud } from "../../hooks/use-budget-group";
 import { BudgetGroupRequest } from "@/api/services/budgetGroupService";
 
 type CreateGroupDialogProps = {
+  onGroupCreated?: () => void;
   createBudgetGroup?: (data: BudgetGroupRequest) => Promise<void>;
   loading?: boolean;
-  onSuccess?: () => void;
 };
 
-export default function CreateGroupDialog({
-  createBudgetGroup: propCreateBudgetGroup,
-  loading: propLoading,
-  onSuccess,
-}: CreateGroupDialogProps) {
+export default function CreateGroupDialog({ onGroupCreated, createBudgetGroup: propCreateBudgetGroup, loading: propLoading }: CreateGroupDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [groupName, setGroupName] = useState("");
-  const [groupColor, setGroupColor] = useState("#000000ff");
+  const [groupColor, setGroupColor] = useState("#ffffff");
   
   const { createBudgetGroup: hookCreateBudgetGroup, loadingCreateGroup: hookLoading } = useBudgetGroupsCrud();
   const createBudgetGroup = propCreateBudgetGroup || hookCreateBudgetGroup;
@@ -44,9 +40,11 @@ export default function CreateGroupDialog({
 
       toast.success(`Grupo "${name}" criado com sucesso!`);
       setGroupName("");
-      setGroupColor("#000000ff");
+      setGroupColor("#3b82f6");
       setIsOpen(false);
-      onSuccess?.();
+      
+      // Callback para atualizar a lista de grupos
+      onGroupCreated?.();
     } catch (error) {
       console.error("Erro ao criar grupo:", error);
       toast.error("Erro ao criar grupo");
@@ -92,7 +90,7 @@ export default function CreateGroupDialog({
               <Input 
                 value={groupColor} 
                 onChange={(e) => setGroupColor(e.target.value)}
-                placeholder="#000000ff"
+                placeholder="#3b82f6"
                 disabled={loading}
               />
             </div>
