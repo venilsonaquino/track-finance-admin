@@ -1,13 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import PageBreadcrumbNav from "@/components/BreadcrumbNav";
 import ReadOnlyBlock from "./components/ReadOnlyBlock";
 import EditableBlock from "./components/EditableBlock";
-import { EditableSectionState, MonthKey, SectionEditable } from "./types";
+import { EditableSectionState, MonthKey, PendingDraftEntry, SectionEditable } from "./types";
 import ManageGroupsSheet from "./components/ManageGroupsSheet";
 import { useBudgetOverview, useBudgetGroupsCrud } from "../hooks/use-budget-group";
 import { MonthYearPicker } from "../movements/components/MonthYearPicker";
 import { toast } from "sonner";
+import { Pin, PinOff } from "lucide-react";
+import { cn } from "@/lib/utils";
+import CreateGroupDialog from "./components/CreateGroupDialog";
+import DeleteGroupDialog from "./components/DeleteGroupDialog";
+import AddCategoryDialog from "./components/AddCategoryDialog";
 
 const MONTH_LABELS_MAP: Record<MonthKey, string> = {
   Jan: "Janeiro",
@@ -137,6 +143,8 @@ export default function BudgetPage() {
   } = useBudgetGroupsCrud();
 
   const blockingError = overviewError || crudError;
+  const isInitialLoading = loading && !budgetOverview;
+  const isRefreshing = loading && Boolean(budgetOverview);
   const [editableSections, setEditableSections] = useState<EditableSectionState[]>([]);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editingTitleValue, setEditingTitleValue] = useState("");
@@ -344,22 +352,16 @@ export default function BudgetPage() {
     }
   }, [editableSections, editingSectionId, cancelEditingSection]);
 
-  const handleDeleteSection = useCallback(async (section: EditableSectionState) => {
+  const handleDeleteSection = useCallback(async (section: EditableSectionState): Promise<boolean> => {
     if (section.isSystemDefault) {
       toast.error("Não é possível excluir um grupo padrão.");
-      return;
+      return false;
     }
 
     if (deletingSectionId) {
       toast.info("Aguarde a exclusão em andamento.");
-      return;
+      return false;
     }
-
-    const shouldDelete = typeof window === "undefined"
-      ? true
-      : window.confirm(`Tem certeza que deseja excluir o grupo "${section.title}"? Essa ação não pode ser desfeita.`);
-
-    if (!shouldDelete) return;
 
     try {
       setDeletingSectionId(section.id);
@@ -367,13 +369,40 @@ export default function BudgetPage() {
       setEditableSections((prev) => prev.filter(({ id }) => id !== section.id));
       toast.success("Grupo excluído com sucesso!");
       refreshCurrentBudgetOverview();
+      return true;
     } catch (error) {
       console.error("Erro ao excluir grupo:", error);
       toast.error("Não foi possível excluir o grupo.");
+      return false;
     } finally {
       setDeletingSectionId((current) => (current === section.id ? null : current));
     }
   }, [deleteBudgetGroup, refreshCurrentBudgetOverview, deletingSectionId]);
+
+  const closeDeleteDialog = useCallback(() => {
+    setDeleteDialogOpen(false);
+    setSectionPendingDeletion(null);
+  }, []);
+
+  const handleDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      closeDeleteDialog();
+    }
+  }, [closeDeleteDialog]);
+
+  const handleAddCategoryDialogOpenChange = useCallback((open: boolean) => {
+    setAddCategoryDialogOpen(open);
+    if (!open) {
+      setAddCategoryTarget(null);
+    }
+  }, []);
+
+  const handleConfirmDelete = useCallback(async (section: EditableSectionState) => {
+    const deleted = await handleDeleteSection(section);
+    if (deleted) {
+      closeDeleteDialog();
+    }
+  }, [handleDeleteSection, closeDeleteDialog]);
 
   const handleSectionAction = useCallback((section: EditableSectionState, action: "edit" | "delete" | "addCategory") => {
     if (action === "edit") {
@@ -383,16 +412,22 @@ export default function BudgetPage() {
     }
 
     if (action === "delete") {
-      handleDeleteSection(section);
+      if (section.isSystemDefault) {
+        toast.error("Não é possível excluir um grupo padrão.");
+        return;
+      }
+      if (deletingSectionId) {
+        toast.info("Aguarde a exclusão em andamento.");
+        return;
+      }
+      setSectionPendingDeletion(section);
+      setDeleteDialogOpen(true);
       return;
     }
 
-    const actionLabels = {
-      addCategory: "Adicionar categoria",
-    } as const;
-
-    toast.info(`${actionLabels[action]}: ${section.title}`);
-  }, [handleDeleteSection]);
+    setAddCategoryTarget(section);
+    setAddCategoryDialogOpen(true);
+  }, [deletingSectionId]);
 
   const saveSectionTitle = useCallback(async () => {
     if (!editingSectionId) return;
@@ -423,35 +458,64 @@ export default function BudgetPage() {
     }
   }, [editingSectionId, editingTitleValue, renameBudgetGroup, cancelEditingSection, refreshCurrentBudgetOverview]);
 
-  if (blockingError && !loading) {
+  if (blockingError && !budgetOverview) {
     return <BudgetErrorState message={blockingError} onRetry={() => fetchBudgetOverview(currentYear)} />;
   }
 
-  if (loading || !budgetOverview) {
+  if (isInitialLoading || !budgetOverview) {
     return <BudgetSkeleton />;
   }
 
   return (
     <>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <PageBreadcrumbNav items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]} />
-        <div className="flex justify-end gap-2">
-          <ManageGroupsSheet
-            labelButton="Organizar Grupos"
-            budgetGroups={budgetGroups}
-            onRefreshBudgetGroups={fetchBudgetGroups}
-            createBudgetGroup={createBudgetGroup}
-            loadingCreateGroup={loadingCreateGroup}
-            onGroupsChanged={refreshCurrentBudgetOverview}
+      <div className="w-full flex flex-col gap-3 sm:grid sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-4">
+        <PageBreadcrumbNav
+          items={[{ label: "Transações" }, { label: "Orçamentos", href: "/transacoes/orcamento" }]}
+        />
+        <div className="flex justify-center w-full">
+          <MonthYearPicker
+            date={currentDate}
+            onChange={handleMonthYearChange}
+            mode="year"
+            className="w-full max-w-xs sm:w-auto [&>div]:py-0"
           />
         </div>
+        <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-2">
+          {isRefreshing && (
+            <div className="flex w-full items-center text-xs text-muted-foreground gap-2 sm:w-auto sm:justify-end">
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+              <span>Atualizando dados...</span>
+            </div>
+          )}
+          <div className="flex w-full flex-row flex-wrap justify-center gap-2 sm:w-auto sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2">
+            <div className="w-auto">
+              <CreateGroupDialog 
+                createBudgetGroup={createBudgetGroup}
+                loading={loadingCreateGroup}
+                onSuccess={refreshCurrentBudgetOverview}
+              />
+            </div>
+            <div className="w-auto">
+              <ManageGroupsSheet
+                labelButton="Organizar Grupos"
+                budgetGroups={budgetGroups}
+                onRefreshBudgetGroups={fetchBudgetGroups}
+                onGroupsChanged={refreshCurrentBudgetOverview}
+              />
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <MonthYearPicker date={currentDate} onChange={handleMonthYearChange} mode="year" />
-      </div>
-      <div className="mt-4 w-full">
-        <Card className="shadow-sm w-full overflow-hidden">
-          <CardContent className="space-y-6 px-3 sm:px-6">
+      <div className="mt-4 w-full space-y-4">
+        <Card
+          className={cn(
+            "shadow-sm w-full overflow-hidden transition-all duration-300",
+            pinSaldoCard
+              ? "sticky top-20 z-30 border-primary/40 shadow-lg bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur"
+              : ""
+          )}
+        >
+          <CardContent className="space-y-4 px-3 sm:px-6">
             <ReadOnlyBlock
               title="SALDO"
               color={computedSection?.color}
@@ -464,10 +528,29 @@ export default function BudgetPage() {
               }
               locale={budgetOverview.locale}
               currency={budgetOverview.currency}
+              titleAction={
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  aria-label={pinSaldoCard ? "Desfixar cartão do saldo" : "Fixar cartão do saldo"}
+                  aria-pressed={pinSaldoCard}
+                  onClick={() => setPinSaldoCard((prev) => !prev)}
+                  className={cn(
+                    "h-8 w-8 text-muted-foreground",
+                    pinSaldoCard && "text-primary"
+                  )}
+                >
+                  {pinSaldoCard ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+                </Button>
+              }
             />
-            {editableSections.map((section) => (
+          </CardContent>
+        </Card>
+        {editableSections.map((section) => (
+          <Card key={section.id} className="shadow-sm w-full overflow-hidden">
+            <CardContent className="space-y-6 px-3 sm:px-6">
               <EditableBlock
-                key={section.id}
                 title={section.title}
                 color={section.color}
                 months={monthLabels}
@@ -489,11 +572,40 @@ export default function BudgetPage() {
                 onTitleSave={saveSectionTitle}
                 onTitleCancel={cancelEditingSection}
                 savingTitle={savingTitle && editingSectionId === section.id}
+                hasPendingChanges={Boolean(pendingCellsBySection[section.id])}
+                isCellPending={(rowId, monthIndex) =>
+                  Boolean(pendingCellsBySection[section.id]?.[rowId]?.[monthIndex])
+                }
+                onRegisterPendingEntry={(payload) =>
+                  registerPendingEntry({
+                    ...payload,
+                    sectionId: section.id,
+                    sectionTitle: section.title,
+                  })
+                }
+                onUndoPendingEntry={(payload) =>
+                  removeLatestPendingEntryForCell(section.id, payload.rowId, payload.monthIndex)
+                }
               />
-            ))}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+      <AddCategoryDialog
+        open={addCategoryDialogOpen}
+        targetSection={addCategoryTarget}
+        onOpenChange={handleAddCategoryDialogOpenChange}
+        onSuccess={async () => {
+          await Promise.all([fetchBudgetGroups(), refreshCurrentBudgetOverview()]);
+        }}
+      />
+      <DeleteGroupDialog
+        open={deleteDialogOpen}
+        section={sectionPendingDeletion}
+        onOpenChange={handleDialogOpenChange}
+        onConfirm={handleConfirmDelete}
+        loading={Boolean(deletingSectionId)}
+      />
     </>
   );
 }
